@@ -1,0 +1,13 @@
+{% extends 'procurement01/layout.html' %}
+
+{% block title %}Create RFP - Step 1{% endblock %}
+
+{% block content %}
+<h2>Create RFP - Step 1: Title and Description</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Next: Add SKUs</button>
+</form>
+{% endblock %}

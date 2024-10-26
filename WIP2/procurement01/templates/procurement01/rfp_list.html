@@ -1,0 +1,27 @@
+{% extends 'procurement01/layout.html' %}
+
+{% block content %}
+<h2>List of RFPs</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Date Created</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for rfp in rfps %}
+        <tr>
+            <td>{{ rfp.title }}</td>
+            <td>{{ rfp.description }}</td>
+            <td>{{ rfp.created_at }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">No RFPs available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

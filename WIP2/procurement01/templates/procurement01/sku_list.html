@@ -1,0 +1,41 @@
+{% extends 'procurement01/layout.html' %}
+
+{% block title %}SKU List{% endblock %}
+
+{% block content %}
+<h2>SKU List</h2>
+<table class="table table-striped" id="sku-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>SKU Code</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sku in skus %}
+        <tr class="clickable-row" data-href="{% url 'sku_detail' sku.id %}">
+            <td>{{ sku.id }}</td>
+            <td>{{ sku.name }}</td>
+            <td>{{ sku.sku_code }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'sku_create' %}" class="btn btn-primary">Create New SKU</a>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Attach click event to all rows with the class 'clickable-row'
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.clickable-row').forEach(function(row) {
+            row.addEventListener('click', function() {
+                window.location = row.getAttribute('data-href');
+            });
+        });
+    });
+</script>
+{% endblock %}

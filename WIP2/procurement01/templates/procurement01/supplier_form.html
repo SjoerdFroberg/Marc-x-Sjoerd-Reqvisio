@@ -1,0 +1,15 @@
+{% extends 'procurement01/layout.html' %}
+
+{% block title %}Create Supplier{% endblock %}
+
+{% block content %}
+<h2>Create New Supplier</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}  <!-- Display the form fields -->
+    <button type="submit" class="btn btn-primary">Create Supplier</button>
+</form>
+
+<a href="{% url 'supplier_list' %}" class="btn btn-secondary">Cancel</a>  <!-- Cancel button -->
+{% endblock %}

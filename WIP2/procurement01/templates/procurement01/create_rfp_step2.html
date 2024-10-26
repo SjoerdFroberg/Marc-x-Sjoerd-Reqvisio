@@ -1,0 +1,240 @@
+{% extends 'procurement01/layout.html' %}
+
+{% block title %}Create RFP - Step 2{% endblock %}
+
+{% block content %}
+<h2>Create RFP - Step 2: Add SKUs to "{{ rfp.title }}"</h2>
+
+<!-- Search input -->
+<input type="text" id="sku-search-input" placeholder="Search for SKUs..." autocomplete="off">
+<!-- Search results will be displayed here -->
+<div id="sku-search-results" style="margin-top: 10px;"></div>
+
+
+<form id="rfp-skus-form" method="POST">
+    {% csrf_token %}
+
+<table class="table" id="sku-table">
+    <thead>
+        <tr>
+            <th>Remove SKU</th>
+            <th>SKU Name</th>
+            <th>Quantity</th>
+            <th>Unit Size</th>
+            <th>Target Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Dynamically added SKUs will go here -->
+    </tbody>
+</table>
+
+
+
+
+    <input type="hidden" id="extra_columns_data" name="extra_columns_data" />
+
+</form>
+
+<!-- Button to add extra columns -->
+<button id="add-column" class="btn btn-primary">Add Extra Column</button>
+<button type="button" class="btn btn-primary" onclick="submitForm()">Continue to Step 3</button>
+ 
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('sku-search-input').addEventListener('input', function() {
+    const query = this.value.trim();
+    if (query.length > 0) {
+        fetch(`/procurement01/search_skus/?query=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(skus => {
+                const searchResults = document.getElementById('sku-search-results');
+                searchResults.innerHTML = '';  // Clear previous results
+
+                if (skus.length === 0) {
+                    searchResults.innerHTML = '<p>No SKUs found.</p>';
+                    return;
+                }
+
+                skus.forEach(sku => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'search-result-item';
+                    resultItem.style.cursor = 'pointer';
+                    resultItem.innerHTML = `${sku.name} (${sku.sku_code})`;
+
+                    // Attach event listener to select the SKU and add to the table
+                    resultItem.addEventListener('click', function() {
+                        addSkuToTable(sku.name, sku.sku_code);
+                        searchResults.innerHTML = '';  // Clear search results after adding
+                        document.getElementById('sku-search-input').value = '';  // Clear the search input
+                    });
+
+                    searchResults.appendChild(resultItem);
+                });
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+            });
+    } else {
+        document.getElementById('sku-search-results').innerHTML = '';  // Clear search results if input is empty
+    }
+});
+
+    
+        // Function to add SKU to the table
+        function addSkuToTable(skuName, skuCode) {
+            const tableBody = document.querySelector('#sku-table tbody');
+            
+            // Check if SKU already exists
+            const existingRow = Array.from(tableBody.querySelectorAll('tr')).find(row => {
+                return row.querySelector('td:nth-child(2)').innerText === skuName;
+            });
+            
+            if (existingRow) {
+                alert("This SKU is already added.");
+                return;
+            }
+    
+            // Add SKU to the table
+            let row = document.createElement('tr');
+            row.innerHTML = `
+                <td><button type="button" class="btn btn-danger remove-sku-btn">Remove</button></td>
+                <td><input type="hidden" name="skus[]" value="${skuCode}">${skuName}</td>
+                <td><input type="number" name="quantities[]" value="1"></td>
+                <td><input type="text" name="unit_sizes[]" value=""></td>
+                <td><input type="text" name="target_prices[]" value=""></td>
+            `;
+            tableBody.appendChild(row);
+    
+            // Attach remove functionality for SKU
+            row.querySelector('.remove-sku-btn').addEventListener('click', function() {
+                row.remove();
+            });
+    
+            // Add empty cells for extra columns if any exist
+            const columnCount = document.querySelectorAll('#sku-table thead th').length;
+            for (let i = 5; i < columnCount; i++) {
+                let newTd = document.createElement('td');
+                newTd.innerHTML = `<input type="text" name="extra_column_${i}[]">`;
+                row.appendChild(newTd);
+            }
+        }
+    
+        // Add new column logic
+        document.getElementById('add-column').addEventListener('click', function() {
+            let tableHead = document.querySelector('#sku-table thead tr');
+    
+            // Create a new header with an input for column name and an 'X' for removal
+            let newTh = document.createElement('th');
+            newTh.style.position = 'relative';
+            newTh.innerHTML = `
+                <input type="text" class="column-input" placeholder="Column Name">
+                <span class="remove-column-x" style="position: absolute; top: 5px; right: 5px; cursor: pointer; display: none;">&#10006;</span>
+            `;
+            tableHead.appendChild(newTh);
+    
+            // Attach remove column button to new column
+            attachRemoveColumnButtons();
+    
+            // Add empty cells for this column to each existing row
+            document.querySelectorAll('#sku-table tbody tr').forEach(row => {
+                let newTd = document.createElement('td');
+                newTd.innerHTML = `<input type="text" name="extra_column_${tableHead.children.length - 1}[]">`;
+                row.appendChild(newTd);
+            });
+        });
+    
+        // Show cross ('X') only on hover and attach remove functionality
+        function attachRemoveColumnButtons() {
+            
+            document.querySelectorAll('#sku-table thead th').forEach((th, index) => {
+                if (index === 1) return; // Skip the SKU name column, making it non-removable
+                if (index === 0) return; // Skip the SKU name column, making it non-removable
+
+                let removeBtn = document.createElement('span');
+
+                removeBtn.innerHTML = '&#10006;'; // 'X' symbol
+                removeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; cursor: pointer; display: none;';
+                th.style.position = 'relative'; // Required for the absolute positioning of the 'X'
+                th.appendChild(removeBtn);
+    
+                // Show the 'X' when hovering
+                th.addEventListener('mouseenter', function() {
+                    removeBtn.style.display = 'inline';
+                });
+    
+                // Hide the 'X' when not hovering
+                th.addEventListener('mouseleave', function() {
+                    removeBtn.style.display = 'none';
+                });
+    
+                // Remove the column and corresponding cells when 'X' is clicked
+                removeBtn.addEventListener('click', function() {
+                    removeColumn(index);
+                });
+            });
+        }
+    
+        // Function to remove columns
+        function removeColumn(index) {
+            document.querySelectorAll('#sku-table thead th').forEach((th, thIndex) => {
+                if (thIndex === index) {
+                    th.remove();
+                }
+            });
+    
+            // Remove corresponding cells from all rows
+            document.querySelectorAll('#sku-table tbody tr').forEach(row => {
+                row.children[index].remove();
+            });
+        }
+    
+        // Attach remove column buttons to all columns on load
+        attachRemoveColumnButtons();
+    
+        // Submit form and move to step 3
+        function submitForm() {
+    const form = document.getElementById('rfp-skus-form');
+    const tableBody = document.querySelector('#sku-table tbody');
+    const skuData = []; // Store each SKU's data separately
+
+    // Get the headers for the columns (excluding the first two columns: Remove and SKU)
+    const allColumnHeaders = Array.from(document.querySelectorAll('#sku-table thead th'))
+        .slice(2)
+        .map(th => th.querySelector('.column-input') ? th.querySelector('.column-input').value : th.textContent.trim());
+
+    // Loop through the table rows and gather the data for each SKU
+    tableBody.querySelectorAll('tr').forEach(row => {
+        const skuCode = row.querySelector('input[name="skus[]"]').value; // SKU code
+        const rowValues = Array.from(row.querySelectorAll('td')).slice(2).map(td => td.querySelector('input').value); // Other column data
+
+        // Create a dictionary of headers (keys) and row values (values)
+        const dataDict = {};
+        allColumnHeaders.forEach((header, index) => {
+            dataDict[header] = rowValues[index];
+        });
+
+        // Push an object representing each SKU and its extra column data (as a dictionary)
+        skuData.push({
+            sku_code: skuCode,
+            data: dataDict
+        });
+    });
+
+    // Store the SKU data (with extra columns as a dictionary) as JSON in the hidden input
+    document.getElementById('extra_columns_data').value = JSON.stringify(skuData);
+
+    // Submit the form
+    form.submit();
+}
+
+
+
+
+    </script>
+    
+
+{% endblock %}
