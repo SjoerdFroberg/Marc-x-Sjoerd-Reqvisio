@@ -81,18 +81,7 @@ class SKUSearchForm(forms.Form):
 class GeneralQuestionForm(forms.ModelForm):
     class Meta:
         model = GeneralQuestion
-        fields = ['question_text', 'question_type']
-
-    def __init__(self, *args, **kwargs):
-        super(GeneralQuestionForm, self).__init__(*args, **kwargs)
-        self.fields['multiple_choice_options'] = forms.CharField(
-            widget=forms.Textarea(attrs={
-                'placeholder': 'Add options, separated by commas',
-                'class': 'form-control',
-                'rows': 3
-            }),
-            required=False
-        )
+        fields = ['question_text', 'question_type', 'multiple_choice_options']
 
     def clean(self):
         cleaned_data = super().clean()
@@ -102,4 +91,5 @@ class GeneralQuestionForm(forms.ModelForm):
         if question_type in ['Single-select', 'Multi-select'] and not multiple_choice_options:
             self.add_error('multiple_choice_options', 'This field is required for single or multi-select questions.')
 
+        # No further transformation is necessary here since JavaScript now sends the data as a comma-separated string
         return cleaned_data

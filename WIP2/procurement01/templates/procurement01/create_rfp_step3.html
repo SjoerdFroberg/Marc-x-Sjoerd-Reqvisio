@@ -26,7 +26,13 @@
                 </td>
                 <td>{{ form.question_text }}</td>
                 <td>{{ form.question_type }}</td>
-                <td><input type="text" name="{{ form.prefix }}-multiple_choice_options" class="multiple-choice-input form-control" value="{{ form.instance.multiple_choice_options }}"></td>
+                <td>
+                    <!-- Tagify input without name to avoid direct submission -->
+                    <input type="text" class="multiple-choice-input form-control">
+                    
+                    <!-- Hidden input with the correct name for Django form processing -->
+                    <input type="hidden" name="{{ form.prefix }}-multiple_choice_options" class="hidden-multiple-choice-input" value="{{ form.instance.multiple_choice_options }}">
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -37,85 +43,97 @@
 </form>
 
 <a href="{% url 'create_rfp_step4' rfp.id %}" class="btn btn-secondary">Skip to Step 4</a>
-
 {% endblock %}
 
+
 {% block scripts %}
-<!-- Tagify CSS and JS -->
 <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.min.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        let questionIndex = parseInt('{{ formset.total_form_count }}', 10);  // Start from the total count of existing forms
-        const questionTableBody = document.getElementById('question-table-body');
-        const addQuestionBtn = document.getElementById('add-question-btn');
-        const totalFormsInput = document.querySelector('#id_form-TOTAL_FORMS');  // Management form input for total forms
-    
-        // Initialize Tagify on existing multiple choice inputs
-        document.querySelectorAll('.multiple-choice-input').forEach(function (input) {
-            new Tagify(input);  // Initialize Tagify
-        });
-    
-        // Function to add a new question row
-        function addNewQuestionRow() {
-            const newRow = document.createElement('tr');
-    
-            // Create the delete button and question form inputs
-            newRow.innerHTML = '<td><button type="button" class="btn btn-danger remove-question-btn">Remove</button></td>' +
-                `<td><input type="text" name="form-${questionIndex}-question_text" class="form-control"></td>` +
-                `<td><select name="form-${questionIndex}-question_type" class="form-control question-type-select">` +
-                '<option value="">---------</option>' +
-                '<option value="text">Text</option>' +
-                '<option value="Single-select">Single-select</option>' +
-                '<option value="Multi-select">Multi-select</option>' +
-                '<option value="File upload">File upload</option>' +
-                '</select></td>' +
-                `<td><input type="text" name="form-${questionIndex}-multiple_choice_options" class="multiple-choice-input form-control"></td>`;
-    
-            questionTableBody.appendChild(newRow);
-    
-            // Initialize Tagify on the new row's multiple choice input
-            const tagifyInput = newRow.querySelector('.multiple-choice-input');
-            new Tagify(tagifyInput);  // Added semicolon
-    
-            questionIndex += 1;  // Increment the form index
-    
-            // Update the total number of forms in the management form
+    let questionIndex = parseInt('{{ formset.total_form_count }}', 10);
+    const questionTableBody = document.getElementById('question-table-body');
+    const addQuestionBtn = document.getElementById('add-question-btn');
+    const totalFormsInput = document.querySelector('#id_form-TOTAL_FORMS');
+
+    // Initialize Tagify on existing multiple-choice inputs and ensure they are detected
+    document.querySelectorAll('.multiple-choice-input').forEach(function (input) {
+        const tagifyInstance = new Tagify(input);
+        console.log("Initialized Tagify for an input field:", input);
+        input._tagify = tagifyInstance;  // Explicitly set the Tagify instance on the input
+    });
+
+    // Function to add a new question row
+    function addNewQuestionRow() {
+        const newRow = document.createElement('tr');
+
+        newRow.innerHTML = `
+            <td><button type="button" class="btn btn-danger remove-question-btn">Remove</button></td>
+            <td><input type="text" name="form-${questionIndex}-question_text" class="form-control"></td>
+            <td><select name="form-${questionIndex}-question_type" class="form-control question-type-select">
+                <option value="">---------</option>
+                <option value="text">Text</option>
+                <option value="Single-select">Single-select</option>
+                <option value="Multi-select">Multi-select</option>
+                <option value="File upload">File upload</option>
+            </select></td>
+            <td>
+                <input type="text" class="multiple-choice-input form-control">
+                <input type="hidden" name="form-${questionIndex}-multiple_choice_options" class="hidden-multiple-choice-input">
+            </td>`;
+
+        questionTableBody.appendChild(newRow);
+
+        // Initialize Tagify for the new input and store the instance explicitly
+        const tagifyInput = newRow.querySelector('.multiple-choice-input');
+        const tagifyInstance = new Tagify(tagifyInput);
+        console.log("Added and initialized Tagify for a new row:", newRow);
+        tagifyInput._tagify = tagifyInstance;
+
+        questionIndex += 1; // Increment the form index
+        totalFormsInput.value = questionIndex; // Update formset count
+    }
+
+    // Handle "Add Another Question" button click
+    addQuestionBtn.addEventListener('click', addNewQuestionRow);
+
+    // Remove question row
+    questionTableBody.addEventListener('click', function (event) {
+        if (event.target.classList.contains('remove-question-btn')) {
+            event.target.closest('tr').remove();
+            questionIndex -= 1;
             totalFormsInput.value = questionIndex;
+            console.log("Removed a question row. New form count:", questionIndex);
         }
-    
-        // Handle the "Add Another Question" button click
-        addQuestionBtn.addEventListener('click', function () {
-            addNewQuestionRow();
-        });
-    
-        // Delegate event to handle remove question button clicks
-        questionTableBody.addEventListener('click', function (event) {
-            if (event.target.classList.contains('remove-question-btn')) {
-                event.target.closest('tr').remove();  // Remove the row
-    
-                // Update the total number of forms in the management form
-                questionIndex -= 1;
-                totalFormsInput.value = questionIndex;
-            }
-        });
-    
-        // Dynamically show or hide the options input (multiple_choice_options) based on question type
-        questionTableBody.addEventListener('change', function (event) {
-            if (event.target.classList.contains('question-type-select')) {
-                const row = event.target.closest('tr');
-                const input = row.querySelector('.multiple-choice-input');
-                if (event.target.value === 'Single-select' || event.target.value === 'Multi-select') {
-                    input.style.display = 'block';  // Show options input
-                } else {
-                    input.style.display = 'none';  // Hide options input
+    });
+
+    // Update hidden input with comma-separated Tagify data on form submit
+    document.getElementById('question-form').addEventListener('submit', function () {
+        console.log("Submitting form. Checking multiple-choice options...");
+
+        document.querySelectorAll('.multiple-choice-input').forEach(function (input) {
+            const tagifyInstance = input._tagify;
+            if (tagifyInstance) {
+                const tags = tagifyInstance.value.map(item => item.value).join(',');
+
+                const hiddenInput = input.parentNode.querySelector('.hidden-multiple-choice-input');
+                hiddenInput.value = tags; // Set plain text as hidden input's value
+
+                console.log("Set hidden input for multiple-choice options. Value:", hiddenInput.value);
+
+                // Additional check for empty value
+                if (!hiddenInput.value) {
+                    console.error("Hidden input value for mc options is empty.");
                 }
+            } else {
+                console.error("Tagify instance not found for input:", input);
             }
         });
     });
-    </script>
+});
+
     
-
-
+    
+    </script>
 {% endblock %}

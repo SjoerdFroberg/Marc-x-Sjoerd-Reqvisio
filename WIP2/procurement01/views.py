@@ -196,7 +196,7 @@ def create_rfp_step3(request, rfp_id):
                 deleted_instance.delete()
             
             # After saving, redirect to the next step (Step 4)
-            return redirect('create_rfp_step4', rfp_id=rfp.id)
+            
 
     # If the form is not submitted, display the existing questions
     else:
