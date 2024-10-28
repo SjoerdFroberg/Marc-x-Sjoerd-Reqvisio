@@ -81,6 +81,26 @@ body {
 }
 
 
-.multiple-choice-input {
-    display: none !important;
+
+
+.question-text-input,
+.multiple-choice-input,
+.question-type-select {
+    width: 100%; /* Ensures all inputs are the same width within the table */
+    box-sizing: border-box; /* Prevents padding from affecting width */
+}
+
+
+
+.tagify {
+    width: 100% !important; /* Forces full width for Tagify container */
+    display: inline-block !important; /* Ensures it’s visible */
+    min-width: 200px; /* Adjust if needed */
+    padding: 5px; /* Adjust for better usability */
+    border: 1px solid #ccc; /* Optional: add border for better visibility */
+}
+
+.tagify__input {
+    min-height: 30px; /* Forces height to be noticeable */
+    padding: 5px;
 }

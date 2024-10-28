@@ -18,11 +18,10 @@ urlpatterns = [
     path('search_skus/', views.search_skus, name='search_skus'),  # Add this line
     
     path('rfp/create/step3/<int:rfp_id>/', views.create_rfp_step3, name='create_rfp_step3'),
-        path('rfp/create/step4/<int:rfp_id>/', views.create_rfp_step4, name='create_rfp_step4'),
-
-
-
+    path('rfp/create/step4/<int:rfp_id>/', views.create_rfp_step4, name='create_rfp_step4'),
+    
     path('rfps/', views.rfp_list_view, name='rfp_list'),
+
 
 
 ]

@@ -1,7 +1,10 @@
 {% extends 'procurement01/layout.html' %}
 
 {% block content %}
-<h2>List of RFPs</h2>
+<h2>RFPs</h2>
+
+<a href="{% url 'create_rfp_step1' %}" class="btn btn-primary">Create New RFP</a>  
+
 <table class="table">
     <thead>
         <tr>
