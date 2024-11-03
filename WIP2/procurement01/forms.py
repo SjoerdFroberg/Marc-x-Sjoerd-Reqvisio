@@ -1,6 +1,6 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django import forms
-from .models import SKU, Company, RFP, GeneralQuestion, RFP_SKUs
+from .models import SKU, Company, RFP, GeneralQuestion, RFP_SKUs, SKUSpecificQuestion
 import json
 
 class LoginForm(AuthenticationForm):
@@ -46,10 +46,11 @@ class RFP_SKUForm(forms.ModelForm):
         fields = ['sku', 'quantity', 'target_price', 'unit_size']
 
     def __init__(self, *args, **kwargs):
-        company = kwargs.pop('company', None)  # Pass company if needed
+        company = kwargs.pop('company', None)
         super().__init__(*args, **kwargs)
         if company:
             self.fields['sku'].queryset = SKU.objects.filter(company=company)
+
 
 
 
@@ -98,3 +99,23 @@ class GeneralQuestionForm(forms.ModelForm):
 
         # No further transformation is necessary here since JavaScript now sends the data as a comma-separated string
         return cleaned_data
+
+
+
+class SKUSpecificQuestionForm(forms.ModelForm):
+    class Meta:
+        model = SKUSpecificQuestion
+        fields = ['question', 'question_type']
+        labels = {
+            'question': 'Question',
+            'question_type': 'Question Type'
+        }
+        widgets = {
+            'question': forms.TextInput(attrs={'placeholder': 'Enter question text', 'class': 'form-control'}),
+            'question_type': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(SKUSpecificQuestionForm, self).__init__(*args, **kwargs)
+        # Customize the question_type choices display
+        self.fields['question_type'].choices = SKUSpecificQuestion.QUESTION_TYPES

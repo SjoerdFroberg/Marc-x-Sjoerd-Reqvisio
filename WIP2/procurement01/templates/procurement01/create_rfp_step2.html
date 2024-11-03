@@ -10,228 +10,445 @@
 <!-- Search results will be displayed here -->
 <div id="sku-search-results" style="margin-top: 10px;"></div>
 
-
 <form id="rfp-skus-form" method="POST">
     {% csrf_token %}
 
-<table class="table" id="sku-table">
-    <thead>
-        <tr>
-            <th>Remove SKU</th>
-            <th>SKU Name</th>
-            <th>Quantity</th>
-            <th>Unit Size</th>
-            <th>Target Price</th>
-        </tr>
-    </thead>
-    <tbody>
-        <!-- Dynamically added SKUs will go here -->
-    </tbody>
-</table>
-
-
-
+    <div class="table-wrapper">
+        <table class="table sheet-table" id="sku-table">
+            <thead>
+                <tr>
+                    <th>Remove SKU</th>
+                    <th><input type="text" class="column-input" value="SKU Name"></th>
+                    <th><input type="text" class="column-input" value="Quantity"><span class="remove-column-x" onclick="removeColumn(2)">&#10006;</span></th>
+                    <th><input type="text" class="column-input" value="Unit Size"><span class="remove-column-x" onclick="removeColumn(3)">&#10006;</span></th>
+                    <th><input type="text" class="column-input" value="Target Price"><span class="remove-column-x" onclick="removeColumn(4)">&#10006;</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dynamically added SKUs will go here -->
+            </tbody>
+        </table>
+    </div>
 
     <input type="hidden" id="extra_columns_data" name="extra_columns_data" />
-
 </form>
 
 <!-- Button to add extra columns -->
 <button id="add-column" class="btn btn-primary">Add Extra Column</button>
 <button type="button" class="btn btn-primary" onclick="submitForm()">Continue to Step 3</button>
- 
 
 {% endblock %}
 
 {% block scripts %}
 <script>
     document.getElementById('sku-search-input').addEventListener('input', function() {
-    const query = this.value.trim();
-    if (query.length > 0) {
-        fetch(`/procurement01/search_skus/?query=${encodeURIComponent(query)}`)
-            .then(response => response.json())
-            .then(skus => {
-                const searchResults = document.getElementById('sku-search-results');
-                searchResults.innerHTML = '';  // Clear previous results
+        const query = this.value.trim();
+        if (query.length > 0) {
+            fetch(`/procurement01/search_skus/?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(skus => {
+                    const searchResults = document.getElementById('sku-search-results');
+                    searchResults.innerHTML = '';  // Clear previous results
 
-                if (skus.length === 0) {
-                    searchResults.innerHTML = '<p>No SKUs found.</p>';
-                    return;
-                }
+                    if (skus.length === 0) {
+                        searchResults.innerHTML = '<p>No SKUs found.</p>';
+                        return;
+                    }
 
-                skus.forEach(sku => {
-                    const resultItem = document.createElement('div');
-                    resultItem.className = 'search-result-item';
-                    resultItem.style.cursor = 'pointer';
-                    resultItem.innerHTML = `${sku.name} (${sku.sku_code})`;
+                    skus.forEach(sku => {
+                        const resultItem = document.createElement('div');
+                        resultItem.className = 'search-result-item';
+                        resultItem.style.cursor = 'pointer';
+                        resultItem.innerHTML = `${sku.name} (${sku.sku_code})`;
 
-                    // Attach event listener to select the SKU and add to the table
-                    resultItem.addEventListener('click', function() {
-                        addSkuToTable(sku.name, sku.sku_code);
-                        searchResults.innerHTML = '';  // Clear search results after adding
-                        document.getElementById('sku-search-input').value = '';  // Clear the search input
+                        resultItem.addEventListener('click', function() {
+                            addSkuToTable(sku.id, sku.name, sku.sku_code);
+                            searchResults.innerHTML = '';
+                            document.getElementById('sku-search-input').value = ''; // Clear search input
+                        });
+
+                        searchResults.appendChild(resultItem);
                     });
-
-                    searchResults.appendChild(resultItem);
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
                 });
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-            });
-    } else {
-        document.getElementById('sku-search-results').innerHTML = '';  // Clear search results if input is empty
-    }
-});
-
-    
-        // Function to add SKU to the table
-        function addSkuToTable(skuName, skuCode) {
-            const tableBody = document.querySelector('#sku-table tbody');
-            
-            // Check if SKU already exists
-            const existingRow = Array.from(tableBody.querySelectorAll('tr')).find(row => {
-                return row.querySelector('td:nth-child(2)').innerText === skuName;
-            });
-            
-            if (existingRow) {
-                alert("This SKU is already added.");
-                return;
-            }
-    
-            // Add SKU to the table
-            let row = document.createElement('tr');
-            row.innerHTML = `
-                <td><button type="button" class="btn btn-danger remove-sku-btn">Remove</button></td>
-                <td><input type="hidden" name="skus[]" value="${skuCode}">${skuName}</td>
-                <td><input type="number" name="quantities[]" value="1"></td>
-                <td><input type="text" name="unit_sizes[]" value=""></td>
-                <td><input type="text" name="target_prices[]" value=""></td>
-            `;
-            tableBody.appendChild(row);
-    
-            // Attach remove functionality for SKU
-            row.querySelector('.remove-sku-btn').addEventListener('click', function() {
-                row.remove();
-            });
-    
-            // Add empty cells for extra columns if any exist
-            const columnCount = document.querySelectorAll('#sku-table thead th').length;
-            for (let i = 5; i < columnCount; i++) {
-                let newTd = document.createElement('td');
-                newTd.innerHTML = `<input type="text" name="extra_column_${i}[]">`;
-                row.appendChild(newTd);
-            }
+        } else {
+            document.getElementById('sku-search-results').innerHTML = '';
         }
-    
-        // Add new column logic
-        document.getElementById('add-column').addEventListener('click', function() {
-            let tableHead = document.querySelector('#sku-table thead tr');
-    
-            // Create a new header with an input for column name and an 'X' for removal
-            let newTh = document.createElement('th');
-            newTh.style.position = 'relative';
-            newTh.innerHTML = `
-                <input type="text" class="column-input" placeholder="Column Name">
-                <span class="remove-column-x" style="position: absolute; top: 5px; right: 5px; cursor: pointer; display: none;">&#10006;</span>
-            `;
-            tableHead.appendChild(newTh);
-    
-            // Attach remove column button to new column
-            attachRemoveColumnButtons();
-    
-            // Add empty cells for this column to each existing row
-            document.querySelectorAll('#sku-table tbody tr').forEach(row => {
-                let newTd = document.createElement('td');
-                newTd.innerHTML = `<input type="text" name="extra_column_${tableHead.children.length - 1}[]">`;
-                row.appendChild(newTd);
-            });
+    });
+
+    function addSkuToTable(skuId, skuName, skuCode) {
+        const tableBody = document.querySelector('#sku-table tbody');
+
+        const existingRow = Array.from(tableBody.querySelectorAll('input[name="skus[]"]')).find(input => {
+            return input.value === String(skuId);
         });
-    
-        // Show cross ('X') only on hover and attach remove functionality
-        function attachRemoveColumnButtons() {
+
+        if (existingRow) {
+            alert("This SKU is already added.");
+            return;
+        }
+
+        // Dynamically build the row based on the current headers
+        let row = document.createElement('tr');
+        row.innerHTML = `
+            <td><button type="button" class="btn btn-danger remove-sku-btn">Remove</button></td>
+            <td>${skuName}<input type="hidden" name="skus[]" value="${skuId}"></td>
+        `;
+
+        const headerCells = document.querySelectorAll('#sku-table thead th');
+        for (let i = 2; i < headerCells.length; i++) {
+            let newTd = document.createElement('td');
+            newTd.contentEditable = "true";
+            row.appendChild(newTd);
+        }
+
+        tableBody.appendChild(row);
+
+        row.querySelector('.remove-sku-btn').addEventListener('click', function() {
+            row.remove();
+        });
+
+        applyCellNavigation();
+    }
+
+    document.getElementById('add-column').addEventListener('click', function() {
+        let tableHead = document.querySelector('#sku-table thead tr');
+
+        let newTh = document.createElement('th');
+        newTh.style.position = 'relative';
+        newTh.innerHTML = `
+            <input type="text" class="column-input" placeholder="Column Name">
+            <span class="remove-column-x" onclick="removeColumn(${tableHead.children.length})">&#10006;</span>
+        `;
+        tableHead.appendChild(newTh);
+
+        document.querySelectorAll('#sku-table tbody tr').forEach(row => {
+            let newTd = document.createElement('td');
+            newTd.contentEditable = "true";
+            row.appendChild(newTd);
+        });
+
+        const newHeaderInput = newTh.querySelector('.column-input');
+        newHeaderInput.addEventListener('keydown', handleHeaderNavigation);
+
+        applyCellNavigation();
+    });
+
+    function removeColumn(index) {
+        const headerCells = document.querySelectorAll('#sku-table thead th');
+        const rows = document.querySelectorAll('#sku-table tbody tr');
+
+        if (index < 2 || index >= headerCells.length) {
+            console.warn("Attempted to remove an invalid or non-removable column.");
+            return;
+        }
+
+        headerCells[index].remove();
+        rows.forEach(row => {
+            const cell = row.children[index];
+            if (cell) {
+                cell.remove();
+            }
+        });
+
+        // Reassign `onclick` attributes only to header cells that contain `.remove-column-x`
+        document.querySelectorAll('#sku-table thead th .remove-column-x').forEach((span, i) => {
+            const actualIndex = Array.from(span.parentNode.parentNode.children).indexOf(span.parentNode); // Recalculate the index
+            span.setAttribute('onclick', `removeColumn(${actualIndex})`);
+        });
+    }
+
+    function applyCellNavigation() {
+        document.querySelectorAll('#sku-table tbody td[contenteditable="true"]').forEach(cell => {
+            cell.removeEventListener('keydown', handleCellNavigation);
+            cell.addEventListener('keydown', handleCellNavigation);
+        });
+    }
+
+    function handleCellNavigation(event) {
+        const cell = event.target;
+        const currentRow = cell.parentNode;
+        const currentCellIndex = Array.from(currentRow.children).indexOf(cell);
+        let targetCell;
+
+        switch (event.key) {
+            case "ArrowUp":
+                targetCell = currentRow.previousElementSibling?.children[currentCellIndex];
+                break;
+            case "ArrowDown":
+                targetCell = currentRow.nextElementSibling?.children[currentCellIndex];
+                break;
+            case "ArrowLeft":
+                targetCell = cell.previousElementSibling;
+                break;
+            case "ArrowRight":
+                targetCell = cell.nextElementSibling;
+                break;
+            case "Enter":
+                event.preventDefault();
+                targetCell = currentRow.nextElementSibling?.children[currentCellIndex];
+                break;
+        }
+
+        if (targetCell && targetCell.getAttribute("contenteditable") === "true") {
+            event.preventDefault();
+            targetCell.focus();
+        }
+    }
+
+    function handleHeaderNavigation(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            const headerCell = event.target;
+            const headerIndex = Array.from(headerCell.parentNode.parentNode.children).indexOf(headerCell.parentNode);
+            const firstRow = document.querySelector('#sku-table tbody tr');
             
-            document.querySelectorAll('#sku-table thead th').forEach((th, index) => {
-                if (index === 1) return; // Skip the SKU name column, making it non-removable
-                if (index === 0) return; // Skip the SKU name column, making it non-removable
-
-                let removeBtn = document.createElement('span');
-
-                removeBtn.innerHTML = '&#10006;'; // 'X' symbol
-                removeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; cursor: pointer; display: none;';
-                th.style.position = 'relative'; // Required for the absolute positioning of the 'X'
-                th.appendChild(removeBtn);
-    
-                // Show the 'X' when hovering
-                th.addEventListener('mouseenter', function() {
-                    removeBtn.style.display = 'inline';
-                });
-    
-                // Hide the 'X' when not hovering
-                th.addEventListener('mouseleave', function() {
-                    removeBtn.style.display = 'none';
-                });
-    
-                // Remove the column and corresponding cells when 'X' is clicked
-                removeBtn.addEventListener('click', function() {
-                    removeColumn(index);
-                });
-            });
-        }
-    
-        // Function to remove columns
-        function removeColumn(index) {
-            document.querySelectorAll('#sku-table thead th').forEach((th, thIndex) => {
-                if (thIndex === index) {
-                    th.remove();
+            if (firstRow) {
+                const targetCell = firstRow.children[headerIndex];
+                if (targetCell && targetCell.getAttribute("contenteditable") === "true") {
+                    targetCell.focus();
                 }
-            });
-    
-            // Remove corresponding cells from all rows
-            document.querySelectorAll('#sku-table tbody tr').forEach(row => {
-                row.children[index].remove();
-            });
+            }
         }
-    
-        // Attach remove column buttons to all columns on load
-        attachRemoveColumnButtons();
-    
-        // Submit form and move to step 3
-        function submitForm() {
+    }
+
+    document.querySelectorAll('#sku-table thead .column-input').forEach(input => {
+        input.addEventListener('keydown', handleHeaderNavigation);
+    });
+
+    function submitForm() {
     const form = document.getElementById('rfp-skus-form');
     const tableBody = document.querySelector('#sku-table tbody');
-    const skuData = []; // Store each SKU's data separately
+    const skuData = [];
 
-    // Get the headers for the columns (excluding the first two columns: Remove and SKU)
+    // Get the headers in the exact order they appear in the table
     const allColumnHeaders = Array.from(document.querySelectorAll('#sku-table thead th'))
-        .slice(2)
-        .map(th => th.querySelector('.column-input') ? th.querySelector('.column-input').value : th.textContent.trim());
+        .map(th => th.querySelector('.column-input') ? th.querySelector('.column-input').value.toString() : th.textContent.trim());
 
-    // Loop through the table rows and gather the data for each SKU
     tableBody.querySelectorAll('tr').forEach(row => {
-        const skuCode = row.querySelector('input[name="skus[]"]').value; // SKU code
-        const rowValues = Array.from(row.querySelectorAll('td')).slice(2).map(td => td.querySelector('input').value); // Other column data
+        const skuId = row.querySelector('input[name="skus[]"]').value;
+        const rowValues = Array.from(row.querySelectorAll('td'))
+            .slice(2) // Skip the first two columns (Remove SKU and SKU Name)
+            .map(td => td.innerText.trim());
 
-        // Create a dictionary of headers (keys) and row values (values)
-        const dataDict = {};
-        allColumnHeaders.forEach((header, index) => {
-            dataDict[header] = rowValues[index];
+        // Use an array to store key-value pairs for consistent ordering
+        const dataArray = [];
+        allColumnHeaders.slice(2).forEach((header, index) => { // Skip first two columns (Remove SKU and SKU Name)
+            dataArray.push([header, rowValues[index]]);
         });
 
-        // Push an object representing each SKU and its extra column data (as a dictionary)
         skuData.push({
-            sku_code: skuCode,
-            data: dataDict
+            sku_id: skuId,
+            data: dataArray
         });
     });
 
-    // Store the SKU data (with extra columns as a dictionary) as JSON in the hidden input
     document.getElementById('extra_columns_data').value = JSON.stringify(skuData);
-
-    // Submit the form
     form.submit();
 }
 
-    </script>
-    
-
+    applyCellNavigation();
+</script>
 {% endblock %}
+
+/* Base Styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f7f7f7;
+    color: #333;
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background-color: #2d4c3e;
+    height: 100vh;
+    padding: 20px;
+    position: fixed;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    border-right: 1px solid #e0e0e0;
+}
+
+.sidebar a {
+    text-decoration: none;
+    color: #d1d5db;
+    font-size: 1em;
+    font-weight: 500;
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+.sidebar a:hover {
+    background-color: #3c6a56;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #ffffff;
+    color: #333;
+    padding: 10px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 280px;
+    padding: 40px;
+    width: calc(100% - 280px);
+}
+
+/* Page Header */
+h2 {
+    color: #2d4c3e;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+/* Table Wrapper for Horizontal Scrolling */
+.table-wrapper {
+    overflow-x: auto; /* Enable horizontal scrolling */
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+    margin-top: 20px;
+    padding: 15px;
+    width: 100%;
+    max-width: 100%; /* Ensure wrapper does not exceed the viewport width */
+    display: block;
+    white-space: nowrap; /* Prevent wrapping of table content */
+}
+
+.sheet-table {
+    border-collapse: collapse;
+    width: auto; /* Auto width to allow scrolling */
+    min-width: 800px; /* Minimum width to activate scrolling when there are many columns */
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.sheet-table th, .sheet-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.sheet-table th {
+    background-color: #f2f5f4;
+    color: #2d4c3e;
+    font-weight: 600;
+    position: relative;
+}
+
+.sheet-table td {
+    background-color: #ffffff;
+    color: #333;
+}
+
+.sheet-table td[contenteditable="true"]:focus {
+    outline: 2px solid #6ca385;
+    background-color: #f7faf9;
+}
+
+.column-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: #2d4c3e;
+    font-weight: 600;
+}
+
+/* Remove Column Button */
+.remove-column-x {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: #d32f2f;
+    font-size: 1.2em;
+    cursor: pointer;
+    display: none;
+}
+
+.sheet-table th:hover .remove-column-x {
+    display: inline;
+}
+
+.remove-column-x:hover {
+    color: #c62828;
+}
+
+/* Buttons */
+.btn {
+    font-size: 0.9em;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s;
+}
+
+.btn-primary {
+    background-color: #3c6a56;
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background-color: #2d4c3e;
+}
+
+/* Search Input */
+#sku-search-input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #333;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* SKU Cards */
+.table-wrapper .sheet-table tbody tr {
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.table-wrapper .sheet-table tbody tr:hover {
+    background-color: #f7faf9;
+    box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Actions Column */
+.table-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.search-result-item {
+    padding: 10px;
+    background-color: #f7faf9;
+    border-radius: 8px;
+    margin-top: 5px;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.search-result-item:hover {
+    background-color: #e6f1ef;
+}

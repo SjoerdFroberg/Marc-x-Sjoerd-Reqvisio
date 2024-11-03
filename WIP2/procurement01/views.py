@@ -6,10 +6,17 @@ from django.forms import modelformset_factory, inlineformset_factory
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 import json 
+from django.db import transaction 
+from django.forms.models import model_to_dict
+from collections import OrderedDict
+from django.http import HttpResponse 
 
 
-from .models import SKU, Company, RFP, GeneralQuestion, RFP_SKUs
-from .forms import SKUForm, SupplierForm, RFPBasicForm, SKUSearchForm, GeneralQuestionForm, RFP_SKUForm, RFPForm
+
+
+
+from .models import SKU, Company, RFP, GeneralQuestion, RFP_SKUs,SKUSpecificQuestion
+from .forms import SKUForm, SupplierForm, RFPBasicForm, SKUSearchForm, GeneralQuestionForm, RFP_SKUForm, RFPForm, SKUSpecificQuestionForm
 
 
 
@@ -111,7 +118,6 @@ def create_rfp_step1(request):
     return render(request, 'procurement01/create_rfp_step1.html', {'form': form})
 
 
-
 @login_required
 def search_skus(request):
     query = request.GET.get('query', '')
@@ -120,7 +126,7 @@ def search_skus(request):
     # Only proceed with the search if there is a query
     if query:
         skus = SKU.objects.filter(company=company, name__icontains=query)
-        sku_data = [{'name': sku.name, 'sku_code': sku.sku_code} for sku in skus]
+        sku_data = [{'id': sku.id, 'name': sku.name, 'sku_code': sku.sku_code} for sku in skus]
     else:
         sku_data = []  # Return an empty list if there is no query
 
@@ -132,29 +138,23 @@ def search_skus(request):
 RFP_SKUFormSet = inlineformset_factory(RFP, RFP_SKUs, fields=('sku',), extra=1)
 
 
-
 @login_required
 def create_rfp_step2(request, rfp_id):
     rfp = get_object_or_404(RFP, id=rfp_id)
 
     if request.method == 'POST':
-        skus = request.POST.getlist('skus[]')
-
-        # Extract the per-SKU extra column data
+        sku_ids = request.POST.getlist('skus[]')
         extra_columns_data = request.POST.get('extra_columns_data')
         extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
 
-        # Iterate over the SKUs and save the related data
-        for sku_code in skus:
-            sku = get_object_or_404(SKU, sku_code=sku_code)
+        for sku_data in extra_columns_json:
+            sku_id = sku_data['sku_id']
+            sku = get_object_or_404(SKU, id=sku_id)
             rfp_sku = RFP_SKUs.objects.create(rfp=rfp, sku=sku)
 
-            # Find the matching extra data for this specific SKU
-            matching_sku_data = next((item['data'] for item in extra_columns_json if item['sku_code'] == sku_code), None)
-
-            if matching_sku_data:
-                # Save the dictionary as extra data for this specific SKU
-                rfp_sku.set_extra_data(matching_sku_data)
+            # Convert dataArray back into a dictionary, maintaining order
+            data_ordered = OrderedDict(sku_data['data'])
+            rfp_sku.set_extra_data(data_ordered)
 
             rfp_sku.save()
 
@@ -166,7 +166,6 @@ def create_rfp_step2(request, rfp_id):
         'rfp': rfp,
         'sku_search_form': sku_search_form,
     })
-
 
 
 
@@ -209,11 +208,91 @@ def create_rfp_step3(request, rfp_id):
     })
 
 
-
-
 @login_required
 def create_rfp_step4(request, rfp_id):
-    pass 
+    # Get the RFP instance
+    rfp = get_object_or_404(RFP, id=rfp_id)
+    
+    # Fetch all RFP_SKUs associated with this RFP
+    rfp_skus = RFP_SKUs.objects.filter(rfp=rfp)
+
+    # Process SKUs to pass to the template
+    processed_skus = []
+    extra_columns = []
+
+    for rfp_sku in rfp_skus:
+        extra_data = rfp_sku.get_extra_data()
+        if not extra_columns:
+            extra_columns = list(extra_data.keys())  # Store the keys only once from the first SKU
+            print(extra_data)
+            print(extra_columns)
+        processed_skus.append({
+            'sku_id': rfp_sku.id,
+            'sku_name': rfp_sku.sku.name,
+            'extra_data': extra_data,
+        })
+        print(processed_skus)
+
+    # Handle form submission
+    if request.method == 'POST':
+        # Retrieve the JSON data for sku_specific_data from the form
+        sku_specific_data = request.POST.get('sku_specific_data')
+        questions_data = json.loads(sku_specific_data) if sku_specific_data else []
+
+        # Clear any existing SKU-specific questions for this RFP to prevent duplicates
+        SKUSpecificQuestion.objects.filter(rfp=rfp).delete()
+
+        # Save each question once for this RFP
+        for question_data in questions_data:
+            SKUSpecificQuestion.objects.create(
+                rfp=rfp,
+                question=question_data['question'],
+                question_type=question_data['question_type']
+            )
+
+        # Redirect to the next step
+        print("Form submitted successfully, data saved to DB")
+        return HttpResponse("Form submitted successfully, data saved to DB") 
+
+    # Pass context to the template
+    context = {
+        'rfp': rfp,
+        'extra_columns': extra_columns,
+        'processed_skus': processed_skus,
+        'question_types': SKUSpecificQuestion.QUESTION_TYPES,
+    }
+    return render(request, 'procurement01/create_rfp_step4.html', context)
+
+def view_rfp_skus(request, rfp_id):
+    rfp = get_object_or_404(RFP, id=rfp_id)
+    rfp_skus = RFP_SKUs.objects.filter(rfp=rfp)
+    
+    processed_skus = []
+    extra_columns = []
+
+    for rfp_sku in rfp_skus:
+        extra_data = rfp_sku.get_extra_data()  # This should return the JSON data in the original order
+        print(extra_data)
+        if not extra_columns:
+            # Collect columns based on the first SKU's extra data keys in order
+            extra_columns = list(extra_data.keys())
+            print(extra_columns)
+        processed_skus.append({
+            'sku_name': rfp_sku.sku.name,
+            'extra_data': extra_data,
+        })
+        print(processed_skus)
+    
+    context = {
+        'rfp': rfp,
+        'extra_columns': extra_columns,
+        'processed_skus': processed_skus,
+    }
+    print(context)
+    return render(request, 'procurement01/view_rfp_skus.html', context)
+
+
+    
 
 @login_required
 def rfp_list_view(request):

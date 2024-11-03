@@ -40,7 +40,7 @@ class SKU(models.Model):
     image_url = models.URLField(blank=True, null=True)  # Optional image URL
 
     def __str__(self):
-        return self.name
+        return self.name 
     
 
 class RFP_SKUs(models.Model):
@@ -89,3 +89,19 @@ class GeneralQuestion(models.Model):
 
     def __str__(self):
         return self.question_text
+    
+
+class SKUSpecificQuestion(models.Model):
+    QUESTION_TYPES = [
+        ('text', 'Text'),
+        ('number', 'Number'),
+        ('file', 'File Upload'),
+        ('date', 'Date'),
+    ]
+
+    rfp = models.ForeignKey('RFP', on_delete=models.CASCADE, related_name='sku_specific_questions')
+    question = models.CharField(max_length=255)
+    question_type = models.CharField(max_length=50, choices=QUESTION_TYPES)
+
+    def __str__(self):
+        return f"{self.question} ({self.get_question_type_display()})"

@@ -1,106 +1,199 @@
+/* Base Styles */
 body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f7f7f7;
+    color: #333;
     display: flex;
+    margin: 0;
+    padding: 0;
 }
 
+/* Sidebar */
 .sidebar {
-    width: 250px;
-    background-color: #f8f9fa;
+    width: 260px;
+    background-color: #2d4c3e;
     height: 100vh;
     padding: 20px;
     position: fixed;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    border-right: 1px solid #e0e0e0;
 }
 
 .sidebar a {
     text-decoration: none;
-    color: #333;
-    display: block;
-    margin: 10px 0;
-    padding: 10px;
-    border-radius: 5px;
+    color: #d1d5db;
+    font-size: 1em;
+    font-weight: 500;
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: background-color 0.3s;
 }
 
 .sidebar a:hover {
-    background-color: #e9ecef;
+    background-color: #3c6a56;
 }
 
+/* Navbar */
+.navbar {
+    background-color: #ffffff;
+    color: #333;
+    padding: 10px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Main Content */
 .main-content {
-    margin-left: 250px;
-    padding: 20px;
-    width: 100%;
-    background-color: F5F6F6; /* This should be lowercase */
+    margin-left: 280px;
+    padding: 40px;
+    width: calc(100% - 280px);
 }
 
-.card {
+/* Page Header */
+h2 {
+    color: #2d4c3e;
+    font-weight: 600;
     margin-bottom: 20px;
 }
 
-.clickable-row:hover {
-    background-color: #f5f5f5;  /* Light grey background on hover */
-    cursor: pointer;  /* Change cursor to pointer (hand icon) */
-    
-}
-
-.rfp-element {
-    padding: 10px;
-    border: 1px solid #ddd;
-    margin-bottom: 15px;
-}
-
-
-
-.dropdown-menu {
-    display: none;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    position: absolute;
+/* Table Wrapper for Horizontal Scrolling */
+.table-wrapper {
+    overflow-x: auto; /* Enable horizontal scrolling */
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+    margin-top: 20px;
+    padding: 15px;
     width: 100%;
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 1000;
+    max-width: 100%; /* Ensure wrapper does not exceed the viewport width */
+    display: block;
+    white-space: nowrap; /* Prevent wrapping of table content */
 }
 
-.dropdown-item {
-    padding: 8px;
-    cursor: pointer;
+.sheet-table {
+    border-collapse: collapse;
+    width: auto; /* Auto width to allow scrolling */
+    min-width: 800px; /* Minimum width to activate scrolling when there are many columns */
+    border-radius: 8px;
+    overflow: hidden;
 }
 
-.dropdown-item:hover {
-    background-color: #f0f0f0;
+.sheet-table th, .sheet-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e6e6e6;
 }
 
+.sheet-table th {
+    background-color: #f2f5f4;
+    color: #2d4c3e;
+    font-weight: 600;
+    position: relative;
+}
+
+.sheet-table td {
+    background-color: #ffffff;
+    color: #333;
+}
+
+.sheet-table td[contenteditable="true"]:focus {
+    outline: 2px solid #6ca385;
+    background-color: #f7faf9;
+}
+
+.column-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: #2d4c3e;
+    font-weight: 600;
+}
+
+/* Remove Column Button */
 .remove-column-x {
-    color: #333; /* Make it a soft grey */
-    font-weight: bold;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: #d32f2f;
     font-size: 1.2em;
     cursor: pointer;
-    transition: color 0.3s;
+    display: none;
+}
+
+.sheet-table th:hover .remove-column-x {
+    display: inline;
 }
 
 .remove-column-x:hover {
-    color: #ff0000; /* Red when hovered */
+    color: #c62828;
 }
 
-
-
-
-.question-text-input,
-.multiple-choice-input,
-.question-type-select {
-    width: 100%; /* Ensures all inputs are the same width within the table */
-    box-sizing: border-box; /* Prevents padding from affecting width */
+/* Buttons */
+.btn {
+    font-size: 0.9em;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s;
 }
 
-
-
-.tagify {
-    width: 100% !important; /* Forces full width for Tagify container */
-    display: inline-block !important; /* Ensures it’s visible */
-    min-width: 200px; /* Adjust if needed */
-    padding: 5px; /* Adjust for better usability */
-    border: 1px solid #ccc; /* Optional: add border for better visibility */
+.btn-primary {
+    background-color: #3c6a56;
+    color: #ffffff;
 }
 
-.tagify__input {
-    min-height: 30px; /* Forces height to be noticeable */
-    padding: 5px;
+.btn-primary:hover {
+    background-color: #2d4c3e;
+}
+
+/* Search Input */
+#sku-search-input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #333;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* SKU Cards */
+.table-wrapper .sheet-table tbody tr {
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.table-wrapper .sheet-table tbody tr:hover {
+    background-color: #f7faf9;
+    box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Actions Column */
+.table-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.search-result-item {
+    padding: 10px;
+    background-color: #f7faf9;
+    border-radius: 8px;
+    margin-top: 5px;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.search-result-item:hover {
+    background-color: #e6f1ef;
 }
