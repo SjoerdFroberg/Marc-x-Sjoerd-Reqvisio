@@ -13,8 +13,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Check that tableHeadRow1 and tableHeadRow2 are being selected correctly
     console.log("Table Head Row 1:", tableHeadRow1);
     console.log("Table Head Row 2:", tableHeadRow2);
-
-
     
 
     // Add new question column
@@ -93,19 +91,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.submitForm = function() {
         console.log("submitForm function triggered");
+        console.log("initial count:" + initialColumnCount);
     
-        const tableHeadRow1 = document.querySelector('#sku-specific-table thead tr:first-child');
-        const tableHeadRow2 = document.querySelector('#sku-specific-table thead tr:nth-child(2)');
         
         // Collect question headers (column input values)
         const questionHeaders = Array.from(tableHeadRow1.querySelectorAll('th input.column-input'))
             .map(input => input.value.trim())
-            .slice(initialColumnCount);
+            .slice(initialColumnCount+1);
+
+            console.log("question headers:" + questionHeaders);
     
         // Collect question types (select values)
-        const questionTypes = Array.from(tableHeadRow2.querySelectorAll('th select'))
-            .map(select => select.value)
-            .slice(initialColumnCount);
+        const questionTypes = Array.from(tableHeadRow2.querySelectorAll('th select.question-type-select'))
+            .map(select => select.value);
+
+            console.log("question types:" + questionTypes);
     
         const questionsData = [];
         for (let i = 0; i < questionHeaders.length; i++) {
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => {
             console.log("Submitting form");
             document.getElementById('rfp-sku-questions-form').submit();
-        }, 5000); // 5000ms = 5 seconds delay
+        }, 50000); // 5000ms = 5 seconds delay
     };
     
 });

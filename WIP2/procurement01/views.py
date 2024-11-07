@@ -263,6 +263,8 @@ def create_rfp_step4(request, rfp_id):
     }
     return render(request, 'procurement01/create_rfp_step4.html', context)
 
+
+@login_required
 def view_rfp_skus(request, rfp_id):
     rfp = get_object_or_404(RFP, id=rfp_id)
     rfp_skus = RFP_SKUs.objects.filter(rfp=rfp)
