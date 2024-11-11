@@ -19,9 +19,9 @@
                 <tr>
                     <th>Remove SKU</th>
                     <th><input type="text" class="column-input" value="SKU Name"></th>
-                    <th><input type="text" class="column-input" value="Quantity"><span class="remove-column-x" onclick="removeColumn(2)">&#10006;</span></th>
-                    <th><input type="text" class="column-input" value="Unit Size"><span class="remove-column-x" onclick="removeColumn(3)">&#10006;</span></th>
-                    <th><input type="text" class="column-input" value="Target Price"><span class="remove-column-x" onclick="removeColumn(4)">&#10006;</span></th>
+                    <th><input type="text" class="column-input" value="Quantity"><span class="remove-column-x" onclick="removeColumn(2)">&#x2715;</span></th>
+                    <th><input type="text" class="column-input" value="Unit Size"><span class="remove-column-x" onclick="removeColumn(3)">&#x2715;</span></th>
+                    <th><input type="text" class="column-input" value="Target Price"><span class="remove-column-x" onclick="removeColumn(4)">&#x2715;</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -120,7 +120,7 @@
         newTh.style.position = 'relative';
         newTh.innerHTML = `
             <input type="text" class="column-input" placeholder="Column Name">
-            <span class="remove-column-x" onclick="removeColumn(${tableHead.children.length})">&#10006;</span>
+            <span class="remove-column-x" onclick="removeColumn(${tableHead.children.length})">&#x2715;</span>
         `;
         tableHead.appendChild(newTh);
 

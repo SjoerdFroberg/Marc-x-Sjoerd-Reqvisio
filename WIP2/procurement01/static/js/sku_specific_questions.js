@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => {
             console.log("Submitting form");
             document.getElementById('rfp-sku-questions-form').submit();
-        }, 50000); // 5000ms = 5 seconds delay
+        }, 5000); // 5000ms = 5 seconds delay
     };
     
 });
