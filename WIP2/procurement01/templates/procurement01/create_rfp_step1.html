@@ -10,8 +10,9 @@
             <h3 class="mb-0">Create RFP - Step 1: Title and Description</h3>
         </div>
         <div class="card-body">
-            <form method="post" novalidate>
+            <form method="post" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
+
                 <div class="form-group mb-4">
                     <label for="id_title" class="form-label fw-bold text-secondary">RFP Title</label>
                     {{ form.title }}
@@ -21,6 +22,7 @@
                         </div>
                     {% endif %}
                 </div>
+
                 <div class="form-group mb-4">
                     <label for="id_description" class="form-label fw-bold text-secondary">RFP Description</label>
                     {{ form.description }}
@@ -30,6 +32,12 @@
                         </div>
                     {% endif %}
                 </div>
+
+                <div class="form-group mb-4">
+                    <label for="id_files" class="form-label fw-bold text-secondary">Attach Files</label>
+                    <input type="file" name="files" id="id_files" class="form-control" multiple>
+                </div>
+
                 <div class="d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary">Next: Add SKUs</button>
                 </div>

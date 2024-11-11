@@ -6,9 +6,9 @@
 <h2>Create RFP - Step 2: Add SKUs to "{{ rfp.title }}"</h2>
 
 <!-- Search input -->
-<input type="text" id="sku-search-input" placeholder="Search for SKUs..." autocomplete="off">
+<input type="text" id="sku-search-input" class="form-control" placeholder="Search for SKUs..." autocomplete="off">
 <!-- Search results will be displayed here -->
-<div id="sku-search-results" style="margin-top: 10px;"></div>
+<div id="sku-search-results" class="sku-search-results"></div>
 
 <form id="rfp-skus-form" method="POST">
     {% csrf_token %}
@@ -19,9 +19,24 @@
                 <tr>
                     <th>Remove SKU</th>
                     <th><input type="text" class="column-input" value="SKU Name"></th>
-                    <th><input type="text" class="column-input" value="Quantity"><span class="remove-column-x" onclick="removeColumn(2)">&#x2715;</span></th>
-                    <th><input type="text" class="column-input" value="Unit Size"><span class="remove-column-x" onclick="removeColumn(3)">&#x2715;</span></th>
-                    <th><input type="text" class="column-input" value="Target Price"><span class="remove-column-x" onclick="removeColumn(4)">&#x2715;</span></th>
+                    <th>
+                        <input type="text" class="column-input" value="Quantity">
+                        <button type="button" class="remove-column-x" onclick="removeColumn(2)">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </th>
+                    <th>
+                        <input type="text" class="column-input" value="Unit Size">
+                        <button type="button" class="remove-column-x" onclick="removeColumn(3)">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </th>
+                    <th>
+                        <input type="text" class="column-input" value="Target Price">
+                        <button type="button" class="remove-column-x" onclick="removeColumn(4)">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -38,6 +53,7 @@
 <button type="button" class="btn btn-primary" onclick="submitForm()">Continue to Step 3</button>
 
 {% endblock %}
+
 
 {% block scripts %}
 <script>
@@ -120,7 +136,10 @@
         newTh.style.position = 'relative';
         newTh.innerHTML = `
             <input type="text" class="column-input" placeholder="Column Name">
-            <span class="remove-column-x" onclick="removeColumn(${tableHead.children.length})">&#x2715;</span>
+            <button type="button" class="remove-column-x" onclick="removeColumn(${tableHead.children.length})">
+                <i class="bi bi-x-circle"></i>
+            </button>
+
         `;
         tableHead.appendChild(newTh);
 
@@ -253,202 +272,3 @@
 </script>
 {% endblock %}
 
-/* Base Styles */
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f7f7f7;
-    color: #333;
-    display: flex;
-    margin: 0;
-    padding: 0;
-}
-
-/* Sidebar */
-.sidebar {
-    width: 260px;
-    background-color: #2d4c3e;
-    height: 100vh;
-    padding: 20px;
-    position: fixed;
-    color: #ffffff;
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-    border-right: 1px solid #e0e0e0;
-}
-
-.sidebar a {
-    text-decoration: none;
-    color: #d1d5db;
-    font-size: 1em;
-    font-weight: 500;
-    padding: 10px 15px;
-    border-radius: 8px;
-    transition: background-color 0.3s;
-}
-
-.sidebar a:hover {
-    background-color: #3c6a56;
-}
-
-/* Navbar */
-.navbar {
-    background-color: #ffffff;
-    color: #333;
-    padding: 10px 20px;
-    border-bottom: 1px solid #e0e0e0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
-}
-
-/* Main Content */
-.main-content {
-    margin-left: 280px;
-    padding: 40px;
-    width: calc(100% - 280px);
-}
-
-/* Page Header */
-h2 {
-    color: #2d4c3e;
-    font-weight: 600;
-    margin-bottom: 20px;
-}
-
-/* Table Wrapper for Horizontal Scrolling */
-.table-wrapper {
-    overflow-x: auto; /* Enable horizontal scrolling */
-    border-radius: 12px;
-    background-color: #ffffff;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
-    margin-top: 20px;
-    padding: 15px;
-    width: 100%;
-    max-width: 100%; /* Ensure wrapper does not exceed the viewport width */
-    display: block;
-    white-space: nowrap; /* Prevent wrapping of table content */
-}
-
-.sheet-table {
-    border-collapse: collapse;
-    width: auto; /* Auto width to allow scrolling */
-    min-width: 800px; /* Minimum width to activate scrolling when there are many columns */
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.sheet-table th, .sheet-table td {
-    padding: 12px 16px;
-    text-align: left;
-    border-bottom: 1px solid #e6e6e6;
-}
-
-.sheet-table th {
-    background-color: #f2f5f4;
-    color: #2d4c3e;
-    font-weight: 600;
-    position: relative;
-}
-
-.sheet-table td {
-    background-color: #ffffff;
-    color: #333;
-}
-
-.sheet-table td[contenteditable="true"]:focus {
-    outline: 2px solid #6ca385;
-    background-color: #f7faf9;
-}
-
-.column-input {
-    width: 100%;
-    border: none;
-    background: transparent;
-    color: #2d4c3e;
-    font-weight: 600;
-}
-
-/* Remove Column Button */
-.remove-column-x {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    color: #d32f2f;
-    font-size: 1.2em;
-    cursor: pointer;
-    display: none;
-}
-
-.sheet-table th:hover .remove-column-x {
-    display: inline;
-}
-
-.remove-column-x:hover {
-    color: #c62828;
-}
-
-/* Buttons */
-.btn {
-    font-size: 0.9em;
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border: none;
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-    transition: background-color 0.3s;
-}
-
-.btn-primary {
-    background-color: #3c6a56;
-    color: #ffffff;
-}
-
-.btn-primary:hover {
-    background-color: #2d4c3e;
-}
-
-/* Search Input */
-#sku-search-input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 10px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    background-color: #ffffff;
-    color: #333;
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-/* SKU Cards */
-.table-wrapper .sheet-table tbody tr {
-    transition: background-color 0.3s, box-shadow 0.3s;
-}
-
-.table-wrapper .sheet-table tbody tr:hover {
-    background-color: #f7faf9;
-    box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.05);
-}
-
-/* Actions Column */
-.table-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.search-result-item {
-    padding: 10px;
-    background-color: #f7faf9;
-    border-radius: 8px;
-    margin-top: 5px;
-    color: #333;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.search-result-item:hover {
-    background-color: #e6f1ef;
-}

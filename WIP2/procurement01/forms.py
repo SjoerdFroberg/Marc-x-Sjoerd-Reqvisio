@@ -31,7 +31,7 @@ class SupplierForm(forms.ModelForm):
 class RFPBasicForm(forms.ModelForm):
     class Meta:
         model = RFP
-        fields = ['title', 'description']  # Only show title and description in Step 1
+        fields = ['title', 'description']  # Ensure general_info_files is included here
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter RFP Title'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Enter RFP Description'}),

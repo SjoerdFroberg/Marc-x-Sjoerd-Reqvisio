@@ -15,7 +15,7 @@ from django.http import HttpResponse
 
 
 
-from .models import SKU, Company, RFP, GeneralQuestion, RFP_SKUs,SKUSpecificQuestion
+from .models import SKU, Company, RFP, GeneralQuestion, RFP_SKUs,SKUSpecificQuestion, RFPFile
 from .forms import SKUForm, SupplierForm, RFPBasicForm, SKUSearchForm, GeneralQuestionForm, RFP_SKUForm, RFPForm, SKUSpecificQuestionForm
 
 
@@ -104,13 +104,15 @@ def create_supplier_view(request):
     return render(request, 'procurement01/supplier_form.html', {'form': form})
 
 @login_required
-# Step 1: Create RFP (Title and Description)
+# Step 1: Create RFP (Title, Description, and Files)
 def create_rfp_step1(request):
     if request.method == 'POST':
         form = RFPBasicForm(request.POST)
         if form.is_valid():
             rfp = form.save()
-            # After saving the title and description, redirect to step 2
+            # Save each uploaded file
+            for file in request.FILES.getlist('files'):
+                RFPFile.objects.create(rfp=rfp, file=file)
             return redirect('create_rfp_step2', rfp_id=rfp.id)
     else:
         form = RFPBasicForm()

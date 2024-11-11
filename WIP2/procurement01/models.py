@@ -64,8 +64,12 @@ class RFP_SKUs(models.Model):
 class RFP(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
+
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
 
     def __str__(self):
         return self.title
@@ -73,6 +77,16 @@ class RFP(models.Model):
     @property
     def skus(self):
         return self.rfp_skus_set.all()  # This will return all related SKUs through the RFP_SKUs table
+
+
+class RFPFile(models.Model):
+    rfp = models.ForeignKey(RFP, related_name='files', on_delete=models.CASCADE)
+    file = models.FileField(upload_to='rfp_files/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.rfp.title} - {self.file.name}"
+
 
 class GeneralQuestion(models.Model):
     QUESTION_TYPES = [
