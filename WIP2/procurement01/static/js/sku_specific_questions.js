@@ -1,4 +1,22 @@
 document.addEventListener('DOMContentLoaded', function () {
+
+    // Full-screen toggle functionality
+    document.getElementById('full-screen-toggle').addEventListener('click', function () {
+        const fullScreenContainer = document.getElementById('full-screen-container');
+        const fullScreenButton = document.getElementById('full-screen-toggle');
+
+        if (!fullScreenContainer.classList.contains('full-screen')) {
+            // Enter full-screen mode
+            fullScreenContainer.classList.add('full-screen');
+            fullScreenButton.textContent = 'Exit Full Screen';
+            fullScreenButton.classList.add('full-screen-exit');
+        } else {
+            // Exit full-screen mode
+            fullScreenContainer.classList.remove('full-screen');
+            fullScreenButton.textContent = 'Full Screen';
+            fullScreenButton.classList.remove('full-screen-exit');
+        }
+    });
     
     // Retrieve extra_columns from the hidden <div>
     const extraColumnsElement = document.getElementById('extra-columns-data');
