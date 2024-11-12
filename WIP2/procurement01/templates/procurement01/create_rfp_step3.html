@@ -47,112 +47,155 @@
 
 
 {% block scripts %}
+<!-- Include Tagify JS and CSS -->
+<script src="https://unpkg.com/@yaireo/tagify"></script>
+<link rel="stylesheet" href="https://unpkg.com/@yaireo/tagify/dist/tagify.css">
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    let questionIndex = parseInt('{{ formset.total_form_count }}', 10);
-    const questionTableBody = document.getElementById('question-table-body');
-    const addQuestionBtn = document.getElementById('add-question-btn');
-    const totalFormsInput = document.querySelector('#id_form-TOTAL_FORMS');
+document.addEventListener('DOMContentLoaded', function() {
 
-    // Function to initialize Tagify on a given input
-    function initializeTagify(input) {
-        if (input) {
-            const tagifyInstance = new Tagify(input);
-            input._tagify = tagifyInstance;
-            console.log("Initialized Tagify for input:", input);
-        }
-    }
+    // Function to initialize Tagify and show/hide logic for a row
+    function initializeRow(row) {
+        var questionTypeSelect = row.querySelector('.question-type-select');
+        var multipleChoiceInput = row.querySelector('.multiple-choice-input');
+        var hiddenMultipleChoiceInput = row.querySelector('.hidden-multiple-choice-input');
 
-    // Show/hide the Tagify input based on the question type selected
-    function toggleTagifyInput(row) {
-        const questionTypeSelect = row.querySelector('.question-type-select');
-        const tagifyInput = row.querySelector('.multiple-choice-input');
-        
-        // Show Tagify input only for Single-select and Multi-select
-        if (questionTypeSelect.value === 'Single-select' || questionTypeSelect.value === 'Multi-select') {
-            tagifyInput.style.display = 'block';
-            initializeTagify(tagifyInput); // Initialize Tagify if not already initialized
-        } else {
-            tagifyInput.style.display = 'none';
-            if (tagifyInput._tagify) {
-                tagifyInput._tagify.removeAll(); // Clear any Tagify data if hidden
+        var tagify;
+
+        function toggleMultipleChoiceInput() {
+            var selectedType = questionTypeSelect.value;
+            if (selectedType === 'Single-select' || selectedType === 'Multi-select') {
+                multipleChoiceInput.style.display = 'block';
+                // Initialize Tagify if not already initialized
+                if (!tagify) {
+                    tagify = new Tagify(multipleChoiceInput);
+                    // Load existing tags from the hidden input value
+                    if (hiddenMultipleChoiceInput.value) {
+                        tagify.addTags(hiddenMultipleChoiceInput.value.split(','));
+                    }
+                    // When tags change, update the hidden input
+                    tagify.on('change', function() {
+                        hiddenMultipleChoiceInput.value = tagify.value.map(item => item.value).join(',');
+                    });
+                }
+            } else {
+                multipleChoiceInput.style.display = 'none';
+                // Destroy Tagify instance if exists
+                if (tagify) {
+                    tagify.destroy();
+                    tagify = null;
+                }
+                // Clear the hidden input
+                hiddenMultipleChoiceInput.value = '';
             }
         }
+
+        // Bind the change event to the question type select
+        questionTypeSelect.addEventListener('change', toggleMultipleChoiceInput);
+
+        // Initialize the multiple choice input based on the initial value
+        toggleMultipleChoiceInput();
     }
 
-    // Initialize Tagify on all existing multiple-choice inputs and set event listener on question-type selects
-    document.querySelectorAll('.multiple-choice-input').forEach((input, index) => {
-        const row = input.closest('tr');
-        const questionTypeSelect = row.querySelector('.question-type-select');
-
-        // Initialize Tagify on load if the initial type is Multi-select or Single-select
-        if (questionTypeSelect.value === 'Single-select' || questionTypeSelect.value === 'Multi-select') {
-            initializeTagify(input);
-            input.style.display = 'block';
-        }
-
-        // Add change event listener to toggle Tagify input visibility
-        questionTypeSelect.addEventListener('change', () => 
-        toggleTagifyInput(row));
+    // Initialize all existing rows
+    var rows = document.querySelectorAll('#question-table-body tr');
+    rows.forEach(function(row) {
+        initializeRow(row);
     });
 
-    // Function to add a new question row
-    function addNewQuestionRow() {
-        const newRow = document.createElement('tr');
+    // Add functionality to the 'Add Another Question' button
+    var addQuestionBtn = document.getElementById('add-question-btn');
+    addQuestionBtn.addEventListener('click', function() {
+        // Get the total number of forms from the management form
+        var totalFormsInput = document.querySelector('#id_form-TOTAL_FORMS');
+        var totalForms = parseInt(totalFormsInput.value);
+
+        // Create a new row
+        var newRow = document.createElement('tr');
 
         newRow.innerHTML = `
-            <td><button type="button" class="btn btn-danger remove-question-btn">Remove</button></td>
-            <td><input type="text" name="form-${questionIndex}-question_text" class="form-control question-text-input"></td>
-            <td><select name="form-${questionIndex}-question_type" class="form-control question-type-select">
-                <option value="">---------</option>
-                <option value="text">Text</option>
-                <option value="Single-select">Single-select</option>
-                <option value="Multi-select">Multi-select</option>
-                <option value="File upload">File upload</option>
-            </select></td>
             <td>
-                <input type="text" class="multiple-choice-input form-control" style="display: none;">
-                <input type="hidden" name="form-${questionIndex}-multiple_choice_options" class="hidden-multiple-choice-input">
-            </td>`;
+                <button type="button" class="btn btn-danger remove-question-btn">Remove</button>
+            </td>
+            <td><input type="text" name="form-${totalForms}-question_text" class="form-control"></td>
+            <td>
+                <select name="form-${totalForms}-question_type" class="form-control question-type-select">
+                    <option value="text">Text</option>
+                    <option value="Single-select">Single-select</option>
+                    <option value="Multi-select">Multi-select</option>
+                    <option value="File upload">File upload</option>
+                </select>
+            </td>
+            <td>
+                <!-- Tagify input -->
+                <input type="text" class="multiple-choice-input form-control" placeholder="Type and press Enter to add options" style="display: none;">
+                <!-- Hidden input to store the options -->
+                <input type="hidden" name="form-${totalForms}-multiple_choice_options" class="hidden-multiple-choice-input">
+            </td>
+        `;
 
-        questionTableBody.appendChild(newRow);
+        // Append the new row to the table body
+        document.getElementById('question-table-body').appendChild(newRow);
 
-        // Set up Tagify and change listener for the new row
-        const tagifyInput = newRow.querySelector('.multiple-choice-input');
-        const questionTypeSelect = newRow.querySelector('.question-type-select');
-        questionTypeSelect.addEventListener('change', () => 
-        toggleTagifyInput(newRow));
+        // Update the total number of forms
+        totalFormsInput.value = totalForms + 1;
 
+        // Initialize the new row
+        initializeRow(newRow);
 
-        questionIndex += 1; // Increment the form index
-        totalFormsInput.value = questionIndex; // Update formset count
-    }
-
-    // Handle "Add Another Question" button click
-    addQuestionBtn.addEventListener('click', addNewQuestionRow);
-
-    // Remove question row
-    questionTableBody.addEventListener('click', function (event) {
-        if (event.target.classList.contains('remove-question-btn')) {
-            event.target.closest('tr').remove();
-            questionIndex -= 1;
-            totalFormsInput.value = questionIndex;
-        }
-    });
-
-    // Update hidden input with comma-separated Tagify data on form submit
-    document.getElementById('question-form').addEventListener('submit', function () {
-        document.querySelectorAll('.multiple-choice-input').forEach(function (input) {
-            const tagifyInstance = input._tagify;
-            if (tagifyInstance) {
-                const tags = tagifyInstance.value.map(item => item.value).join(',');
-                const hiddenInput = input.parentNode.querySelector('.hidden-multiple-choice-input');
-                hiddenInput.value = tags; // Set plain text as hidden input's value
-                console.log("Setting hidden input value for multiple-choice options:", hiddenInput.value);
-            }
+        // Add event listener to the remove button
+        var removeBtn = newRow.querySelector('.remove-question-btn');
+        removeBtn.addEventListener('click', function() {
+            newRow.remove();
+            // Update the total forms count and re-index the form fields
+            var totalFormsInput = document.querySelector('#id_form-TOTAL_FORMS');
+            totalFormsInput.value = document.querySelectorAll('#question-table-body tr').length;
+            updateFormIndices();
         });
     });
+
+    // Function to update form indices after adding/removing rows
+    function updateFormIndices() {
+        var forms = document.querySelectorAll('#question-table-body tr');
+        forms.forEach(function(row, index) {
+            // Update the names and ids of the input fields
+            var questionTextInput = row.querySelector('input[name^="form-"][name$="-question_text"]');
+            var questionTypeSelect = row.querySelector('select[name^="form-"][name$="-question_type"]');
+            var multipleChoiceInput = row.querySelector('.multiple-choice-input');
+            var hiddenMultipleChoiceInput = row.querySelector('input[name^="form-"][name$="-multiple_choice_options"]');
+
+            if (questionTextInput) {
+                questionTextInput.name = `form-${index}-question_text`;
+                questionTextInput.id = `id_form-${index}-question_text`;
+            }
+            if (questionTypeSelect) {
+                questionTypeSelect.name = `form-${index}-question_type`;
+                questionTypeSelect.id = `id_form-${index}-question_type`;
+            }
+            if (multipleChoiceInput) {
+                multipleChoiceInput.id = `id_form-${index}-multiple_choice_options_tagify`;
+            }
+            if (hiddenMultipleChoiceInput) {
+                hiddenMultipleChoiceInput.name = `form-${index}-multiple_choice_options`;
+                hiddenMultipleChoiceInput.id = `id_form-${index}-multiple_choice_options`;
+            }
+        });
+    }
+
+    // Add event listeners to existing remove buttons
+    var removeBtns = document.querySelectorAll('.remove-question-btn');
+    removeBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var row = btn.closest('tr');
+            row.remove();
+            // Update the total forms count and re-index the form fields
+            var totalFormsInput = document.querySelector('#id_form-TOTAL_FORMS');
+            totalFormsInput.value = document.querySelectorAll('#question-table-body tr').length;
+            updateFormIndices();
+        });
+    });
+
 });
 </script>
 {% endblock %}
+

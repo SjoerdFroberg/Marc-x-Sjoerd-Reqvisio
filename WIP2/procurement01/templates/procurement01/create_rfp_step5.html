@@ -1,0 +1,142 @@
+{% extends 'procurement01/layout.html' %}
+
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Create RFP - Step 5: Finalize RFP{% endblock %}
+
+{% block content %}
+<div class="container mt-5 p-4 bg-white shadow-sm rounded">
+    <h2>Create RFP - Step 5: Finalize RFP for "{{ rfp.title }}"</h2>
+
+    <!-- Title and Description Section -->
+    <div class="form-group mb-4">
+        <label for="id_title" class="form-label fw-bold text-secondary">RFP Title</label>
+        <input type="text" id="id_title" name="title" value="{{ rfp.title }}" class="form-control">
+    </div>
+
+    <div class="form-group mb-4">
+        <label for="id_description" class="form-label fw-bold text-secondary">RFP Description</label>
+        <textarea id="id_description" name="description" class="form-control">{{ rfp.description }}</textarea>
+    </div>
+
+    <!-- Files Section -->
+    <div class="form-group mb-4">
+        <label class="form-label fw-bold text-secondary">Attached Files</label>
+        <ul id="existing-files-list">
+            {% for file in rfp.files.all %}
+            <li>
+                <span>{{ file.file.name }}</span>
+                <button type="button" class="btn btn-danger btn-sm remove-file-btn" data-file-id="{{ file.id }}">Remove</button>
+            </li>
+            {% endfor %}
+        </ul>
+        <input type="file" name="new_files" id="new-files" class="form-control" multiple>
+    </div>
+</div>
+
+<div class="container mt-5 p-4 bg-white shadow-sm rounded">
+    <!-- General Questions Section -->
+    <h4 class="fw-bold text-secondary">General Questions</h4>
+    <div id="general-questions-container">
+        {{ formset.management_form }}
+        <table class="table" id="general-questions-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Question Text</th>
+                    <th>Question Type</th>
+                    <th>Multiple Choice Options</th>
+                </tr>
+            </thead>
+            <tbody id="general-questions-table-body">
+                {% for form in formset.forms %}
+                <tr>
+                    <td><button type="button" class="btn btn-danger remove-question-btn">Remove</button></td>
+                    <td>{{ form.question_text }}</td>
+                    <td>{{ form.question_type }}</td>
+                    <td>
+                        <input type="text" class="multiple-choice-input form-control"
+                               value="{{ form.instance.multiple_choice_options }}"
+                               placeholder="Type and press Enter to add tags"
+                               {% if form.instance.question_type != "Multi-select" and form.instance.question_type != "Single-select" %} style="display: none;" {% endif %}>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-secondary" id="add-general-question-btn">Add Another Question</button>
+    </div>
+</div>
+
+<div class="container mt-5 p-4 bg-white shadow-sm rounded">
+    <!-- SKU-Specific Questions and Details Table -->
+    <h4 class="fw-bold text-secondary">SKU Details and Questions</h4>
+    <div id="full-screen-container">
+        <div class="top-controls">
+            <div id="left-controls">
+                <button type="button" id="full-screen-toggle" class="action-btn">Full Screen</button>
+                <button type="button" id="add-column" class="action-btn">Add Extra Column</button>
+                <button type="button" id="add-sku-btn" class="action-btn">Add SKU</button>
+                <button type="button" id="add-sku-question-btn" class="action-btn">Add SKU-Specific Question</button>
+            </div>
+        </div>
+        <div class="search-container">
+            <label for="sku-search-input">Search and Add SKU</label>
+            <span class="tooltip-icon" title="Type an SKU name to add it to the table">ℹ️</span>
+        </div>
+        <input type="text" id="sku-search-input" class="form-control" placeholder="Search SKU to Add" autocomplete="off" autofocus>
+
+        <!-- SKU Search Results Container -->
+        <div id="sku-search-results" class="sku-search-results"></div>
+
+        <div class="table-wrapper">
+            <table class="table sheet-table" id="sku-specific-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>SKU Name</th>
+                        {% for column in extra_columns %}
+                            <th>{{ column }}</th>
+                        {% endfor %}
+                        {% for question in sku_specific_questions %}
+                            <th>
+                                <input type="text" class="column-input" value="{{ question.question }}">
+                                <select class="form-control question-type-select">
+                                    <option value="text" {% if question.question_type == 'text' %}selected{% endif %}>Text</option>
+                                    <option value="number" {% if question.question_type == 'number' %}selected{% endif %}>Number</option>
+                                    <option value="file" {% if question.question_type == 'file' %}selected{% endif %}>File Upload</option>
+                                    <option value="date" {% if question.question_type == 'date' %}selected{% endif %}>Date</option>
+                                </select>
+                            </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sku in processed_skus %}
+                    <tr data-sku-id="{{ sku.sku_id }}">
+                        <td><button type="button" class="remove-sku-btn"><i class="bi bi-x-circle"></i></button></td>
+                        <td contenteditable="false">{{ sku.sku_name }}</td>
+                        {% for column in extra_columns %}
+                            <td contenteditable="true">{{ sku.extra_data|get_item:column }}</td>
+                        {% endfor %}
+                        {% for question in sku_specific_questions %}
+                            <td contenteditable="true"></td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Finalize RFP Button -->
+    <div class="d-flex justify-content-end mt-4">
+        <button type="button" class="btn btn-primary" id="finalize-rfp-btn">Finalize RFP</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/finalize_rfp.js' %}"></script>
+{% endblock %}

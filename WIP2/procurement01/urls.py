@@ -30,6 +30,9 @@ urlpatterns = [
     path('create_rfp_step2a/<int:rfp_id>/', views.create_rfp_step2a, name='create_rfp_step2a'),
     path('create_sku/', views.create_sku, name='create_sku'),
 
+    path('rfp/create/step5/<int:rfp_id>/', views.create_rfp_step5, name='create_rfp_step5'),  # New step 5 URL
+
+
 
 
 ]
