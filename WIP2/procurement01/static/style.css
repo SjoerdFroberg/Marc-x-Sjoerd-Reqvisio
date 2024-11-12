@@ -24,7 +24,6 @@ h2 {
 }
 
 /* Full-Screen Container */
-/* Full-Screen Container */
 #full-screen-container.full-screen {
     position: fixed;
     top: 0;
@@ -397,3 +396,156 @@ textarea.form-control:focus {
     position: relative;
     z-index: 10001; /* Ensure it stays on top in full-screen mode */
 }
+
+/* Table Borders */
+.sheet-table, .sheet-table th, .sheet-table td {
+    border: 1px solid #e0e0e0; /* Light gray border */
+    border-collapse: collapse;
+}
+
+/* Header Background */
+.sheet-table th {
+    background-color: #2d4c3e; /* Dark green background */
+    color: white; /* White text for headers */
+    font-weight: 600;
+    text-align: left;
+    padding: 8px;
+}
+
+/* Cell Padding */
+.sheet-table td {
+    padding: 8px;
+    text-align: left;
+}
+
+/* Smaller Cell Size and Font */
+.sheet-table th, .sheet-table td {
+    padding: 6px 8px; /* Reduced padding */
+    font-size: 0.875rem; /* Smaller font size */
+}
+
+/* Adjust Header Font Size Separately, if Needed */
+.sheet-table th {
+    font-size: 0.9rem; /* Slightly larger for headers */
+}
+
+/* Centered Remove Button */
+.remove-sku-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    width: 20px; /* Reduced width */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Icon Styling for Remove Button */
+.remove-sku-btn i {
+    font-size: 1rem; /* Smaller icon size */
+    color: #9e9e9e; /* Light gray to match the style */
+    transition: color 0.2s;
+}
+
+.remove-sku-btn:hover i {
+    color: #757575; /* Darker gray on hover */
+}
+
+/* Adjust Column Width for Remove Button Column */
+.sheet-table th:first-child, .sheet-table td:first-child {
+    width: 40px; /* Narrow column for the remove button */
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+}
+
+
+
+
+/* Smaller Remove Button */
+.remove-sku-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    width: 20px; /* Reduced width */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto; /* Ensure it centers horizontally */
+    height: 100%; /* Ensure the height matches the row's height */
+}
+
+/* Icon Styling for Remove Button */
+.remove-sku-btn i {
+    font-size: 1rem; /* Smaller icon size */
+    color: #9e9e9e; /* Light gray to match the style */
+    transition: color 0.2s;
+}
+
+.remove-sku-btn:hover i {
+    color: #757575; /* Darker gray on hover */
+}
+
+/* Adjust Column Width for Remove Button Column */
+.sheet-table th:first-child, .sheet-table td:first-child {
+    width: 40px; /* Narrow column for the remove button */
+    text-align: center;
+    padding: 0;
+    vertical-align: middle; /* Vertical centering */
+
+}
+
+
+/* Editable Header Input Styles */
+.sheet-table th input.column-input {
+    background-color: #2d4c3e; /* Match the dark green header background */
+    color: white; /* White text to match the header style */
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    outline: none;
+    padding: 8px;
+    text-align: left;
+    width: 100%; /* Fill the entire header cell */
+    box-sizing: border-box; /* Ensure padding doesn’t overflow */
+}
+
+.sheet-table th input.column-input::placeholder {
+    color: white; /* Placeholder text in white to blend with header */
+    opacity: 0.8;
+}
+
+
+
+
+/* Hide remove button until hover */
+.sheet-table th {
+    position: relative;
+}
+
+.sheet-table th:hover .remove-column-x {
+    display: inline;
+}
+
+.remove-column-x {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.remove-column-x i {
+    color: #9e9e9e;
+    transition: color 0.2s;
+}
+
+.remove-column-x:hover i {
+    color: #757575;
+}
+
+

@@ -365,7 +365,7 @@ def create_sku(request):
             return JsonResponse({'success': False, 'error': 'SKU with this name already exists.'}, status=400)
 
         # Create a new SKU
-        new_sku = SKU.objects.create(name=sku_name, company=company, sku_code=f'{sku_name[:3].upper()}-{company.id}')
+        new_sku = SKU.objects.create(name=sku_name, company=company, sku_code=f'{sku_name.upper()}-{company.id}')
         
         return JsonResponse({'success': True, 'sku_id': new_sku.id, 'sku_name': new_sku.name})
     except Exception as e:

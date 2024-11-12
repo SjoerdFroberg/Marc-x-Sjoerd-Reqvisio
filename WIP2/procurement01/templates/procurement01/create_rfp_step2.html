@@ -27,7 +27,7 @@
             <table class="table sheet-table" id="sku-table">
                 <thead>
                     <tr>
-                        <th>Remove SKU</th>
+                        <th></th>
                         <th><input type="text" class="column-input" value="SKU Name"></th>
                         <th>
                             <input type="text" class="column-input" value="Quantity">
@@ -133,7 +133,7 @@
         // Dynamically build the row based on the current headers
         let row = document.createElement('tr');
         row.innerHTML = `
-            <td><button type="button" class="btn btn-danger remove-sku-btn">Remove</button></td>
+            <td><button type="button" class="remove-sku-btn"><i class="bi bi-x-circle"></i></button></td>
             <td>${skuName}<input type="hidden" name="skus[]" value="${skuId}"></td>
         `;
 

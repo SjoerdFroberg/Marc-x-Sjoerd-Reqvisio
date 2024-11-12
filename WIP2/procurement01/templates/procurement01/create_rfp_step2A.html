@@ -25,7 +25,7 @@
                         <th></th>
                         <th>SKU Name</th>
                         <th>
-                            Quantity
+                            <input type="text" class="column-input" value="Quantity" />
                             <button type="button" class="remove-column-x" onclick="removeColumn(2)">
                                 <i class="bi bi-x-circle"></i>
                             </button>
@@ -63,7 +63,7 @@
         const tableBody = document.querySelector('#sku-table tbody');
         let row = document.createElement('tr');
         row.innerHTML = `
-            <td><button type="button" class="btn btn-danger remove-sku-btn">Remove</button></td>
+            <td><button type="button" class="remove-sku-btn"><i class="bi bi-x-circle"></i></button></td>
             <td>
                 <div class="sku-input-wrapper">
                     <input type="text" class="sku-search-input" placeholder="Search or add SKU..." oninput="searchSku(this)">
@@ -221,7 +221,7 @@
         let newTh = document.createElement('th');
         newTh.style.position = 'relative';
         newTh.innerHTML = `
-            <input type="text" class="column-input" placeholder="Column Name">
+            <input type="text" class="column-input" placeholder="Column Name" />
             <button type="button" class="remove-column-x" onclick="removeColumn(${tableHead.children.length})">
                 <i class="bi bi-x-circle"></i>
             </button>
