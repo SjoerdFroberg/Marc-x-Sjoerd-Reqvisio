@@ -1,50 +1,63 @@
 document.addEventListener('DOMContentLoaded', function () {
 
+    document.querySelectorAll('.remove-sku-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const row = button.closest('tr');
+            if (row) {
+                row.remove();
+            }
+        });
+    });
+
     // Full-screen toggle functionality
     document.getElementById('full-screen-toggle').addEventListener('click', function () {
         const fullScreenContainer = document.getElementById('full-screen-container');
         const fullScreenButton = document.getElementById('full-screen-toggle');
 
-        if (!fullScreenContainer.classList.contains('full-screen')) {
-            // Enter full-screen mode
-            fullScreenContainer.classList.add('full-screen');
-            fullScreenButton.textContent = 'Exit Full Screen';
-            fullScreenButton.classList.add('full-screen-exit');
+        if (!document.fullscreenElement) {
+            fullScreenContainer.requestFullscreen().then(() => {
+                document.body.style.backgroundColor = "white"; // Ensure body background color is set to white
+                fullScreenContainer.style.backgroundColor = "white"; // Ensure full-screen container is white
+                fullScreenButton.textContent = 'Exit Full Screen';
+            }).catch(err => {
+                alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
         } else {
-            // Exit full-screen mode
-            fullScreenContainer.classList.remove('full-screen');
-            fullScreenButton.textContent = 'Full Screen';
-            fullScreenButton.classList.remove('full-screen-exit');
+            document.exitFullscreen().then(() => {
+                document.body.style.backgroundColor = ""; // Reset background color
+                fullScreenContainer.style.backgroundColor = ""; // Reset container background color
+                fullScreenButton.textContent = 'Full Screen';
+            }).catch(err => {
+                alert(`Error attempting to exit full-screen mode: ${err.message} (${err.name})`);
+            });
         }
     });
-    
+
+    // Exit full screen with Esc key
+    document.addEventListener('keydown', function (event) {
+        if (event.key === "Escape" && document.fullscreenElement) {
+            document.exitFullscreen();
+        }
+    });
+
     // Retrieve extra_columns from the hidden <div>
     const extraColumnsElement = document.getElementById('extra-columns-data');
     const extraColumns = JSON.parse(extraColumnsElement.textContent);
     const initialColumnCount = extraColumns.length;
-    console.log("Extra Columns:", extraColumns);
-    console.log("Initial Column Count:", initialColumnCount);
 
     const tableHeadRow1 = document.querySelector('#sku-specific-table thead tr:first-child');
     const tableHeadRow2 = document.querySelector('#sku-specific-table thead tr:nth-child(2)');
 
-    // Check that tableHeadRow1 and tableHeadRow2 are being selected correctly
-    console.log("Table Head Row 1:", tableHeadRow1);
-    console.log("Table Head Row 2:", tableHeadRow2);
-    
-
     // Add new question column
     document.getElementById('add-question-btn').addEventListener('click', function() {
-        let tableHeadRow1 = document.querySelector('#sku-specific-table thead tr:first-child');
-        let tableHeadRow2 = document.querySelector('#sku-specific-table thead tr:nth-child(2)');
-        console.log("Add Question button clicked");
-
         // Create the question input column in the first header row
         let newTh = document.createElement('th');
         newTh.style.position = 'relative';
         newTh.innerHTML = `
             <input type="text" class="column-input" placeholder="Question">
-            <span class="remove-column-x" style="position: absolute; top: 5px; right: 5px; display: none;" onclick="removeColumn(${tableHeadRow1.children.length})">&#10006;</span>
+            <button type="button" class="remove-column-x">
+                <i class="bi bi-x-circle"></i>
+            </button>
         `;
         tableHeadRow1.appendChild(newTh);
 
@@ -68,22 +81,17 @@ document.addEventListener('DOMContentLoaded', function () {
             row.appendChild(newTd);
         });
 
-        // Show remove button on hover
-        newTh.addEventListener('mouseover', function() {
-            newTh.querySelector('.remove-column-x').style.display = 'inline';
-        });
-        newTh.addEventListener('mouseout', function() {
-            newTh.querySelector('.remove-column-x').style.display = 'none';
-        });
+        // Rebind remove column functionality
+        addRemoveColumnListeners();
     });
 
     // Remove a question column
-    window.removeColumn = function(index) {
+    function removeColumn(index) {
         const headerCells = document.querySelectorAll('#sku-specific-table thead tr:first-child th');
         const typeCells = document.querySelectorAll('#sku-specific-table thead tr:nth-child(2) th');
         const rows = document.querySelectorAll('#sku-specific-table tbody tr');
 
-        if (index < 2 || index >= headerCells.length) {
+        if (index < initialColumnCount + 1 || index >= headerCells.length) {
             console.warn("Attempted to remove an invalid or non-removable column.");
             return;
         }
@@ -99,32 +107,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 cell.remove();
             }
         });
+    }
 
-        // Reassign onclick attributes only to header cells that contain .remove-column-x
-        document.querySelectorAll('#sku-specific-table thead tr:first-child th .remove-column-x').forEach((span, i) => {
-            const actualIndex = Array.from(span.parentNode.parentNode.children).indexOf(span.parentNode); // Recalculate the index
-            span.setAttribute('onclick', `removeColumn(${actualIndex})`);
+    // Add event listeners to column remove buttons
+    function addRemoveColumnListeners() {
+        const removeColumnButtons = document.querySelectorAll('.remove-column-x');
+        removeColumnButtons.forEach(button => {
+            button.removeEventListener('click', removeColumnHandler); // Remove previous listeners
+            button.addEventListener('click', removeColumnHandler);
         });
-    };
+    }
+
+    // Remove column handler
+    function removeColumnHandler(event) {
+        const index = Array.from(event.target.closest('th').parentNode.children).indexOf(event.target.closest('th'));
+        removeColumn(index);
+    }
+
+    // Add event listeners to initial remove buttons
+    addRemoveColumnListeners();
 
     window.submitForm = function() {
-        console.log("submitForm function triggered");
-        console.log("initial count:" + initialColumnCount);
-    
-        
         // Collect question headers (column input values)
         const questionHeaders = Array.from(tableHeadRow1.querySelectorAll('th input.column-input'))
             .map(input => input.value.trim())
             .slice(initialColumnCount+1);
 
-            console.log("question headers:" + questionHeaders);
-    
         // Collect question types (select values)
         const questionTypes = Array.from(tableHeadRow2.querySelectorAll('th select.question-type-select'))
             .map(select => select.value);
 
-            console.log("question types:" + questionTypes);
-    
         const questionsData = [];
         for (let i = 0; i < questionHeaders.length; i++) {
             if (questionHeaders[i] && questionTypes[i]) {
@@ -134,18 +146,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
         }
-    
-        console.log("Questions Data:", questionsData);
-    
+
+        
         // Set the JSON data in the hidden input field
         document.getElementById('sku_specific_data').value = JSON.stringify(questionsData);
-        console.log("Hidden input value set:", document.getElementById('sku_specific_data').value);
-    
+
         // Delay form submission by 5 seconds to inspect logs
         setTimeout(() => {
-            console.log("Submitting form");
             document.getElementById('rfp-sku-questions-form').submit();
         }, 5000); // 5000ms = 5 seconds delay
     };
-    
 });

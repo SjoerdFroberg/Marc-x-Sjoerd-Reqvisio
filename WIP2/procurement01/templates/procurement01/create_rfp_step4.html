@@ -15,8 +15,26 @@
 <div id="full-screen-container">
 
 
+
+
+<div class="button-container">
+
+    <!-- Button to toggle full screen -->
+    <button type="button" id="full-screen-toggle" class="action-btn">Full Screen</button>
+    <!-- Button to add a new question -->
+    <button type="button" id="add-question-btn" class="btn btn-primary">Add Question</button>
+
+    
+
+    <!-- Button to submit the form and continue to the next step -->
+    <button type="button" class="btn btn-primary" onclick="submitForm()">Continue to Step 5</button>
+</div>
+
 <form id="rfp-sku-questions-form" method="POST" >
     {% csrf_token %}
+
+    <!-- Hidden input to store the SKU-specific questions data -->
+    <input type="hidden" id="sku_specific_data" name="sku_specific_data" />
 
     <div class="table-wrapper">
         <table class="table sheet-table" id="sku-specific-table">
@@ -42,7 +60,11 @@
             <tbody>
                 {% for sku in processed_skus %}
                     <tr data-sku-id="{{ sku.sku_id }}">
-                        <td><button type="button" class="btn btn-danger remove-sku-btn">Remove</button></td>
+                        <td>
+                            <button type="button" class="remove-sku-btn">
+                                <i class="bi bi-x-circle"></i>
+                              </button>
+                        </td>
                         <td contenteditable="false">{{ sku.sku_name }}</td>
                         {% for column in extra_columns %}
                             <td contenteditable="false">{{ sku.extra_data|get_item:column }}</td>
@@ -53,19 +75,7 @@
         </table>
     </div>
 
-    <!-- Hidden input to store the SKU-specific questions data -->
-    <input type="hidden" id="sku_specific_data" name="sku_specific_data" />
-
-    <div class="button-container">
-        <!-- Button to add a new question -->
-        <button type="button" id="add-question-btn" class="btn btn-primary">Add Question</button>
-
-        <!-- Button to toggle full screen -->
-        <button type="button" id="full-screen-toggle" class="action-btn">Full Screen</button>
-
-        <!-- Button to submit the form and continue to the next step -->
-        <button type="button" class="btn btn-primary" onclick="submitForm()">Continue to Step 5</button>
-    </div>
+    
     
 </form>
 
