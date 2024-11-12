@@ -1,0 +1,307 @@
+{% extends 'procurement01/layout.html' %}
+
+{% block title %}Create RFP - Step 2A{% endblock %}
+
+{% block content %}
+<h2>Create RFP - Step 2A: Add SKUs to "{{ rfp.title }}"</h2>
+
+<div id="full-screen-container">
+
+    <div class="top-controls">
+        <div id="left-controls">
+            <button id="full-screen-toggle" class="action-btn">Full Screen</button>
+            <button id="add-column" class="action-btn">Add Extra Column</button>
+            <button type="button" class="action-btn" onclick="submitForm()">Continue to Step 3</button>
+        </div>
+    </div>
+
+    <form id="rfp-skus-form" method="POST">
+        {% csrf_token %}
+
+        <div class="table-wrapper">
+            <table class="table sheet-table" id="sku-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>SKU Name</th>
+                        <th>
+                            Quantity
+                            <button type="button" class="remove-column-x" onclick="removeColumn(2)">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </th>
+                        <!-- Extra columns will be appended here -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamically added SKUs will go here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Add new row button -->
+        <div id="add-row-container" class="add-row-container">
+            <button type="button" id="add-row-btn" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add New Row
+            </button>
+        </div>
+
+        <input type="hidden" id="extra_columns_data" name="extra_columns_data" />
+    </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('add-row-btn').addEventListener('click', function () {
+        addNewRow();
+    });
+
+    // Function to add a new row to the SKU table
+    function addNewRow() {
+        const tableBody = document.querySelector('#sku-table tbody');
+        let row = document.createElement('tr');
+        row.innerHTML = `
+            <td><button type="button" class="btn btn-danger remove-sku-btn">Remove</button></td>
+            <td>
+                <div class="sku-input-wrapper">
+                    <input type="text" class="sku-search-input" placeholder="Search or add SKU..." oninput="searchSku(this)">
+                    <div class="sku-search-results"></div>
+                </div>
+            </td>
+        `;
+
+        const headerCells = document.querySelectorAll('#sku-table thead th');
+        for (let i = 2; i < headerCells.length; i++) {
+            let newTd = document.createElement('td');
+            newTd.contentEditable = "true";
+            row.appendChild(newTd);
+        }
+
+        tableBody.appendChild(row);
+
+        // Add event listener for remove button
+        row.querySelector('.remove-sku-btn').addEventListener('click', function() {
+            row.remove();
+        });
+
+        applyCellNavigation();
+    }
+
+    // SKU search functionality
+    function searchSku(inputField) {
+        const query = inputField.value.trim();
+        const searchResultsContainer = inputField.nextElementSibling; // Search results container for that particular input field
+
+        if (query.length > 0) {
+            fetch(`/procurement01/search_skus/?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(skus => {
+                    searchResultsContainer.innerHTML = ''; // Clear previous results
+                    searchResultsContainer.style.display = 'block'; // Show the search results container
+
+                    if (skus.length === 0) {
+                        searchResultsContainer.innerHTML = '<p>No SKUs found.</p>';
+                        // Add create button below
+                        const createBtn = document.createElement('button');
+                        createBtn.type = 'button';
+                        createBtn.className = 'btn btn-primary';
+                        createBtn.textContent = 'Create New SKU';
+                        createBtn.addEventListener('click', function () {
+                            createNewSku(query, inputField);
+                        });
+                        searchResultsContainer.appendChild(createBtn);
+                    } else {
+                        skus.forEach(sku => {
+                            const resultItem = document.createElement('div');
+                            resultItem.className = 'search-result-item';
+                            resultItem.style.cursor = 'pointer';
+                            resultItem.innerHTML = `${sku.name} (${sku.sku_code})`;
+
+                            resultItem.addEventListener('click', function () {
+                                inputField.value = `${sku.name}`;
+                                inputField.dataset.skuId = sku.id;
+                                searchResultsContainer.style.display = 'none'; // Hide the search results
+                            });
+
+                            searchResultsContainer.appendChild(resultItem);
+                        });
+
+                        // Create New SKU button even if results are found
+                        const createBtn = document.createElement('button');
+                        createBtn.type = 'button';
+                        createBtn.className = 'btn btn-primary';
+                        createBtn.textContent = 'Create New SKU';
+                        createBtn.addEventListener('click', function () {
+                            createNewSku(query, inputField);
+                        });
+                        searchResultsContainer.appendChild(createBtn);
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                });
+        } else {
+            searchResultsContainer.innerHTML = '';
+            searchResultsContainer.style.display = 'none'; // Hide the search results container
+        }
+    }
+
+    // Function to create a new SKU
+    function createNewSku(skuName, inputField) {
+        fetch('/procurement01/create_sku/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ name: skuName })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                inputField.value = data.sku_name;
+                inputField.dataset.skuId = data.sku_id;
+                const searchResultsContainer = inputField.nextElementSibling;
+                searchResultsContainer.innerHTML = ''; // Clear search results
+                searchResultsContainer.style.display = 'none'; // Hide the search results container
+            } else {
+                alert(data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error creating SKU:', error);
+        });
+    }
+
+    // Full-screen toggle functionality
+    document.getElementById('full-screen-toggle').addEventListener('click', function () {
+        const fullScreenContainer = document.getElementById('full-screen-container');
+
+        if (!document.fullscreenElement) {
+            fullScreenContainer.requestFullscreen().then(() => {
+                document.body.style.backgroundColor = "white"; // Ensure body background color is set to white
+                fullScreenContainer.style.backgroundColor = "white"; // Ensure full-screen container is white
+            }).catch(err => {
+                alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
+            this.textContent = 'Exit Full Screen';
+        } else {
+            document.exitFullscreen().then(() => {
+                document.body.style.backgroundColor = ""; // Reset background color
+                fullScreenContainer.style.backgroundColor = ""; // Reset container background color
+            }).catch(err => {
+                alert(`Error attempting to exit full-screen mode: ${err.message} (${err.name})`);
+            });
+            this.textContent = 'Full Screen';
+        }
+    });
+
+    // Event listener for fullscreenchange to handle Esc key exit
+    document.addEventListener('fullscreenchange', function () {
+        const fullScreenButton = document.getElementById('full-screen-toggle');
+
+        if (!document.fullscreenElement) {
+            fullScreenButton.textContent = 'Full Screen';
+            document.body.style.backgroundColor = ""; // Reset background color
+            const fullScreenContainer = document.getElementById('full-screen-container');
+            fullScreenContainer.style.backgroundColor = ""; // Reset container background color
+        }
+    });
+
+    // Add column functionality
+    document.getElementById('add-column').addEventListener('click', function () {
+        addColumn();
+    });
+
+    function addColumn() {
+        let tableHead = document.querySelector('#sku-table thead tr');
+
+        let newTh = document.createElement('th');
+        newTh.style.position = 'relative';
+        newTh.innerHTML = `
+            <input type="text" class="column-input" placeholder="Column Name">
+            <button type="button" class="remove-column-x" onclick="removeColumn(${tableHead.children.length})">
+                <i class="bi bi-x-circle"></i>
+            </button>
+        `;
+        tableHead.appendChild(newTh);
+
+        document.querySelectorAll('#sku-table tbody tr').forEach(row => {
+            let newTd = document.createElement('td');
+            newTd.contentEditable = "true";
+            row.appendChild(newTd);
+        });
+
+        applyCellNavigation();
+    }
+
+    function removeColumn(index) {
+        const headerCells = document.querySelectorAll('#sku-table thead th');
+        const rows = document.querySelectorAll('#sku-table tbody tr');
+
+        if (index < 2 || index >= headerCells.length) {
+            console.warn("Attempted to remove an invalid or non-removable column.");
+            return;
+        }
+
+        headerCells[index].remove();
+        rows.forEach(row => {
+            const cell = row.children[index];
+            if (cell) {
+                cell.remove();
+            }
+        });
+
+        // Reassign `onclick` attributes only to header cells that contain `.remove-column-x`
+        document.querySelectorAll('#sku-table thead th .remove-column-x').forEach((button, i) => {
+            const actualIndex = Array.from(button.parentNode.parentNode.children).indexOf(button.parentNode);
+            button.setAttribute('onclick', `removeColumn(${actualIndex})`);
+        });
+    }
+
+    function applyCellNavigation() {
+        document.querySelectorAll('#sku-table tbody td[contenteditable="true"]').forEach(cell => {
+            cell.removeEventListener('keydown', handleCellNavigation);
+            cell.addEventListener('keydown', handleCellNavigation);
+        });
+    }
+
+    // Function to handle cell navigation
+    function handleCellNavigation(event) {
+        const cell = event.target;
+        const currentRow = cell.parentNode;
+        const currentCellIndex = Array.from(currentRow.children).indexOf(cell);
+        let targetCell;
+
+        switch (event.key) {
+            case "ArrowUp":
+                targetCell = currentRow.previousElementSibling?.children[currentCellIndex];
+                break;
+            case "ArrowDown":
+                targetCell = currentRow.nextElementSibling?.children[currentCellIndex];
+                break;
+            case "ArrowLeft":
+                targetCell = cell.previousElementSibling;
+                break;
+            case "ArrowRight":
+                targetCell = cell.nextElementSibling;
+                break;
+            case "Enter":
+                event.preventDefault();
+                targetCell = currentRow.nextElementSibling?.children[currentCellIndex];
+                break;
+        }
+
+        if (targetCell && targetCell.getAttribute("contenteditable") === "true") {
+            event.preventDefault();
+            targetCell.focus();
+        }
+    }
+
+    applyCellNavigation();
+</script>
+
+
+{% endblock %}

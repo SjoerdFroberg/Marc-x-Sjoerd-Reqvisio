@@ -11,6 +11,10 @@ from django.forms.models import model_to_dict
 from collections import OrderedDict
 from django.http import HttpResponse 
 
+from django.views.decorators.http import require_POST
+
+from django.views.decorators.csrf import csrf_exempt
+
 
 
 
@@ -302,3 +306,67 @@ def view_rfp_skus(request, rfp_id):
 def rfp_list_view(request):
     rfps = RFP.objects.all()  # You might want to filter by the user's company if needed
     return render(request, 'procurement01/rfp_list.html', {'rfps': rfps})
+
+
+
+
+@login_required
+def create_rfp_step2a(request, rfp_id):
+    rfp = get_object_or_404(RFP, id=rfp_id)
+
+    if request.method == 'POST':
+        sku_ids = request.POST.getlist('skus[]')
+        extra_columns_data = request.POST.get('extra_columns_data')
+        extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
+
+        for sku_data in extra_columns_json:
+            sku_id = sku_data['sku_id']
+            sku = get_object_or_404(SKU, id=sku_id)
+            rfp_sku = RFP_SKUs.objects.create(rfp=rfp, sku=sku)
+
+            # Convert dataArray back into a dictionary, maintaining order
+            data_ordered = OrderedDict(sku_data['data'])
+            rfp_sku.set_extra_data(data_ordered)
+
+            rfp_sku.save()
+
+        return redirect('create_rfp_step3', rfp_id=rfp.id)
+
+    sku_search_form = SKUSearchForm()
+
+    return render(request, 'procurement01/create_rfp_step2a.html', {
+        'rfp': rfp,
+        'sku_search_form': sku_search_form,
+    })
+
+
+from django.views.decorators.http import require_POST
+
+@login_required
+@csrf_exempt  # Note: CSRF is disabled here since we are handling API calls, but keep in mind the security implications.
+@require_POST
+def create_sku(request):
+    try:
+        # Get the current user
+        user = request.user
+        if not user.is_procurer:
+            return JsonResponse({'success': False, 'error': 'Only procurers can create SKUs.'}, status=403)
+
+        # Parse the request data
+        data = json.loads(request.body.decode('utf-8'))
+        sku_name = data.get('name', '').strip()
+
+        if not sku_name:
+            return JsonResponse({'success': False, 'error': 'SKU name cannot be empty.'}, status=400)
+
+        # Check if SKU with the same name exists for the company
+        company = user.company
+        if SKU.objects.filter(name=sku_name, company=company).exists():
+            return JsonResponse({'success': False, 'error': 'SKU with this name already exists.'}, status=400)
+
+        # Create a new SKU
+        new_sku = SKU.objects.create(name=sku_name, company=company, sku_code=f'{sku_name[:3].upper()}-{company.id}')
+        
+        return JsonResponse({'success': True, 'sku_id': new_sku.id, 'sku_name': new_sku.name})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

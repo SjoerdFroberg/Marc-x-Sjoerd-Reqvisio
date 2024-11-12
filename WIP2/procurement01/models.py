@@ -63,7 +63,7 @@ class RFP_SKUs(models.Model):
 
 class RFP(models.Model):
     title = models.CharField(max_length=255)
-    description = models.TextField()
+    description = models.TextField(blank = True)
 
 
     created_at = models.DateTimeField(auto_now_add=True)
