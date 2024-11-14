@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 import json 
 from django.db import models
+from django.utils.crypto import get_random_string
+from django.utils import timezone
 
 
 
@@ -15,6 +17,8 @@ class Company(models.Model):
     name = models.CharField(max_length=100)
     company_type = models.CharField(max_length=10, choices=COMPANY_TYPES)
     procurer = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='suppliers')
+    email = models.EmailField(max_length=254, blank=True, null=True)  # Add this field
+
 
     def __str__(self):
         return self.name
@@ -119,3 +123,20 @@ class SKUSpecificQuestion(models.Model):
 
     def __str__(self):
         return f"{self.question} ({self.get_question_type_display()})"
+
+
+class RFPInvitation(models.Model):
+    rfp = models.ForeignKey(RFP, on_delete=models.CASCADE, related_name='invitations')
+    supplier = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='rfp_invitations')
+    token = models.CharField(max_length=64, unique=True, blank=True)
+    sent_at = models.DateTimeField(auto_now_add=True)
+    responded_at = models.DateTimeField(null=True, blank=True)
+    is_accepted = models.BooleanField(default=False)
+    expires_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = get_random_string(64)
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timezone.timedelta(days=7)  # Invitation expires in 7 days
+        super().save(*args, **kwargs)

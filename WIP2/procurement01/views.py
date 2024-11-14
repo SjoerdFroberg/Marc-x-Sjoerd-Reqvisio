@@ -17,11 +17,19 @@ from django.views.decorators.http import require_POST
 
 from django.views.decorators.csrf import csrf_exempt
 
+from django.core.mail import send_mail
+from django.urls import reverse
+from django.conf import settings
+from django.utils import timezone
 
 
 
 
-from .models import SKU, Company, RFP, GeneralQuestion, RFP_SKUs,SKUSpecificQuestion, RFPFile
+
+
+
+
+from .models import SKU, Company, RFP, GeneralQuestion, RFP_SKUs,SKUSpecificQuestion, RFPFile, RFPInvitation
 from .forms import SKUForm, SupplierForm, RFPBasicForm, SKUSearchForm, GeneralQuestionForm, RFP_SKUForm, RFPForm, SKUSpecificQuestionForm
 
 
@@ -94,6 +102,7 @@ def supplier_list_view(request):
         return render(request, 'procurement01/access_denied.html')
     
 
+
 @login_required
 def create_supplier_view(request):
     if not request.user.is_procurer:
@@ -108,6 +117,7 @@ def create_supplier_view(request):
         form = SupplierForm()
 
     return render(request, 'procurement01/supplier_form.html', {'form': form})
+
 
 @login_required
 # Step 1: Create RFP (Title, Description, and Files)
@@ -467,7 +477,7 @@ def create_rfp_step5(request, rfp_id):
                     )
 
                 # Finalize RFP and redirect to RFP list or a success page
-                return redirect('rfp_list')
+                return redirect('invite_suppliers', rfp_id=rfp.id)
 
             else:
                 # If forms are invalid, re-render the page with errors
@@ -539,3 +549,92 @@ def create_rfp_step5(request, rfp_id):
         }
 
         return render(request, 'procurement01/create_rfp_step5.html', context)
+
+
+
+def send_invitation_email(invitation):
+    subject = f"Invitation to respond to RFP: {invitation.rfp.title}"
+    invitation_link = settings.SITE_URL + reverse('supplier_rfp_response', args=[invitation.token])
+    message = f"""
+    Dear {invitation.supplier.name},
+
+    You have been invited to respond to the RFP titled "{invitation.rfp.title}".
+
+    Please click the link below to view the RFP and submit your response:
+
+    {invitation_link}
+
+    Best regards,
+    {invitation.rfp.title}
+    """
+
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [invitation.supplier.email],
+        fail_silently=False,
+    )
+
+
+@login_required
+def invite_suppliers(request, rfp_id):
+    rfp = get_object_or_404(RFP, id=rfp_id)
+
+    if not request.user.is_procurer:
+        return render(request, 'procurement01/access_denied.html')
+
+    if request.method == 'POST':
+        supplier_ids = request.POST.getlist('suppliers')
+        for supplier_id in supplier_ids:
+            supplier = Company.objects.get(id=supplier_id)
+            # Create an invitation for each supplier
+            invitation, created = RFPInvitation.objects.get_or_create(rfp=rfp, supplier=supplier)
+            if created:
+                # Send invitation email
+                print('sending email')
+                send_invitation_email(invitation)
+                print('sent email')
+        return redirect('rfp_list')  # Redirect to the RFP list or appropriate page
+
+    else:
+        # Get suppliers associated with this procurer
+        procurer_company = request.user.company
+        suppliers = Company.objects.filter(procurer=procurer_company, company_type='Supplier')
+        return render(request, 'procurement01/invite_suppliers.html', {
+            'rfp': rfp,
+            'suppliers': suppliers,
+        })
+
+
+
+def supplier_rfp_response(request, token):
+    try:
+        invitation = RFPInvitation.objects.get(token=token)
+    except RFPInvitation.DoesNotExist:
+        return render(request, 'procurement01/invalid_invitation.html')
+
+    # Check if the invitation has expired
+    if invitation.expires_at and timezone.now() > invitation.expires_at:
+        return render(request, 'procurement01/expired_invitation.html')
+
+    # Check if the invitation has already been responded to
+    if invitation.responded_at:
+        return render(request, 'procurement01/already_responded.html')
+
+    # Handle form submission
+    if request.method == 'POST':
+        # Process the supplier's response
+        # We'll implement the response functionality later
+        invitation.responded_at = timezone.now()
+        invitation.is_accepted = True  # Or based on response
+        invitation.save()
+        return redirect('supplier_thank_you')  # A thank you page
+
+    else:
+        # Display the RFP details and response form
+        rfp = invitation.rfp
+        return render(request, 'procurement01/supplier_rfp_response.html', {
+            'rfp': rfp,
+            'invitation': invitation,
+        })

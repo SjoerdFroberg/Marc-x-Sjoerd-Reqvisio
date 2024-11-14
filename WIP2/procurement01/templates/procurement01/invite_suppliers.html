@@ -1,0 +1,21 @@
+<!-- templates/procurement01/invite_suppliers.html -->
+
+{% extends 'procurement01/layout.html' %}
+
+{% block content %}
+<h2>Invite Suppliers to RFP: {{ rfp.title }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <p>Select suppliers to invite:</p>
+    {% for supplier in suppliers %}
+        <div>
+            <input type="checkbox" name="suppliers" value="{{ supplier.id }}" id="supplier_{{ supplier.id }}">
+            <label for="supplier_{{ supplier.id }}">{{ supplier.name }} ({{ supplier.email }})</label>
+        </div>
+    {% empty %}
+        <p>No suppliers available. Please add suppliers first.</p>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Send Invitations</button>
+</form>
+{% endblock %}

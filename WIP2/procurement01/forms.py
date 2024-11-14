@@ -13,19 +13,29 @@ class SKUForm(forms.ModelForm):
         fields = ['name', 'sku_code', 'image_url']  # All the fields you want to show
 
 
+
 class SupplierForm(forms.ModelForm):
     class Meta:
         model = Company
-        fields = ['name']  # Only the name field is required for now
+        fields = ['name', 'email']  # Include the email field
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Supplier Name'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter Supplier Email'}),
+        }
 
     def save(self, procurer, *args, **kwargs):
-        # Automatically set the company type to 'Supplier' and assign the procurer
         supplier = super(SupplierForm, self).save(commit=False)
         supplier.company_type = 'Supplier'
         supplier.procurer = procurer
         supplier.save()
         return supplier
-    
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if not email:
+            raise forms.ValidationError('Email is required for suppliers.')
+        return email
+
 
 
 class RFPBasicForm(forms.ModelForm):

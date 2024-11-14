@@ -1,0 +1,18 @@
+
+{% extends 'procurement01/layout.html' %}
+
+{% block content %}
+<h2>Respond to RFP: {{ rfp.title }}</h2>
+<p>{{ rfp.description }}</p>
+
+<!-- Display RFP details and response form -->
+<form method="post">
+    {% csrf_token %}
+    <!-- Include fields for responding to the RFP -->
+    <!-- For now, we'll just have a placeholder -->
+    <p>Please submit your response below:</p>
+    <textarea name="response" rows="10" cols="80"></textarea>
+    <br>
+    <button type="submit" class="btn btn-primary">Submit Response</button>
+</form>
+{% endblock %}

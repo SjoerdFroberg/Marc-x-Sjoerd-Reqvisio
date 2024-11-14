@@ -134,3 +134,16 @@ import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+
+
+
+SITE_URL = 'http://127.0.0.1:8000'  # Replace with your actual domain
+DEFAULT_FROM_EMAIL = 'sjoerd@reqvisio.com'  # Replace with your desired sender email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'sjoerd@reqvisio.com'
+EMAIL_HOST_PASSWORD = 'loek zuzg vdps pxxu'
