@@ -115,6 +115,8 @@ class SKUSpecificQuestion(models.Model):
         ('number', 'Number'),
         ('file', 'File Upload'),
         ('date', 'Date'),
+        ('Single-select', 'Single-select'),
+        ('Multi-select', 'Multi-select'),
     ]
 
     rfp = models.ForeignKey('RFP', on_delete=models.CASCADE, related_name='sku_specific_questions')
@@ -140,3 +142,47 @@ class RFPInvitation(models.Model):
         if not self.expires_at:
             self.expires_at = timezone.now() + timezone.timedelta(days=7)  # Invitation expires in 7 days
         super().save(*args, **kwargs)
+
+
+
+
+
+class SupplierResponse(models.Model):
+    """A model to store a supplier's overall response to an RFP."""
+    rfp = models.ForeignKey(RFP, on_delete=models.CASCADE, related_name="responses")
+    supplier = models.ForeignKey(Company, on_delete=models.CASCADE)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    is_finalized = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Response to {self.rfp.title} by {self.supplier.name}"
+
+
+class GeneralQuestionResponse(models.Model):
+    """Stores each response to a general question within an RFP."""
+    response = models.ForeignKey(SupplierResponse, on_delete=models.CASCADE, related_name="general_responses")
+    question = models.ForeignKey(GeneralQuestion, on_delete=models.CASCADE)
+    invitation = models.ForeignKey(RFPInvitation, on_delete=models.CASCADE)
+
+    # Separate fields for different types of answers
+    answer_text = models.TextField(blank=True, null=True)   # For open text responses
+    answer_choice = models.TextField(blank=True, null=True)  # For single or multi-select answers
+    answer_number = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # For numeric responses
+    answer_date = models.DateField(blank=True, null=True)   # For date responses
+    answer_file = models.FileField(upload_to='responses/files/', blank=True, null=True)  # For file uploads
+
+    def __str__(self):
+        return f"Response to General Question '{self.question}' by {self.response.supplier.name}"
+
+class SKUSpecificQuestionResponse(models.Model):
+    response = models.ForeignKey(SupplierResponse, on_delete=models.CASCADE, related_name="sku_question_responses")
+    rfp_sku = models.ForeignKey(RFP_SKUs, on_delete=models.CASCADE)
+    question = models.ForeignKey(SKUSpecificQuestion, on_delete=models.CASCADE)
+    answer_text = models.TextField(blank=True, null=True)
+    answer_number = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    answer_file = models.FileField(upload_to='responses/files/', blank=True, null=True)
+    answer_date = models.DateField(blank=True, null=True)
+    answer_choice = models.TextField(blank=True, null=True)  # Add this field
+
+    def __str__(self):
+        return f"Response to SKU Question '{self.question}' for SKU '{self.rfp_sku.sku.name}' by {self.response.supplier.name}"

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
-from django.forms import modelformset_factory, inlineformset_factory
+from django.forms import modelformset_factory, inlineformset_factory, formset_factory
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 import json 
@@ -29,8 +29,8 @@ from django.utils import timezone
 
 
 
-from .models import SKU, Company, RFP, GeneralQuestion, RFP_SKUs,SKUSpecificQuestion, RFPFile, RFPInvitation
-from .forms import SKUForm, SupplierForm, RFPBasicForm, SKUSearchForm, GeneralQuestionForm, RFP_SKUForm, RFPForm, SKUSpecificQuestionForm
+from .models import SKU, Company, RFP, GeneralQuestion, RFP_SKUs,SKUSpecificQuestion, RFPFile, RFPInvitation, SupplierResponse, SKUSpecificQuestionResponse, GeneralQuestionResponse
+from .forms import SKUForm, SupplierForm, RFPBasicForm, SKUSearchForm, GeneralQuestionForm, RFP_SKUForm, RFPForm, SKUSpecificQuestionForm, GeneralQuestionResponseForm, SKUSpecificQuestionResponseForm
 
 
 
@@ -606,35 +606,183 @@ def invite_suppliers(request, rfp_id):
             'suppliers': suppliers,
         })
 
-
+from django.shortcuts import render, get_object_or_404, redirect
+from django.db import transaction
+from django.utils import timezone
+from decimal import Decimal, InvalidOperation
+from datetime import datetime
 
 def supplier_rfp_response(request, token):
-    try:
-        invitation = RFPInvitation.objects.get(token=token)
-    except RFPInvitation.DoesNotExist:
-        return render(request, 'procurement01/invalid_invitation.html')
+    invitation = get_object_or_404(RFPInvitation, token=token)
 
-    # Check if the invitation has expired
     if invitation.expires_at and timezone.now() > invitation.expires_at:
         return render(request, 'procurement01/expired_invitation.html')
 
-    # Check if the invitation has already been responded to
     if invitation.responded_at:
         return render(request, 'procurement01/already_responded.html')
 
-    # Handle form submission
-    if request.method == 'POST':
-        # Process the supplier's response
-        # We'll implement the response functionality later
-        invitation.responded_at = timezone.now()
-        invitation.is_accepted = True  # Or based on response
-        invitation.save()
-        return redirect('supplier_thank_you')  # A thank you page
+    rfp = invitation.rfp
+    general_questions = GeneralQuestion.objects.filter(rfp=rfp)
+    sku_specific_questions = SKUSpecificQuestion.objects.filter(rfp=rfp)
+    rfp_skus = RFP_SKUs.objects.filter(rfp=rfp)
 
-    else:
-        # Display the RFP details and response form
-        rfp = invitation.rfp
-        return render(request, 'procurement01/supplier_rfp_response.html', {
-            'rfp': rfp,
-            'invitation': invitation,
+    processed_skus = []
+    extra_columns = []
+
+    for rfp_sku in rfp_skus:
+        extra_data = rfp_sku.get_extra_data()
+        if extra_data:
+            extra_columns = list(extra_data.keys())
+        processed_skus.append({
+            'sku_id': rfp_sku.sku.id,
+            'sku_name': rfp_sku.sku.name,
+            'extra_data': extra_data,
         })
+
+    # Prepare options lists for questions
+    for question in general_questions:
+        if question.question_type in ['Single-select', 'Multi-select']:
+            question.options_list = [option.strip() for option in question.multiple_choice_options.split(',')]
+
+    for sku_question in sku_specific_questions:
+        if sku_question.question_type in ['Single-select', 'Multi-select']:
+            sku_question.options_list = [option.strip() for option in sku_question.multiple_choice_options.split(',')]
+
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Create SupplierResponse record
+                supplier_response = SupplierResponse.objects.create(
+                    rfp=rfp,
+                    supplier=invitation.supplier,
+                    is_finalized=True
+                )
+
+                # Save general question responses
+                for question in general_questions:
+                    field_name = f'general_{question.id}'
+                    file = request.FILES.get(field_name)
+
+                    if question.question_type == 'text':
+                        answer_text = request.POST.get(field_name)
+                        answer_choice = None
+                    elif question.question_type == 'Single-select':
+                        answer_choice = request.POST.get(field_name)
+                        answer_text = None
+                    elif question.question_type == 'Multi-select':
+                        selected_options = request.POST.getlist(field_name)
+                        answer_choice = ','.join(selected_options)
+                        answer_text = None
+                    elif question.question_type == 'File upload':
+                        answer_text = None
+                        answer_choice = None
+                    else:
+                        answer_text = None
+                        answer_choice = None
+
+                    GeneralQuestionResponse.objects.create(
+                        response=supplier_response,
+                        question=question,
+                        invitation=invitation,
+                        answer_text=answer_text,
+                        answer_choice=answer_choice,
+                        answer_file=file if question.question_type == 'File upload' else None
+                    )
+
+                # Save SKU-specific question responses
+                for sku in processed_skus:
+                    for sku_question in sku_specific_questions:
+                        field_name = f'sku_{sku["sku_id"]}_{sku_question.id}'
+                        file = request.FILES.get(field_name)
+                        answer = request.POST.get(field_name)
+
+                        if sku_question.question_type == 'text':
+                            answer_text = answer
+                            answer_number = None
+                            answer_date = None
+                            answer_file = None
+                            answer_choice = None
+                        elif sku_question.question_type == 'number':
+                            try:
+                                answer_number = Decimal(answer)
+                            except (InvalidOperation, TypeError):
+                                answer_number = None
+                            answer_text = None
+                            answer_date = None
+                            answer_file = None
+                            answer_choice = None
+                        elif sku_question.question_type == 'date':
+                            try:
+                                answer_date = datetime.strptime(answer, '%Y-%m-%d').date()
+                            except (ValueError, TypeError):
+                                answer_date = None
+                            answer_text = None
+                            answer_number = None
+                            answer_file = None
+                            answer_choice = None
+                        elif sku_question.question_type == 'file':
+                            answer_file = file
+                            answer_text = None
+                            answer_number = None
+                            answer_date = None
+                            answer_choice = None
+                        elif sku_question.question_type == 'Single-select':
+                            answer_choice = request.POST.get(field_name)
+                            answer_text = None
+                            answer_number = None
+                            answer_date = None
+                            answer_file = None
+                        elif sku_question.question_type == 'Multi-select':
+                            selected_options = request.POST.getlist(field_name)
+                            answer_choice = ','.join(selected_options)
+                            answer_text = None
+                            answer_number = None
+                            answer_date = None
+                            answer_file = None
+                        else:
+                            answer_text = None
+                            answer_number = None
+                            answer_date = None
+                            answer_file = None
+                            answer_choice = None
+
+                        SKUSpecificQuestionResponse.objects.create(
+                            response=supplier_response,
+                            rfp_sku=RFP_SKUs.objects.get(rfp=rfp, sku__id=sku["sku_id"]),
+                            question=sku_question,
+                            answer_text=answer_text,
+                            answer_number=answer_number,
+                            answer_file=answer_file,
+                            answer_date=answer_date,
+                            answer_choice=answer_choice,
+                        )
+
+                # Mark the invitation as responded
+                invitation.responded_at = timezone.now()
+                invitation.is_accepted = True
+                invitation.save()
+
+                return redirect('supplier_thank_you')
+        except Exception as e:
+            print("Exception occurred:", e)
+            return render(request, 'procurement01/error.html', {'message': str(e)})
+
+    return render(request, 'procurement01/supplier_rfp_response.html', {
+        'rfp': rfp,
+        'invitation': invitation,
+        'general_questions': general_questions,
+        'sku_specific_questions': sku_specific_questions,
+        'extra_columns': extra_columns,
+        'processed_skus': processed_skus,
+    })
+
+
+def supplier_thank_you(request):
+    # Retrieve the RFP title from the session if it's been passed through.
+    rfp_title = request.session.get('rfp_title', 'the RFP')
+
+    # Clear the RFP title from the session after displaying it
+    if 'rfp_title' in request.session:
+        del request.session['rfp_title']
+
+    return render(request, 'procurement01/supplier_thank_you.html', {'rfp_title': rfp_title})

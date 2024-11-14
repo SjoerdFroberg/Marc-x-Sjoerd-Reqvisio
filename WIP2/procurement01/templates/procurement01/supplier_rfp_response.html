@@ -1,18 +1,146 @@
-
 {% extends 'procurement01/layout.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Respond to RFP - {{ rfp.title }}{% endblock %}
 
 {% block content %}
-<h2>Respond to RFP: {{ rfp.title }}</h2>
-<p>{{ rfp.description }}</p>
+<div id="main-content-wrapper">
+    <h2>Respond to RFP: {{ rfp.title }}</h2>
 
-<!-- Display RFP details and response form -->
-<form method="post">
-    {% csrf_token %}
-    <!-- Include fields for responding to the RFP -->
-    <!-- For now, we'll just have a placeholder -->
-    <p>Please submit your response below:</p>
-    <textarea name="response" rows="10" cols="80"></textarea>
-    <br>
-    <button type="submit" class="btn btn-primary">Submit Response</button>
-</form>
+    <!-- RFP Basic Information Section -->
+    <div class="container mt-5">
+        <div class="card shadow-lg border-0">
+            <div class="card-header">
+                <h3 class="mb-0">RFP Basic Information</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Title:</strong> {{ rfp.title }}</p>
+                <p><strong>Description:</strong> {{ rfp.description }}</p>
+
+                <!-- Attached Files -->
+                {% if rfp.files.exists %}
+                    <h4>Attached Files</h4>
+                    <ul>
+                        {% for file in rfp.files.all %}
+                            <li><a href="{{ file.file.url }}" target="_blank">{{ file.file.name|filename }}</a></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Start of Form -->
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- General Questions Section -->
+        <div class="container mt-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-header">
+                    <h3 class="mb-0">General Questions</h3>
+                </div>
+                <div class="card-body">
+                    {% for question in general_questions %}
+                        <div class="form-group mb-3">
+                            <label>{{ question.question_text }}</label>
+                            {% if question.question_type == 'text' %}
+                                <input type="text" name="general_{{ question.id }}" class="form-control">
+                            {% elif question.question_type == 'Single-select' %}
+                                <select name="general_{{ question.id }}" class="form-control">
+                                    <option value="">Select an option</option>
+                                    {% for option in question.options_list %}
+                                        <option value="{{ option }}">{{ option }}</option>
+                                    {% endfor %}
+                                </select>
+                            {% elif question.question_type == 'Multi-select' %}
+                                {% for option in question.options_list %}
+                                    <div class="form-check">
+                                        <input type="checkbox" name="general_{{ question.id }}" value="{{ option }}" class="form-check-input">
+                                        <label class="form-check-label">{{ option }}</label>
+                                    </div>
+                                {% endfor %}
+                            {% elif question.question_type == 'File upload' %}
+                                <input type="file" name="general_{{ question.id }}" class="form-control">
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- SKU-Specific Questions Section -->
+        <div class="container mt-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-header">
+                    <h3 class="mb-0">SKU-Specific Questions</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered sheet-table" id="sku-table">
+                            <thead>
+                                <tr>
+                                    <th>SKU Name</th>
+                                    {% for column in extra_columns %}
+                                        <th>{{ column }}</th>
+                                    {% endfor %}
+                                    {% for question in sku_specific_questions %}
+                                        <th>{{ question.question }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sku in processed_skus %}
+                                    <tr>
+                                        <td>{{ sku.sku_name }}</td>
+                                        {% for value in sku.extra_data.values %}
+                                            <td>{{ value }}</td>
+                                        {% endfor %}
+
+                                        {% for question in sku_specific_questions %}
+                                            <td>
+                                                {% if question.question_type == 'text' %}
+                                                    <input type="text" name="sku_{{ sku.sku_id }}_{{ question.id }}" class="form-control">
+                                                {% elif question.question_type == 'number' %}
+                                                    <input type="number" step="any" name="sku_{{ sku.sku_id }}_{{ question.id }}" class="form-control">
+                                                {% elif question.question_type == 'date' %}
+                                                    <input type="date" name="sku_{{ sku.sku_id }}_{{ question.id }}" class="form-control">
+                                                {% elif question.question_type == 'file' %}
+                                                    <input type="file" name="sku_{{ sku.sku_id }}_{{ question.id }}" class="form-control">
+                                                {% elif question.question_type == 'Single-select' %}
+                                                    <select name="sku_{{ sku.sku_id }}_{{ question.id }}" class="form-control">
+                                                        <option value="">Select an option</option>
+                                                        {% for option in question.options_list %}
+                                                            <option value="{{ option }}">{{ option }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                {% elif question.question_type == 'Multi-select' %}
+                                                    {% for option in question.options_list %}
+                                                        <div class="form-check">
+                                                            <input type="checkbox" name="sku_{{ sku.sku_id }}_{{ question.id }}" value="{{ option }}" class="form-check-input">
+                                                            <label class="form-check-label">{{ option }}</label>
+                                                        </div>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="container mt-5">
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">Submit Response</button>
+            </div>
+        </div>
+    </form>
+    <!-- End of Form -->
+</div>
 {% endblock %}
