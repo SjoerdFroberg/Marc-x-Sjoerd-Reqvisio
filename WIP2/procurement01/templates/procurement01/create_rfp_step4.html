@@ -14,9 +14,6 @@
 
 <div id="full-screen-container">
 
-
-
-
 <div class="button-container">
 
     <!-- Button to toggle full screen -->
@@ -24,11 +21,10 @@
     <!-- Button to add a new question -->
     <button type="button" id="add-question-btn" class="btn btn-primary">Add Question</button>
 
-    
-
     <!-- Button to submit the form and continue to the next step -->
     <button type="button" class="btn btn-primary" onclick="submitForm()">Continue to Step 5</button>
 </div>
+
 
 <form id="rfp-sku-questions-form" method="POST" >
     {% csrf_token %}

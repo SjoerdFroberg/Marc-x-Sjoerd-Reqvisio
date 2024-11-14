@@ -75,6 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('continue-to-step-3').addEventListener('click', submitForm);
 
 
+ //SEARCH SKUS
+
     // Handle search input
     searchInput.addEventListener('input', async function () {
         const query = this.value.trim();
@@ -230,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Rebind the remove column event after adding the new column
         addRemoveColumnListeners();
         // Reapply cell navigation after adding new columns
-    applyCellNavigation();
+        applyCellNavigation();
 
 
     }
@@ -456,6 +458,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Apply paste listeners to rows and initialize cell navigation
     document.querySelectorAll('#sku-table tbody tr').forEach(row => applyListenersToRow(row));
+   
+    // Apply cell navigation
     applyCellNavigation();
 
     // Bind the event listeners to the initial remove column buttons

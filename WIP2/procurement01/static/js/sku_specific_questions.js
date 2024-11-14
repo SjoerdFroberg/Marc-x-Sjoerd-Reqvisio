@@ -150,10 +150,8 @@ document.addEventListener('DOMContentLoaded', function () {
         
         // Set the JSON data in the hidden input field
         document.getElementById('sku_specific_data').value = JSON.stringify(questionsData);
-
-        // Delay form submission by 5 seconds to inspect logs
-        setTimeout(() => {
-            document.getElementById('rfp-sku-questions-form').submit();
-        }, 5000); // 5000ms = 5 seconds delay
+        
+        document.getElementById('rfp-sku-questions-form').submit();
+       
     };
 });

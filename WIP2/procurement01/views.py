@@ -182,8 +182,14 @@ def create_rfp_step3(request, rfp_id):
     # Get the RFP instance
     rfp = get_object_or_404(RFP, id=rfp_id)
 
+    if GeneralQuestion.objects.filter(rfp=rfp):
+        extra_forms = 0
+    else:
+        extra_forms = 1
+
+
     # Create a formset for handling multiple GeneralQuestion instances
-    GeneralQuestionFormSet = modelformset_factory(GeneralQuestion, form=GeneralQuestionForm, extra=1, can_delete=True)
+    GeneralQuestionFormSet = modelformset_factory(GeneralQuestion, form=GeneralQuestionForm, extra=extra_forms, can_delete=True)
 
     # If the form is submitted
     if request.method == 'POST':
@@ -259,8 +265,8 @@ def create_rfp_step4(request, rfp_id):
             )
 
         # Redirect to the next step
-        print("Form submitted successfully, data saved to DB")
-        return HttpResponse("Form submitted successfully, data saved to DB") 
+            
+        return redirect('create_rfp_step5', rfp_id=rfp.id)
 
     # Pass context to the template
     context = {
@@ -374,102 +380,162 @@ def create_sku(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
+
 @login_required
 def create_rfp_step5(request, rfp_id):
-    # Get the RFP instance
     rfp = get_object_or_404(RFP, id=rfp_id)
-    
-    # Fetch all RFP_SKUs associated with this RFP
-    rfp_skus = RFP_SKUs.objects.filter(rfp=rfp)
 
-    # Process SKUs to pass to the template
-    processed_skus = []
-    extra_columns = []
-    for rfp_sku in rfp_skus:
-        extra_data = rfp_sku.get_extra_data()
-        if not extra_columns:
-            extra_columns = list(extra_data.keys())  # Store the keys only once from the first SKU
-        processed_skus.append({
-            'sku_id': rfp_sku.id,
-            'sku_name': rfp_sku.sku.name,
-            'extra_data': extra_data,
-        })
+    # Initialize the GeneralQuestionFormSet
+    GeneralQuestionFormSet = modelformset_factory(
+        GeneralQuestion, form=GeneralQuestionForm, extra=0, can_delete=True
+    )
 
-    # Fetch SKU-specific questions
-    sku_specific_questions = SKUSpecificQuestion.objects.filter(rfp=rfp)
-
-    # Create a formset for handling multiple GeneralQuestion instances
-    GeneralQuestionFormSet = modelformset_factory(GeneralQuestion, form=GeneralQuestionForm, extra=0, can_delete=True)
-
-    # Handle form submission
     if request.method == 'POST':
-        formset = GeneralQuestionFormSet(request.POST, queryset=GeneralQuestion.objects.filter(rfp=rfp))
-        rfp_title = request.POST.get('title')
-        rfp_description = request.POST.get('description')
-        new_files = request.FILES.getlist('new_files')
-        sku_specific_data = request.POST.get('sku_specific_data')
-        questions_data = json.loads(sku_specific_data) if sku_specific_data else []
-        extra_columns_data = request.POST.get('extra_columns_data')
-        extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
+        with transaction.atomic():
+            # Process RFP Basic Information Form
+            rfp_form = RFPBasicForm(request.POST, instance=rfp)
+            rfp_form_valid = rfp_form.is_valid()
 
-        if formset.is_valid():
-            # Update RFP title and description
-            rfp.title = rfp_title
-            rfp.description = rfp_description
-            rfp.save()
+            # Process General Questions FormSet
+            general_questions_formset = GeneralQuestionFormSet(
+                request.POST, queryset=GeneralQuestion.objects.filter(rfp=rfp)
+            )
+            general_questions_formset_valid = general_questions_formset.is_valid()
 
-            # Process files - remove selected ones and add new ones
-            removed_file_ids = request.POST.getlist('removed_files')
-            RFPFile.objects.filter(id__in=removed_file_ids).delete()
-            for file in new_files:
-                RFPFile.objects.create(rfp=rfp, file=file)
+            if rfp_form_valid and general_questions_formset_valid:
+                # Save RFP Basic Information
+                rfp = rfp_form.save()
 
-            # Process general questions
-            instances = formset.save(commit=False)
-            for instance in instances:
-                instance.rfp = rfp
-                instance.save()
-            for deleted_instance in formset.deleted_objects:
-                deleted_instance.delete()
+                # Handle file deletions
+                files_to_delete = request.POST.getlist('delete_files')
+                if files_to_delete:
+                    RFPFile.objects.filter(id__in=files_to_delete, rfp=rfp).delete()
 
-            # Clear existing SKU-specific questions and data for this RFP
-            SKUSpecificQuestion.objects.filter(rfp=rfp).delete()
-            RFP_SKUs.objects.filter(rfp=rfp).delete()
+                # Handle new file uploads
+                for file in request.FILES.getlist('new_files'):
+                    RFPFile.objects.create(rfp=rfp, file=file)
 
-            # Re-create SKU data and questions
-            for sku_data in extra_columns_json:
-                sku_id = sku_data['sku_id']
-                sku = get_object_or_404(SKU, id=sku_id)
-                rfp_sku = RFP_SKUs.objects.create(rfp=rfp, sku=sku)
-                data_ordered = OrderedDict(sku_data['data'])
-                rfp_sku.set_extra_data(data_ordered)
-                rfp_sku.save()
+                # Save General Questions
+                general_questions = general_questions_formset.save(commit=False)
+                for question in general_questions:
+                    question.rfp = rfp
+                    question.save()
+                # Delete any questions marked for deletion
+                for deleted_question in general_questions_formset.deleted_objects:
+                    deleted_question.delete()
 
-            for question_data in questions_data:
-                SKUSpecificQuestion.objects.create(
-                    rfp=rfp,
-                    question=question_data['question'],
-                    question_type=question_data['question_type']
+                # Process SKUs and Extra Data
+                # Get existing SKUs associated with the RFP
+                existing_sku_ids = set(
+                    RFP_SKUs.objects.filter(rfp=rfp).values_list('sku_id', flat=True)
                 )
 
-            # Redirect to a success page or back to the RFP list
-            return redirect('rfp_list')
+                # Get SKU IDs from the form
+                sku_ids = request.POST.getlist('skus[]')
+                submitted_sku_ids = set(int(sku_id) for sku_id in sku_ids)
+
+                # Remove SKUs that are no longer in the form
+                skus_to_remove = existing_sku_ids - submitted_sku_ids
+                RFP_SKUs.objects.filter(rfp=rfp, sku_id__in=skus_to_remove).delete()
+
+                # Update or create RFP_SKUs and their extra data
+                extra_columns_data = request.POST.get('extra_columns_data')
+                extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
+
+                for sku_data in extra_columns_json:
+                    sku_id = sku_data['sku_id']
+                    sku = get_object_or_404(SKU, id=sku_id)
+                    rfp_sku, _ = RFP_SKUs.objects.get_or_create(rfp=rfp, sku=sku)
+                    # Convert dataArray back into an ordered dictionary
+                    data_ordered = OrderedDict(sku_data['data'])
+                    rfp_sku.set_extra_data(data_ordered)
+                    rfp_sku.save()
+
+                # Process SKU-Specific Questions
+                # Remove existing SKU-specific questions
+                SKUSpecificQuestion.objects.filter(rfp=rfp).delete()
+
+                # Add new SKU-specific questions
+                sku_specific_data = request.POST.get('sku_specific_data')
+                sku_specific_json = json.loads(sku_specific_data) if sku_specific_data else []
+
+                for question_data in sku_specific_json:
+                    SKUSpecificQuestion.objects.create(
+                        rfp=rfp,
+                        question=question_data['question'],
+                        question_type=question_data['question_type']
+                    )
+
+                # Finalize RFP and redirect to RFP list or a success page
+                return redirect('rfp_list')
+
+            else:
+                # If forms are invalid, re-render the page with errors
+                existing_files = rfp.files.all()
+                rfp_skus = RFP_SKUs.objects.filter(rfp=rfp)
+                processed_skus = []
+                extra_columns = []
+
+                for rfp_sku in rfp_skus:
+                    extra_data = rfp_sku.get_extra_data()
+                    if not extra_columns:
+                        extra_columns = list(extra_data.keys())
+                    processed_skus.append({
+                        'sku_id': rfp_sku.sku.id,
+                        'sku_name': rfp_sku.sku.name,
+                        'extra_data': extra_data,
+                    })
+
+                sku_specific_questions = SKUSpecificQuestion.objects.filter(rfp=rfp)
+
+                context = {
+                    'rfp': rfp,
+                    'rfp_form': rfp_form,
+                    'existing_files': existing_files,
+                    'general_questions_formset': general_questions_formset,
+                    'extra_columns': extra_columns,
+                    'processed_skus': processed_skus,
+                    'sku_specific_questions': sku_specific_questions,
+                }
+
+                return render(request, 'procurement01/create_rfp_step5.html', context)
 
     else:
-        formset = GeneralQuestionFormSet(queryset=GeneralQuestion.objects.filter(rfp=rfp))
+        # Handle GET request
+        rfp_form = RFPBasicForm(instance=rfp)
+        existing_files = rfp.files.all()
 
+        # Initialize the General Questions FormSet with existing questions
+        general_questions_formset = GeneralQuestionFormSet(
+            queryset=GeneralQuestion.objects.filter(rfp=rfp)
+        )
 
+        # Prepare SKUs and Extra Data for the template
+        rfp_skus = RFP_SKUs.objects.filter(rfp=rfp)
+        processed_skus = []
+        extra_columns = []
 
-    
+        for rfp_sku in rfp_skus:
+            extra_data = rfp_sku.get_extra_data()
+            if not extra_columns and extra_data:
+                extra_columns = list(extra_data.keys())
+            processed_skus.append({
+                'sku_id': rfp_sku.sku.id,
+                'sku_name': rfp_sku.sku.name,
+                'extra_data': extra_data,
+            })
 
+        # Get existing SKU-specific questions
+        sku_specific_questions = SKUSpecificQuestion.objects.filter(rfp=rfp)
 
-    # Pass context to the template
-    context = {
-        'rfp': rfp,
-        'formset': formset,
-        'extra_columns': extra_columns,
-        'processed_skus': processed_skus,
-        'sku_specific_questions': sku_specific_questions,
-        'question_types': SKUSpecificQuestion.QUESTION_TYPES,
-    }
-    return render(request, 'procurement01/create_rfp_step5.html', context)
+        context = {
+            'rfp': rfp,
+            'rfp_form': rfp_form,
+            'existing_files': existing_files,
+            'general_questions_formset': general_questions_formset,
+            'extra_columns': extra_columns,
+            'processed_skus': processed_skus,
+            'sku_specific_questions': sku_specific_questions,
+        }
+
+        return render(request, 'procurement01/create_rfp_step5.html', context)

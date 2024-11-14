@@ -85,11 +85,11 @@ class GeneralQuestionForm(forms.ModelForm):
     class Meta:
         model = GeneralQuestion
         fields = ['question_text', 'question_type', 'multiple_choice_options']
-
-        
-    def __init__(self, *args, **kwargs):
-        super(GeneralQuestionForm, self).__init__(*args, **kwargs)
-        self.fields['question_type'].widget.attrs.update({'class': 'form-control question-type-select'})
+        widgets = {
+            'question_text': forms.TextInput(attrs={'class': 'form-control'}),
+            'question_type': forms.Select(attrs={'class': 'form-control question-type-select'}),
+            # Optionally, define the widget for 'multiple_choice_options' if needed
+        }
 
     def clean(self):
         cleaned_data = super().clean()
