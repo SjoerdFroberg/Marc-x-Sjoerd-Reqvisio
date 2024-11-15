@@ -12,6 +12,9 @@ from collections import OrderedDict
 from django.http import HttpResponse 
 from collections import OrderedDict
 
+from decimal import Decimal, InvalidOperation
+from datetime import datetime
+
 
 from django.views.decorators.http import require_POST
 
@@ -606,11 +609,7 @@ def invite_suppliers(request, rfp_id):
             'suppliers': suppliers,
         })
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.db import transaction
-from django.utils import timezone
-from decimal import Decimal, InvalidOperation
-from datetime import datetime
+
 
 def supplier_rfp_response(request, token):
     invitation = get_object_or_404(RFPInvitation, token=token)
