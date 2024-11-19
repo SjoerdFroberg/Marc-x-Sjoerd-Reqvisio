@@ -1,0 +1,47 @@
+{% extends 'procurement01/layout.html' %}
+
+{% block title %}General Questions Analysis - {{ rfp.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>General Questions Analysis</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th>General Questions</th>
+                    {% for response in supplier_responses %}
+                        <th>{{ response.supplier.name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for question in general_questions %}
+                    <tr>
+                        <td>{{ question.question_text }}</td>
+                        {% for supplier_response in supplier_responses %}
+                            <td>
+                                {% with response_data|dict_get:question.id as supplier_responses %}
+                                    {% with supplier_responses|dict_get:supplier_response.supplier.id as answer %}
+                                        {% if answer %}
+                                            {% if question.question_type == 'text' %}
+                                                {{ answer.answer_text }}
+                                            {% elif question.question_type in ['Single-select', 'Multi-select'] %}
+                                                {{ answer.answer_choice }}
+                                            {% elif question.question_type == 'File upload' %}
+                                                <a href="{{ answer.answer_file.url }}" target="_blank">Download</a>
+                                            {% endif %}
+                                        {% else %}
+                                            <em>No response</em>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% endwith %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

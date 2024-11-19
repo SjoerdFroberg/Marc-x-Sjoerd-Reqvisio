@@ -821,3 +821,34 @@ def general_question_analysis(request, rfp_id):
 
     return render(request, 'procurement01/general_question_analysis.html', context)
 
+@login_required
+def general_question_table_view(request, rfp_id):
+    # Get the RFP instance
+    rfp = get_object_or_404(RFP, id=rfp_id)
+
+    # Get all general questions for the RFP
+    general_questions = GeneralQuestion.objects.filter(rfp=rfp)
+
+    # Get all supplier responses for this RFP
+    supplier_responses = SupplierResponse.objects.filter(rfp=rfp)
+
+    # Build a dictionary of responses: {question_id: {supplier_id: response}}
+    response_data = {}
+    for question in general_questions:
+        response_data[question.id] = {}
+        for supplier_response in supplier_responses:
+            general_response = GeneralQuestionResponse.objects.filter(
+                response=supplier_response,
+                question=question
+            ).first()  # Assuming each supplier has one response per question
+            response_data[question.id][supplier_response.supplier.id] = general_response
+
+    # Context for rendering
+    context = {
+        'rfp': rfp,
+        'general_questions': general_questions,
+        'supplier_responses': supplier_responses,
+        'response_data': response_data,
+    }
+
+    return render(request, 'procurement01/general_question_table.html', context)
