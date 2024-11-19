@@ -785,3 +785,39 @@ def supplier_thank_you(request):
         del request.session['rfp_title']
 
     return render(request, 'procurement01/supplier_thank_you.html', {'rfp_title': rfp_title})
+
+
+
+
+@login_required
+def general_question_analysis(request, rfp_id):
+    rfp = get_object_or_404(RFP, id=rfp_id)
+    # Get all general questions for the RFP
+    general_questions = GeneralQuestion.objects.filter(rfp=rfp)
+    
+    # Get all supplier responses for the RFP
+    supplier_responses = SupplierResponse.objects.filter(rfp=rfp)
+    
+    # Get all general question responses for these supplier responses
+    general_question_responses = GeneralQuestionResponse.objects.filter(
+        response__in=supplier_responses
+    )
+
+     # Build a dictionary of responses: {question_id: {supplier_response_id: response}}
+    responses_dict = {}
+    for gq_response in general_question_responses:
+        question_id = gq_response.question.id
+        supplier_response_id = gq_response.response.id
+        if question_id not in responses_dict:
+            responses_dict[question_id] = {}
+        responses_dict[question_id][supplier_response_id] = gq_response
+
+    context = {
+        "rfp": rfp,
+        "general_questions": general_questions,
+        "supplier_responses": supplier_responses,
+        "responses_dict": responses_dict,
+    }
+
+    return render(request, 'procurement01/general_question_analysis.html', context)
+

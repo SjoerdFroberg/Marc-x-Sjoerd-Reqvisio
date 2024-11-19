@@ -10,3 +10,5 @@ def get_item(dictionary, key):
 @register.filter
 def filename(value):
     return os.path.basename(value)
+
+

@@ -36,6 +36,8 @@ urlpatterns = [
     path('respond_rfp/<str:token>/', views.supplier_rfp_response, name='supplier_rfp_response'),
     path('supplierthankyou', views.supplier_thank_you, name = 'supplier_thank_you'),
 
+    path('general_question_analysis/<int:rfp_id>', views.general_question_analysis, name = 'general_question_analysis')
+
 
 
 
