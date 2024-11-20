@@ -804,3 +804,186 @@ textarea.form-control:focus {
 
 
 
+
+/* Table Styling for Dynamic Column Widths */
+.styled-table {
+    border-collapse: collapse; /* Ensures borders collapse for clean styling */
+    width: 100%; /* Ensure the table occupies full width */
+    table-layout: auto; /* Let the browser determine column width based on content */
+}
+
+
+
+/* Alternate Row Background Colors */
+.styled-table tbody tr:nth-child(even) {
+    background-color: #f7faf9; /* Very light green */
+}
+
+
+
+.styled-table tbody tr:hover {
+    background-color: #d9e7e5; /* Slightly darker green for hover */
+    transition: background-color 0.3s ease;
+}
+
+/* Table Data Cells */
+.styled-table td {
+    border-bottom: 1px solid #e0e0e0; /* Light border for separation */
+    color: #333333;
+    padding: 10px 15px;
+    vertical-align: top;
+    white-space: normal; /* Allow text wrapping */
+    word-wrap: break-word;
+}
+
+/* Header Rounded Corners Fix */
+.styled-table th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.styled-table th:last-child {
+    border-top-right-radius: 12px;
+}
+
+/* Links in Cells */
+.styled-table td a {
+    color: #3c6a56; /* Matching link color */
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.styled-table td a:hover {
+    text-decoration: underline;
+}
+
+/* Adjust Responsive Design */
+@media (max-width: 768px) {
+    .styled-table th, .styled-table td {
+        font-size: 0.9rem;
+        padding: 8px 10px;
+    }
+}
+
+
+
+
+
+
+/* Table Header Styling */
+.styled-table th {
+    background-color: #2d4c3e; /* Dark green consistent with app */
+    position: sticky; /* Makes the header sticky */
+    top: 0; /* Keeps it at the top of the scrollable area */
+    z-index: 2; /* Ensures it appears above other content */
+    color: #ffffff; /* White for contrast */
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 15px;
+    border: none;
+    position: sticky; /* Sticky header */
+    top: 0;
+    z-index: 2;
+}
+
+
+
+
+/* Table Wrapper */
+.table-wrapper {
+    width: 100%; /* Full width */
+    margin-left: auto; /* Center the table */
+    margin-right: auto;
+    border-radius: 12px;
+    background-color: #ffffff;
+    z-index: 2;
+    padding: 20px;
+    overflow-x: auto;
+    overflow-y: hidden; /* Allow vertical scrolling */
+    max-height: calc(100vh - 200px);; /* Set a maximum height to enable scrolling */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Softer shadow */
+}
+
+.table-freeze {
+    border-radius: 0px;
+    background-color: #ffffff;
+    padding: 0px;
+    margin: 0 auto;
+    z-index: 2; /* Ensures it appears above other content */
+    overflow-y: auto; /* Allow vertical scrolling */
+    overflow-x: auto;
+    max-height: calc(100vh - 200px);; /* Set a maximum height to enable scrolling */
+
+
+}
+
+
+/* Adjust the body when full-screen is active */
+body.fullscreen-active {
+    overflow: hidden; /* Prevent scrolling on the main page */
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2d4c3e; /* Match your theme's colors */
+}
+
+
+
+/* Exit Full-Screen Button */
+#exit-fullscreen-btn {
+    position: absolute; /* Place it relative to the container */
+    top: 20px; /* Space from the top of the screen */
+    left: 20px; /* Space from the left of the screen */
+    z-index: 10000; /* Ensure it stays above all elements */
+    padding: 10px 15px; /* Add padding for better appearance */
+    border-radius: 8px; /* Rounded corners */
+    background-color: #2d4c3e; /* Match theme color */
+    color: white; /* Ensure text contrast */
+    border: none; /* Remove any border */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+    cursor: pointer; /* Change cursor on hover */
+}
+
+/* Full-Screen Styling for General Questions */
+#general-questions-fullscreen.fullscreen {
+    position: fixed; /* Fix the element to the viewport */
+    top: 0; /* Align to the top of the screen */
+    left: 0; /* Align to the left of the screen */
+    width: 100vw; /* Full width of the viewport */
+    height: 100vh; /* Full height of the viewport */
+    z-index: 9999; /* Ensure it is above all other elements */
+    background-color: white; /* Set the background */
+    overflow: auto; /* Enable scrolling if content overflows */
+    padding: 60px 20px 20px; /* Padding around the container (leave space for the button) */
+}
+
+/* Table Inside Full-Screen */
+#general-questions-fullscreen.fullscreen .table-freeze {
+    margin-top: 10px; /* Add some space below the button */
+    max-height: calc(100vh - 100px); /* Ensure the table fits within the available space */
+    overflow-y: auto; /* Allow vertical scrolling */
+    overflow-x: auto; /* Allow horizontal scrolling */
+}
+
+/* Table Styling */
+#general-questions-fullscreen.fullscreen table {
+    width: 100%; /* Use full width of the container */
+    height: auto; /* Adjust height based on content */
+    border-collapse: collapse; /* Remove gaps between table cells */
+    margin-top: 10px; /* Add a slight gap between the button and the table */
+}
+
+.question-cell {
+    font-weight: bold;
+    border-right: 1px solid #e0e0e0; /* Add a light gray vertical border */
+    padding-right: 10px; /* Add some space between the text and the border */
+}
