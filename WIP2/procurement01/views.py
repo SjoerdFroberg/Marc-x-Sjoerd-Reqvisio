@@ -789,37 +789,7 @@ def supplier_thank_you(request):
 
 
 
-@login_required
-def general_question_analysis(request, rfp_id):
-    rfp = get_object_or_404(RFP, id=rfp_id)
-    # Get all general questions for the RFP
-    general_questions = GeneralQuestion.objects.filter(rfp=rfp)
-    
-    # Get all supplier responses for the RFP
-    supplier_responses = SupplierResponse.objects.filter(rfp=rfp)
-    
-    # Get all general question responses for these supplier responses
-    general_question_responses = GeneralQuestionResponse.objects.filter(
-        response__in=supplier_responses
-    )
 
-     # Build a dictionary of responses: {question_id: {supplier_response_id: response}}
-    responses_dict = {}
-    for gq_response in general_question_responses:
-        question_id = gq_response.question.id
-        supplier_response_id = gq_response.response.id
-        if question_id not in responses_dict:
-            responses_dict[question_id] = {}
-        responses_dict[question_id][supplier_response_id] = gq_response
-
-    context = {
-        "rfp": rfp,
-        "general_questions": general_questions,
-        "supplier_responses": supplier_responses,
-        "responses_dict": responses_dict,
-    }
-
-    return render(request, 'procurement01/general_question_analysis.html', context)
 
 def general_question_table_view(request, rfp_id):
     rfp = get_object_or_404(RFP, id=rfp_id)
@@ -844,3 +814,70 @@ def general_question_table_view(request, rfp_id):
     }
 
     return render(request, 'procurement01/general_question_table.html', context)
+
+
+
+
+@login_required
+def sku_specific_question_responses_analysis(request, rfp_id):
+    # Step 1: Fetch the RFP instance
+    rfp = get_object_or_404(RFP, id=rfp_id)
+
+    # Step 2: Retrieve RFP_SKUs with extra data
+    rfp_skus = RFP_SKUs.objects.filter(rfp=rfp)
+    processed_skus = []
+    extra_columns = []
+
+    for rfp_sku in rfp_skus:
+        extra_data = rfp_sku.get_extra_data()  # Extra data from step 2
+        if not extra_columns and extra_data:
+            extra_columns = list(extra_data.keys())  # Store column names from the first SKU
+        processed_skus.append({
+            'sku_id': rfp_sku.sku.id,
+            'sku_name': rfp_sku.sku.name,
+            'extra_data': extra_data,
+        })
+
+    # Step 3: Retrieve SKU-specific questions for the RFP
+    sku_specific_questions = SKUSpecificQuestion.objects.filter(rfp=rfp)
+
+    # Step 4: Retrieve supplier responses for SKU-specific questions
+    supplier_responses = SupplierResponse.objects.filter(rfp=rfp)
+    sku_question_responses = SKUSpecificQuestionResponse.objects.filter(
+        response__in=supplier_responses
+    )
+
+    # Step 5: Build a response mapping: {(supplier_id, sku_id, question_id): response_data}
+    response_lookup = {}
+    for response in sku_question_responses:
+        key = (response.response.supplier.id, response.rfp_sku.sku.id, response.question.id)
+        response_lookup[key] = {
+            'text': response.answer_text,
+            'number': response.answer_number,
+            'file': response.answer_file.url if response.answer_file else None,
+            'date': response.answer_date,
+            'choice': response.answer_choice,
+        }
+
+    # Step 6: Handle dropdown filtering (default to showing all questions)
+    selected_question_ids = request.GET.getlist('question_ids', [])  # Get selected question IDs from the dropdown
+    if not selected_question_ids:
+        selected_question_ids = [str(q.id) for q in sku_specific_questions]  # Default to all questions
+    selected_questions = sku_specific_questions.filter(id__in=selected_question_ids)
+
+    # Step 7: Prepare context for the template
+    context = {
+        'rfp': rfp,
+        'processed_skus': processed_skus,
+        'extra_columns': extra_columns,
+        'sku_specific_questions': sku_specific_questions,
+        'selected_questions': selected_questions,
+        'supplier_responses': supplier_responses,
+        'response_lookup': response_lookup,
+        "multi_choice_types": ['Single-select', 'Multi-select'],  # Add this
+    }
+
+    print(supplier_responses)
+
+    # Render the template
+    return render(request, 'procurement01/sku_specific_question_responses_analysis.html', context)

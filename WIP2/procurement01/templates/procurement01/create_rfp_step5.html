@@ -2,255 +2,114 @@
 {% load static %}
 {% load custom_filters %}
 
-{% block title %}Create RFP - Step 5{% endblock %}
+{% block title %}SKU-Specific Question Responses Analysis{% endblock %}
 
 {% block content %}
 
-<div id="main-content-wrapper">
-
-    <h2>Finalize RFP</h2>
-    <!-- Wrap the entire content in a single form -->
-    <form method="POST" enctype="multipart/form-data" id="finalize-rfp-form">
-    {% csrf_token %}
-
-        <!-- RFP Basic Information Section -->
-        <div class="container mt-5">
+<div id="main-content-wrapper" class="mt-5">
+    <h2>SKU-Specific Question Responses Analysis</h2>
+    <form method="GET" id="sku-specific-analysis-form">
+        {% csrf_token %}
+        
+        <!-- Filters Section -->
+        <div class="container mb-4">
             <div class="card shadow-lg border-0">
-                <div class="card-header">
-                    <h3 class="mb-0">RFP Basic Information</h3>
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Filters</h3>
                 </div>
                 <div class="card-body">
-                    <!-- Render RFP Basic Form -->
-                    {{ rfp_form.as_p }}
-                    {% if rfp_form.errors %}
-                        <div class="alert alert-danger">
-                            {{ rfp_form.errors }}
-                        </div>
-                    {% endif %}
-
-                    <!-- File Upload Section -->
-                    <h4>Attached Files</h4>
-                    <div class="form-group">
-                        <!-- Hidden file input -->
-                        <input type="file" name="new_files" id="id_new_files" class="d-none" multiple>
-                        <!-- Custom upload button -->
-                        <button type="button" class="btn btn-primary" id="upload-files-button">
-                            <i class="bi bi-upload"></i> Upload Files
-                        </button>
-                    </div>
-
-                    <!-- Display Files as Icons -->
-                    <div class="form-group">
-                        <div class="existing-files-container" id="files-container">
-                            <!-- Existing files will be loaded here -->
-                            {% for file in existing_files %}
-                            <div class="file-icon" data-file-id="{{ file.id }}">
-                                <button type="button" class="remove-file-btn">
-                                    <i class="bi bi-x-circle-fill"></i>
-                                </button>
-                                <a href="{{ file.file.url }}" target="_blank">
-                                    <i class="bi bi-file-earmark"></i>
-                                    <span>{{ file.file.name|filename }}</span>
-                                </a>
-                                <input type="hidden" name="delete_files" value="{{ file.id }}" disabled>
-                            </div>
-                            {% endfor %}
+                    <div class="row">
+                        <!-- Question Filter -->
+                        <div class="col-md-6">
+                            <label for="question-filter" class="form-label"><strong>Filter by Questions:</strong></label>
+                            <select id="question-filter" name="question_ids" class="form-select" multiple>
+                                {% for question in sku_specific_questions %}
+                                    <option value="{{ question.id }}" {% if question.id|stringformat:"s" in selected_question_ids %}selected{% endif %}>
+                                        {{ question.question_text }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted">Use Ctrl/Cmd + click to select multiple questions.</small>
                         </div>
                     </div>
-
-
-
                 </div>
             </div>
         </div>
 
-        <!-- General Questions Section -->
-        <div class="container mt-5">
+        <!-- Table Section -->
+        <div class="container">
             <div class="card shadow-lg border-0">
-                <div class="card-header">
-                    <h3 class="mb-0">General Questions</h3>
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Response Data</h3>
                 </div>
                 <div class="card-body">
-                    <!-- Include Management Form -->
-                    {{ general_questions_formset.management_form }}
-                    {% if general_questions_formset.non_form_errors %}
-                        <div class="alert alert-danger">
-                            {{ general_questions_formset.non_form_errors }}
-                        </div>
-                    {% endif %}
-
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>Question Text</th>
-                                <th>Question Type</th>
-                                <th>Multiple Choice Options</th>
-                            </tr>
-                        </thead>
-                        <tbody id="question-table-body">
-                            {% for form in general_questions_formset %}
-                            {% if form.errors %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped align-middle" id="sku-analysis-table">
+                            <thead>
                                 <tr>
-                                    <td colspan="4">
-                                        <div class="alert alert-danger">
-                                            {{ form.errors }}
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endif %}
-                            <tr>
-                                <td>
-                                    <button type="button" class="btn btn-danger remove-question-btn">Remove</button>
-                                    <!-- Include the hidden id field -->
-                                    {{ form.id }}
-                                </td>
-                                <td>{{ form.question_text }}</td>
-                                <td>{{ form.question_type }}</td>
-                                <td>
-                                    <!-- Tagify input without name to avoid direct submission -->
-                                    <input type="text" class="multiple-choice-input form-control" placeholder="Type and press Enter to add options" style="display: none;">
-                                    <!-- Hidden input with the correct name for Django form processing -->
-                                    <input type="hidden" name="{{ form.prefix }}-multiple_choice_options" class="hidden-multiple-choice-input" value="{{ form.multiple_choice_options.value }}">
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-
-                    <button type="button" class="btn btn-secondary" id="add-question-btn">Add Another Question</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- SKUs and SKU-specific Questions Section -->
-        <div class="container mt-5">
-            <div class="card shadow-lg border-0">
-                <div class="card-header">
-                    <h3 class="mb-0">SKUs and SKU-specific Questions</h3>
-                </div>
-                <div class="card-body">
-
-                    <div id="full-screen-container">
-
-                        <!-- Controls -->
-                        <div class="top-controls">
-                            <div id="left-controls">
-                            <!-- Full screen toggle -->
-                            <button type="button" id="full-screen-toggle" class="action-btn">Full Screen</button>
-
-                            <!-- Button to add extra data column -->
-                            <button type="button" id="add-extra-column" class="action-btn">Add Extra Data Column</button>
-
-                            <!-- Button to add SKU-specific question -->
-                            <button type="button" id="add-sku-question-btn" class="action-btn">Add SKU-specific Question</button>
-                        </div>
-                    </div>
-
-                        <!-- SKU Search -->
-                        <div class="search-container">
-                            <label for="sku-search-input">Search and Add SKU</label>
-                            <span class="tooltip-icon" title="Type an SKU name to add it to the table">ℹ️</span>
-                        </div>
-                        <input type="text" id="sku-search-input" class="form-control" placeholder="Search SKU to Add" autocomplete="off" autofocus>
-                        <div id="sku-search-results" class="sku-search-results"></div>
-
-                        <!-- Hidden inputs to store extra data -->
-                        <input type="hidden" id="extra_columns_data" name="extra_columns_data" />
-                        <input type="hidden" id="sku_specific_data" name="sku_specific_data" />
-
-                        <!-- The table -->
-                        <div class="table-wrapper">
-                            <table class="table sheet-table" id="sku-table">
-                                <thead>
-                                    <tr>
-                                        <th></th>
-                                        <th><input type="text" class="column-input" value="SKU Name" disabled></th>
-                                        {% for column in extra_columns %}
-                                            <th>
-                                                <input type="text" class="column-input" value="{{ column }}">
-                                                <button type="button" class="remove-column-x">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </button>
-                                            </th>
-                                        {% endfor %}
-                                        <!-- SKU-specific Questions Headers -->
-                                        {% for question in sku_specific_questions %}
-                                            <th class="sku-specific-question">
-                                                <input type="text" class="column-input" value="{{ question.question }}">
-                                                <button type="button" class="remove-column-x">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </button>
-                                            </th>
-                                        {% endfor %}
-                                    </tr>
-                                    <tr>
-                                        <th></th>
-                                        <th></th>
-                                        {% for column in extra_columns %}
-                                            <th></th>
-                                        {% endfor %}
-                                        <!-- SKU-specific Questions Types -->
-                                        {% for question in sku_specific_questions %}
-                                            <th class="sku-specific-question">
-                                                <select class="form-control question-type-select">
-                                                    <option value="text" {% if question.question_type == 'text' %}selected{% endif %}>Text</option>
-                                                    <option value="number" {% if question.question_type == 'number' %}selected{% endif %}>Number</option>
-                                                    <option value="file" {% if question.question_type == 'file' %}selected{% endif %}>File Upload</option>
-                                                    <option value="date" {% if question.question_type == 'date' %}selected{% endif %}>Date</option>
-                                                </select>
-                                            </th>
-                                        {% endfor %}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for sku in processed_skus %}
-                                        <tr data-sku-id="{{ sku.sku_id }}">
-                                            <td>
-                                                <button type="button" class="remove-sku-btn">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </button>
-                                            </td>
-                                            <td contenteditable="false">{{ sku.sku_name }}
-                                                <input type="hidden" name="skus[]" value="{{ sku.sku_id }}">
-                                            </td>
-                                            {% for value in sku.extra_data.values %}
-                                                <td contenteditable="true">{{ value }}</td>
-                                            {% endfor %}
-                                            {% for _ in sku_specific_questions %}
-                                                <td contenteditable="true"></td>
-                                            {% endfor %}
-                                        </tr>
+                                    <th>SKU Name</th>
+                                    <!-- Extra Columns -->
+                                    {% for column in extra_columns %}
+                                        <th>{{ column }}</th>
                                     {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-
+                                    <!-- Supplier and Questions -->
+                                    {% for supplier in rfp.suppliers.all %}
+                                        {% for question in selected_questions %}
+                                            <th>{{ supplier.name }} - {{ question.question_text }}</th>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sku in processed_skus %}
+                                    <tr>
+                                        <td>{{ sku.sku_name }}</td>
+                                        <!-- Extra Data -->
+                                        {% for column in extra_columns %}
+                                            <td>{{ sku.extra_data|get_item:column }}</td>
+                                        {% endfor %}
+                                        <!-- Responses -->
+                                        {% for supplier in rfp.suppliers.all %}
+                                            {% for question in selected_questions %}
+                                                <td>
+                                                    {% with key=supplier.id|add:"_"|add:sku.sku_id|add:"_"|add:question.id %}
+                                                        {% with response=response_lookup|get_item:key %}
+                                                            {% if response %}
+                                                                {% if question.question_type == 'text' %}
+                                                                    {{ response.text }}
+                                                                {% elif question.question_type == 'number' %}
+                                                                    {{ response.number }}
+                                                                {% elif question.question_type == 'date' %}
+                                                                    {{ response.date }}
+                                                                {% elif question.question_type == 'file' %}
+                                                                    <a href="{{ response.file }}" class="btn btn-link">Download</a>
+                                                                {% elif question.question_type in multi_choice_types %}
+                                                                    {{ response.choice }}
+                                                                {% endif %}
+                                                            {% else %}
+                                                                <span class="text-muted">No response</span>
+                                                            {% endif %}
+                                                        {% endwith %}
+                                                    {% endwith %}
+                                                </td>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Finalize RFP Button -->
-        <div class="container mt-5">
+        <!-- Finalize Button -->
+        <div class="container mt-4">
             <div class="d-flex justify-content-end">
-                <button type="button" class="btn btn-primary" onclick="finalizeRFP()">Finalize RFP</button>
+                <button type="submit" class="btn btn-success">Apply Filters</button>
             </div>
         </div>
     </form>
 </div>
-
-{% endblock %}
-
-{% block scripts %}
-
-<!-- Include necessary JS files -->
-
-<!-- Include Tagify JS and CSS for General Questions -->
-<script src="https://unpkg.com/@yaireo/tagify"></script>
-<link rel="stylesheet" href="https://unpkg.com/@yaireo/tagify/dist/tagify.css">
-
-<!-- Link to the external JavaScript file for Step 5 -->
-<script src="{% static 'js/step5.js' %}"></script>
 
 {% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'procurement01/layout.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}SKU-Specific Question Responses Analysis{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="section-header">
+        <h2>SKU-Specific Question Responses Analysis</h2>
+    </div>
+
+    <!-- Display RFP details -->
+    <div class="mb-3">
+        <strong>RFP Title:</strong> {{ rfp.title }}<br>
+        <strong>RFP Description:</strong> {{ rfp.description }}
+    </div>
+
+    <!-- Table for SKU-specific questions and responses -->
+    <div class="table-wrapper">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>SKU</th>
+                    {% for column in extra_columns %}
+                        <th>{{ column }}</th>
+                    {% endfor %}
+                    {% for question in sku_specific_questions %}
+                        <th>{{ question.question }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for sku in processed_skus %}
+                <tr>
+                    <td>{{ sku.sku_name }}</td>
+                    {% for column in extra_columns %}
+                        <td>{{ sku.extra_data|get_item:column }}</td>
+                    {% endfor %}
+                    {% for question in sku_specific_questions %}
+                        {% for supplier in suppliers %}
+                            <td>
+                                {% with response=response_lookup|get_item:(supplier.id|add:"_"|add:sku.sku_id|add:"_"|add:question.id) %}
+                                    {% if response %}
+                                        {% if question.question_type == 'text' %}
+                                            {{ response.text }}
+                                        {% elif question.question_type == 'number' %}
+                                            {{ response.number }}
+                                        {% elif question.question_type == 'date' %}
+                                            {{ response.date }}
+                                        {% elif question.question_type == 'file' %}
+                                            <a href="{{ response.file }}" target="_blank">Download</a>
+                                        {% elif question.question_type in multi_choice_types %}
+                                            {{ response.choice }}
+                                        {% endif %}
+                                    {% else %}
+                                        <em>No response</em>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                        {% endfor %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
