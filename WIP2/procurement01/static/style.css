@@ -23,20 +23,6 @@ h2 {
     margin-bottom: 20px;
 }
 
-/* Full-Screen Container */
-#full-screen-container.full-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 9999;
-    background-color: #ffffff;
-    padding: 30px;
-    overflow-y: auto; /* Enable vertical scrolling if content exceeds screen height */
-    display: flex;
-    flex-direction: column;
-}
 
 /* Table Wrapper for Horizontal Scrolling */
 .table-wrapper {
@@ -52,43 +38,114 @@ h2 {
     white-space: nowrap; /* Prevent wrapping of table content */
 }
 
-/* Fixed Column Widths */
+
+
+
+/* neeew
+
+/* Adjust Table Layout for Dynamic Column Widths */
 .sheet-table {
     border-collapse: collapse;
-    width: 100%; /* Set table width to occupy available space */
-    min-width: 1200px; /* Minimum width to trigger horizontal scrolling when there are many columns */
-    table-layout: fixed; /* Force equal column widths */
+    width: 100%;
+    table-layout: auto; /* Let the browser decide column width based on content */
     border-radius: 8px;
     overflow: hidden;
 }
 
-.sheet-table th, .sheet-table td {
-    padding: 12px 16px;
-    text-align: left;
-    border-bottom: 1px solid #e6e6e6;
-    width: 200px; /* Set fixed width for all columns to ensure consistent width */
-}
 
+
+/* Header Styling for Dynamic Widths */
 .sheet-table th {
-    background-color: #f2f5f4;
-    color: #2d4c3e;
+    background-color: #2d4c3e;
+    color: white;
     font-weight: 600;
-    position: relative;
-    width: 200px; /* Fixed width for header cells */
+    text-align: left;
+    padding: 8px;
+    white-space: normal; /* Allow wrapping of long text */
+    word-wrap: break-word; /* Break long words if necessary */
+    border: 1px solid #e0e0e0; /* Ensure consistent borders */
 }
 
+
+/* Prevent Rounded Corners on Second Header Row */
+.sheet-table thead tr:first-child th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.sheet-table thead tr:first-child th:last-child {
+    border-top-right-radius: 12px;
+}
+
+.sheet-table thead tr:nth-child(2) th:first-child,
+.sheet-table thead tr:nth-child(2) th:last-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* Data Cell Styling */
 .sheet-table td {
     background-color: #ffffff;
     color: #333;
-    width: 200px; /* Fixed width for data cells */
-    outline: none; /* Remove default outline */
+    padding: 8px;
+    text-align: left;
+    white-space: normal; /* Allow wrapping for long text */
+    word-wrap: break-word; /* Ensure text doesn't overflow */
+    border: 1px solid #e0e0e0; /* Consistent borders */
 }
+
+/* Alternate Row Colors */
+.sheet-table tbody tr:nth-child(even) {
+    background-color: #f7faf9;
+}
+
+/* Row Hover Effect */
+.sheet-table tbody tr:hover {
+    background-color: #e6f1ef;
+    transition: background-color 0.3s ease;
+}
+
+/* Sticky Header for Scrollable Tables */
+.sheet-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2; /* Ensure headers stay on top */
+}
+
+/* Wrapper for Horizontal and Vertical Scrolling */
+.table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 200px); /* Constrain table height for scrolling */
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for the container */
+}
+
 
 /* Greenish Focus Style for Editable Cells */
 .sheet-table td:focus {
     background-color: #e6f1ef; /* Light greenish background when focused */
     box-shadow: 0 0 5px rgba(60, 106, 86, 0.5); /* Greenish border shadow for focus */
 }
+
+
+/* neeew */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Remove Column Button */
 .remove-column-x {
@@ -391,11 +448,7 @@ textarea.form-control:focus {
     justify-content: flex-start; /* Align buttons to the left */
 }
 
-/* Full-Screen Button Layout */
-.full-screen-exit {
-    position: relative;
-    z-index: 10001; /* Ensure it stays on top in full-screen mode */
-}
+
 
 /* Table Borders */
 .sheet-table, .sheet-table th, .sheet-table td {
@@ -883,6 +936,9 @@ textarea.form-control:focus {
     position: sticky; /* Sticky header */
     top: 0;
     z-index: 2;
+    white-space: normal; /* Enable wrapping */
+    word-wrap: break-word; /* Wrap long words */
+    overflow-wrap: break-word; /* Ensure proper wrapping for modern browsers */
 }
 
 
@@ -917,10 +973,7 @@ textarea.form-control:focus {
 }
 
 
-/* Adjust the body when full-screen is active */
-body.fullscreen-active {
-    overflow: hidden; /* Prevent scrolling on the main page */
-}
+
 
 .section-header {
     display: flex;
@@ -938,23 +991,88 @@ body.fullscreen-active {
 
 
 
-/* Exit Full-Screen Button */
-#exit-fullscreen-btn {
-    position: absolute; /* Place it relative to the container */
-    top: 20px; /* Space from the top of the screen */
-    left: 20px; /* Space from the left of the screen */
-    z-index: 10000; /* Ensure it stays above all elements */
-    padding: 10px 15px; /* Add padding for better appearance */
-    border-radius: 8px; /* Rounded corners */
-    background-color: #2d4c3e; /* Match theme color */
-    color: white; /* Ensure text contrast */
-    border: none; /* Remove any border */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow */
-    cursor: pointer; /* Change cursor on hover */
+.question-cell {
+    font-weight: bold;
+    border-right: 1px solid #e0e0e0; /* Add a light gray vertical border */
+    padding-right: 10px; /* Add some space between the text and the border */
 }
 
+
+
+.styled-table thead tr:nth-child(2) th:first-child {
+    border-top-left-radius: 0; /* Remove left rounding for the second row */
+}
+
+.styled-table thead tr:nth-child(2) th:last-child {
+    border-top-right-radius: 0; /* Remove right rounding for the second row */
+}
+
+
+/* Supplier columns styles */
+.supplier-cell.supplier-0 {
+    background-color: #e6f1ef; /* Light green */
+}
+
+.supplier-cell.supplier-1 {
+    background-color: #f0f7f5; /* Even lighter green */
+}
+
+.supplier-cell.supplier-2 {
+    background-color: #d9e7e5; /* Slightly darker light green */
+}
+
+/* Supplier headers */
+.supplier-header.supplier-0 {
+    background-color: #3c6a56; /* Match primary button color */
+    color: #ffffff;
+}
+
+.supplier-header.supplier-1 {
+    background-color: #2d4c3e; /* Darker green */
+    color: #ffffff;
+}
+
+.supplier-header.supplier-2 {
+    background-color: #4f7b66; /* Intermediate green */
+    color: #ffffff;
+}
+
+
+
+
+
+
+
+
+
+/* all full screen */
+
+
+/* Exit Full-Screen Button */
+#exit-fullscreen-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 10000;
+    padding: 10px 15px;
+    border-radius: 8px;
+    background-color: #2d4c3e;
+    color: white;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+
+
+/* Adjust the body when full-screen is active */
+body.fullscreen-active {
+    overflow: hidden; /* Prevent scrolling on the main page */
+}
+
+
+
 /* Full-Screen Styling for General Questions */
-#general-questions-fullscreen.fullscreen {
+#analysis-fullscreen.fullscreen {
     position: fixed; /* Fix the element to the viewport */
     top: 0; /* Align to the top of the screen */
     left: 0; /* Align to the left of the screen */
@@ -966,8 +1084,9 @@ body.fullscreen-active {
     padding: 60px 20px 20px; /* Padding around the container (leave space for the button) */
 }
 
+
 /* Table Inside Full-Screen */
-#general-questions-fullscreen.fullscreen .table-freeze {
+#analysis-fullscreen.fullscreen .table-freeze {
     margin-top: 10px; /* Add some space below the button */
     max-height: calc(100vh - 100px); /* Ensure the table fits within the available space */
     overflow-y: auto; /* Allow vertical scrolling */
@@ -975,15 +1094,107 @@ body.fullscreen-active {
 }
 
 /* Table Styling */
-#general-questions-fullscreen.fullscreen table {
+#analysis-fullscreen.fullscreen table {
     width: 100%; /* Use full width of the container */
     height: auto; /* Adjust height based on content */
     border-collapse: collapse; /* Remove gaps between table cells */
     margin-top: 10px; /* Add a slight gap between the button and the table */
 }
 
-.question-cell {
-    font-weight: bold;
-    border-right: 1px solid #e0e0e0; /* Add a light gray vertical border */
-    padding-right: 10px; /* Add some space between the text and the border */
+
+
+
+/* Full-Screen Container */
+#full-screen-container.full-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background-color: #ffffff;
+    padding: 30px;
+    overflow-y: auto; /* Enable vertical scrolling if content exceeds screen height */
+    display: flex;
+    flex-direction: column;
 }
+
+
+
+
+/* Adjust the body when full-screen is active */
+body.fullscreen-active {
+    overflow: hidden;
+}
+
+
+
+
+/* end full screen section */
+
+
+
+
+
+/* Customize Choices.js container */
+
+/* Customize Choices.js container */
+.choices {
+    display: block;
+}
+
+.choices__inner {
+    background-color: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    padding: 10px 15px;
+    font-size: 1rem;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Match the subtle shadow */
+}
+
+.choices__inner:focus {
+    border-color: #3c6a56;
+    box-shadow: 0 0 8px rgba(60, 106, 86, 0.3); /* Greenish glow */
+}
+
+/* Customize the dropdown list */
+.choices__list--dropdown {
+    background-color: #f7faf9; /* Slightly off-white to match the second screenshot */
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.05); /* Subtle shadow for dropdown */
+    margin-top: 0.5rem;
+    z-index: 1000;
+    position: relative !important; /* Ensure dropdown appears inline with content */
+}
+
+/* Customize the options */
+.choices__list--dropdown .choices__item--selectable {
+    padding: 10px 15px;
+    font-size: 1rem;
+    color: #2d4c3e; /* Dark green text for consistency */
+    background-color: #ffffff; /* White background for dropdown items */
+    border-radius: 4px; /* Subtle rounded corners */
+    transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effects */
+}
+
+/* Highlighted option */
+.choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: #d9e7e5; /* Light green highlight */
+    color: #2d4c3e; /* Dark green text */
+}
+
+/* Hover effect */
+.choices__list--dropdown .choices__item--selectable:hover {
+    background-color: #e6f1ef; /* Light greenish background on hover */
+    color: #2d4c3e; /* Dark green text */
+}
+
+/* Active option */
+.choices__list--dropdown .choices__item--selectable.is-active {
+    background-color: #3c6a56; /* Dark green background for active item */
+    color: #ffffff; /* White text for active item */
+}
+
+
+

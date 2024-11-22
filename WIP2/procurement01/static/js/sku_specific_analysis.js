@@ -1,9 +1,37 @@
 document.addEventListener('DOMContentLoaded', () => {
+    
+    const tableContainer = document.getElementById('table-container');
+    
     const fullscreenContainer = document.getElementById('analysis-fullscreen');
     const toggleFullscreenButton = document.getElementById('toggle-fullscreen-btn');
     const exitFullscreenButton = document.getElementById('exit-fullscreen-btn');
     const tableFreezeContainer = document.getElementById('table-freeze');
 
+    
+   
+
+
+    // Handle changes in the selection
+    const fetchTableData = () => {
+        const selectedOptions = Array.from(questionSelect.selectedOptions).map(option => option.value);
+        const params = new URLSearchParams();
+        selectedOptions.forEach(id => params.append('question_ids[]', id));
+
+        fetch(window.location.pathname + '?' + params.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                tableContainer.innerHTML = data.table_html;
+            })
+            .catch(error => console.error('Error fetching table data', error));
+    };
+
+
+    
+    
     // Enter Full Screen Mode
     toggleFullscreenButton.addEventListener('click', () => {
         if (!document.fullscreenElement) {

@@ -1,0 +1,68 @@
+
+{% load custom_filters %}
+
+<table class="styled-table">
+    <thead>
+        <tr>
+            <th colspan="{{ extra_columns|length|add:"1" }}" style="text-align: center;">SKU Details</th>
+            {% for supplier in supplier_responses %}
+                <th colspan="{{ selected_questions|length }}" class="supplier-header supplier-{{ forloop.counter0 }}" style="text-align: center;">{{ supplier.supplier.name }}</th>
+            {% endfor %}
+        </tr>
+        <tr>
+            <th>SKU</th>
+            {% for column in extra_columns %}
+                <th>{{ column }}</th>
+            {% endfor %}
+    
+            {% for supplier in supplier_responses %}
+                {% for question in selected_questions %}
+                    <th class="supplier-header supplier-{{ forloop.parentloop.counter0 }}">{{ question.question }}</th>
+                {% endfor %}
+            {% endfor %}
+        </tr>
+    </thead>
+    
+    <tbody>
+        {% for sku in processed_skus %}
+            <tr>
+                <td>{{ sku.sku_name }}</td>
+                {% for column in extra_columns %}
+                    <td>{{ sku.extra_data|get_item:column }}</td>
+                {% endfor %}
+
+                {% for supplier in supplier_responses %}
+                    {% for question in selected_questions %}
+                        <td class="supplier-cell supplier-{{ forloop.parentloop.counter0 }}">
+                            {% with supplier_id=supplier.supplier.id|stringformat:"s" %}
+                            {% with sku_id=sku.sku_id|stringformat:"s" %}
+                            {% with question_id=question.id|stringformat:"s" %}
+                            {% with key=supplier_id|add:"_"|add:sku_id|add:"_"|add:question_id %}
+                                {% with response=response_lookup|get_item:key %}
+                                    {% if response %}
+                                        {% if question.question_type == 'text' %}
+                                            {{ response.text }}
+                                        {% elif question.question_type in multi_choice_types %}
+                                            {{ response.choice }}
+                                        {% elif question.question_type == 'number' %}
+                                            {{ response.number }}
+                                        {% elif question.question_type == 'date' %}
+                                            {{ response.date }}
+                                        {% elif question.question_type == 'file' %}
+                                            <a href="{{ response.file }}" target="_blank">Download</a>
+                                        {% endif %}
+                                    {% else %}
+                                        <em>No response</em>
+                                    {% endif %}
+                                {% endwith %}
+                            {% endwith %}
+                            {% endwith %}
+                            {% endwith %}
+                            {% endwith %}
+                        </td>
+                    {% endfor %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -34,3 +34,9 @@ def get_response(responses, args):
         ):
             return response
     return None
+
+
+@register.filter
+def split(value, delimiter):
+    """Splits a string by the given delimiter."""
+    return value.split(delimiter)

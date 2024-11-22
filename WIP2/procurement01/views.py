@@ -26,6 +26,7 @@ from django.conf import settings
 from django.utils import timezone
 
 
+from django.core.serializers.json import DjangoJSONEncoder
 
 
 
@@ -812,9 +813,9 @@ def general_question_table_view(request, rfp_id):
         "response_data": response_data,
         "multi_choice_types": ['Single-select', 'Multi-select'],  # Add this
     }
+    print(response_data)
 
     return render(request, 'procurement01/general_question_table.html', context)
-
 
 
 
@@ -829,7 +830,7 @@ def sku_specific_question_responses_analysis(request, rfp_id):
     extra_columns = []
 
     for rfp_sku in rfp_skus:
-        extra_data = rfp_sku.get_extra_data()  # Extra data from step 2
+        extra_data = rfp_sku.get_extra_data()  # Assume this method returns a dict
         if not extra_columns and extra_data:
             extra_columns = list(extra_data.keys())  # Store column names from the first SKU
         processed_skus.append({
@@ -841,6 +842,8 @@ def sku_specific_question_responses_analysis(request, rfp_id):
     # Step 3: Retrieve SKU-specific questions for the RFP
     sku_specific_questions = SKUSpecificQuestion.objects.filter(rfp=rfp)
 
+    
+
     # Step 4: Retrieve supplier responses for SKU-specific questions
     supplier_responses = SupplierResponse.objects.filter(rfp=rfp)
     sku_question_responses = SKUSpecificQuestionResponse.objects.filter(
@@ -850,7 +853,7 @@ def sku_specific_question_responses_analysis(request, rfp_id):
     # Step 5: Build a response mapping: {(supplier_id, sku_id, question_id): response_data}
     response_lookup = {}
     for response in sku_question_responses:
-        key = (response.response.supplier.id, response.rfp_sku.sku.id, response.question.id)
+        key = f"{response.response.supplier.id}_{response.rfp_sku.sku.id}_{response.question.id}"
         response_lookup[key] = {
             'text': response.answer_text,
             'number': response.answer_number,
@@ -860,10 +863,24 @@ def sku_specific_question_responses_analysis(request, rfp_id):
         }
 
     # Step 6: Handle dropdown filtering (default to showing all questions)
-    selected_question_ids = request.GET.getlist('question_ids', [])  # Get selected question IDs from the dropdown
+    selected_question_ids = request.GET.getlist('question_ids[]', [])  # Expecting 'question_ids[]' from AJAX
     if not selected_question_ids:
         selected_question_ids = [str(q.id) for q in sku_specific_questions]  # Default to all questions
     selected_questions = sku_specific_questions.filter(id__in=selected_question_ids)
+
+
+    sku_specific_questions_data = [
+    {
+        "value": str(question.id),
+        "label": question.question.replace('"', '\\"').replace('\\\\"', '"'),  # Escape double quotes for JSON
+        "selected": str(question.id) in selected_question_ids
+    }
+    for question in sku_specific_questions
+    ]
+
+
+    print(sku_specific_questions_data)
+
 
     # Step 7: Prepare context for the template
     context = {
@@ -872,12 +889,19 @@ def sku_specific_question_responses_analysis(request, rfp_id):
         'extra_columns': extra_columns,
         'sku_specific_questions': sku_specific_questions,
         'selected_questions': selected_questions,
+        'selected_question_ids': selected_question_ids,  # For template
         'supplier_responses': supplier_responses,
         'response_lookup': response_lookup,
-        "multi_choice_types": ['Single-select', 'Multi-select'],  # Add this
+        "multi_choice_types": ['Single-select', 'Multi-select'],  # For handling response 
+        "sku_specific_questions_json": json.dumps(sku_specific_questions_data, cls=DjangoJSONEncoder),
+
     }
 
-    print(supplier_responses)
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        # Render only the table
+        table_html = render_to_string('procurement01/sku_specific_question_table.html', context, request=request)
+        return JsonResponse({'table_html': table_html})
+    else:
+        # Render the full page
+        return render(request, 'procurement01/sku_specific_question_responses_analysis.html', context)
 
-    # Render the template
-    return render(request, 'procurement01/sku_specific_question_responses_analysis.html', context)
