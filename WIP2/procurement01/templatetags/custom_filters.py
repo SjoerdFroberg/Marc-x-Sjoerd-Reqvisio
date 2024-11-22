@@ -40,3 +40,10 @@ def get_response(responses, args):
 def split(value, delimiter):
     """Splits a string by the given delimiter."""
     return value.split(delimiter)
+
+
+
+
+@register.filter
+def modulo(num, val):
+    return num % val

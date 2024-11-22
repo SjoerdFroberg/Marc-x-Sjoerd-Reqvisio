@@ -819,6 +819,7 @@ def general_question_table_view(request, rfp_id):
 
 
 
+
 @login_required
 def sku_specific_question_responses_analysis(request, rfp_id):
     # Step 1: Fetch the RFP instance
@@ -832,7 +833,7 @@ def sku_specific_question_responses_analysis(request, rfp_id):
     for rfp_sku in rfp_skus:
         extra_data = rfp_sku.get_extra_data()  # Assume this method returns a dict
         if not extra_columns and extra_data:
-            extra_columns = list(extra_data.keys())  # Store column names from the first SKU
+            extra_columns = list(extra_data.keys())  # Store column names from the first SKU with extra data
         processed_skus.append({
             'sku_id': rfp_sku.sku.id,
             'sku_name': rfp_sku.sku.name,
@@ -841,8 +842,6 @@ def sku_specific_question_responses_analysis(request, rfp_id):
 
     # Step 3: Retrieve SKU-specific questions for the RFP
     sku_specific_questions = SKUSpecificQuestion.objects.filter(rfp=rfp)
-
-    
 
     # Step 4: Retrieve supplier responses for SKU-specific questions
     supplier_responses = SupplierResponse.objects.filter(rfp=rfp)
@@ -862,27 +861,29 @@ def sku_specific_question_responses_analysis(request, rfp_id):
             'choice': response.answer_choice,
         }
 
-    # Step 6: Handle dropdown filtering (default to showing all questions)
-    selected_question_ids = request.GET.getlist('question_ids[]', [])  # Expecting 'question_ids[]' from AJAX
-    if not selected_question_ids:
-        selected_question_ids = [str(q.id) for q in sku_specific_questions]  # Default to all questions
+    # **Updated Step 6: Handle selected questions**
+    selected_question_ids = request.GET.getlist('question_ids[]')
+
+    if 'question_ids[]' not in request.GET:
+        # Default to all questions when parameter is not present (initial page load)
+        selected_question_ids = [str(q.id) for q in sku_specific_questions]
+    else:
+        # Remove any empty strings from the list (e.g., when deselecting all)
+        selected_question_ids = [qid for qid in selected_question_ids if qid]
+
     selected_questions = sku_specific_questions.filter(id__in=selected_question_ids)
 
-
+    # Prepare data for the modal checkboxes (if needed)
     sku_specific_questions_data = [
-    {
-        "value": str(question.id),
-        "label": question.question.replace('"', '\\"').replace('\\\\"', '"'),  # Escape double quotes for JSON
-        "selected": str(question.id) in selected_question_ids
-    }
-    for question in sku_specific_questions
+        {
+            "value": str(question.id),
+            "label": question.question.replace('"', '\\"').replace('\\\\"', '"'),  # Escape double quotes for JSON
+            "selected": str(question.id) in selected_question_ids
+        }
+        for question in sku_specific_questions
     ]
 
-
-    print(sku_specific_questions_data)
-
-
-    # Step 7: Prepare context for the template
+    # Prepare context for the template
     context = {
         'rfp': rfp,
         'processed_skus': processed_skus,
@@ -892,9 +893,8 @@ def sku_specific_question_responses_analysis(request, rfp_id):
         'selected_question_ids': selected_question_ids,  # For template
         'supplier_responses': supplier_responses,
         'response_lookup': response_lookup,
-        "multi_choice_types": ['Single-select', 'Multi-select'],  # For handling response 
+        "multi_choice_types": ['Single-select', 'Multi-select'],  # For handling response types
         "sku_specific_questions_json": json.dumps(sku_specific_questions_data, cls=DjangoJSONEncoder),
-
     }
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -904,4 +904,3 @@ def sku_specific_question_responses_analysis(request, rfp_id):
     else:
         # Render the full page
         return render(request, 'procurement01/sku_specific_question_responses_analysis.html', context)
-

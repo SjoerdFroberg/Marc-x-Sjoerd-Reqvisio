@@ -1,4 +1,3 @@
-
 {% load custom_filters %}
 
 <table class="styled-table">
@@ -6,7 +5,9 @@
         <tr>
             <th colspan="{{ extra_columns|length|add:"1" }}" style="text-align: center;">SKU Details</th>
             {% for supplier in supplier_responses %}
-                <th colspan="{{ selected_questions|length }}" class="supplier-header supplier-{{ forloop.counter0 }}" style="text-align: center;">{{ supplier.supplier.name }}</th>
+                {% if selected_questions %}
+                    <th colspan="{{ selected_questions|length }}" class="supplier-header supplier-{{ forloop.counter0 }}" style="text-align: center;">{{ supplier.supplier.name }}</th>
+                {% endif %}
             {% endfor %}
         </tr>
         <tr>
@@ -14,7 +15,7 @@
             {% for column in extra_columns %}
                 <th>{{ column }}</th>
             {% endfor %}
-    
+
             {% for supplier in supplier_responses %}
                 {% for question in selected_questions %}
                     <th class="supplier-header supplier-{{ forloop.parentloop.counter0 }}">{{ question.question }}</th>
@@ -22,7 +23,7 @@
             {% endfor %}
         </tr>
     </thead>
-    
+
     <tbody>
         {% for sku in processed_skus %}
             <tr>
@@ -62,6 +63,10 @@
                         </td>
                     {% endfor %}
                 {% endfor %}
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="{{ extra_columns|length|add:"1" }}" class="text-center">No SKUs found.</td>
             </tr>
         {% endfor %}
     </tbody>

@@ -963,11 +963,12 @@ textarea.form-control:focus {
     border-radius: 0px;
     background-color: #ffffff;
     padding: 0px;
-    margin: 0 auto;
+    margin: 0 ;
     z-index: 2; /* Ensures it appears above other content */
-    overflow-y: auto; /* Allow vertical scrolling */
+    overflow-y: scroll; 
     overflow-x: auto;
-    max-height: calc(100vh - 200px);; /* Set a maximum height to enable scrolling */
+    max-height: calc(100vh - 220px); /* Set a maximum height to enable scrolling */
+    box-sizing: border-box;
 
 
 }
@@ -1009,6 +1010,7 @@ textarea.form-control:focus {
 
 
 /* Supplier columns styles */
+/* Supplier Cells */
 .supplier-cell.supplier-0 {
     background-color: #e6f1ef; /* Light green */
 }
@@ -1021,7 +1023,7 @@ textarea.form-control:focus {
     background-color: #d9e7e5; /* Slightly darker light green */
 }
 
-/* Supplier headers */
+/* Supplier Headers */
 .supplier-header.supplier-0 {
     background-color: #3c6a56; /* Match primary button color */
     color: #ffffff;
@@ -1136,65 +1138,51 @@ body.fullscreen-active {
 
 
 
-/* Customize Choices.js container */
-
-/* Customize Choices.js container */
-.choices {
-    display: block;
+/* Modal Header */
+.modal-header {
+    background-color: #2d4c3e;
+    color: #ffffff;
 }
 
-.choices__inner {
-    background-color: #ffffff;
-    border-radius: 8px;
-    border: 1px solid #d1d5db;
-    padding: 10px 15px;
+.modal-title {
+    font-weight: 600;
+}
+
+.btn-close {
+    color: #ffffff;
+    opacity: 1;
+}
+
+/* Modal Body */
+.modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Form Check Labels */
+.form-check-label {
     font-size: 1rem;
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Match the subtle shadow */
+    color: #333333;
 }
 
-.choices__inner:focus {
+/* Buttons */
+.btn-primary {
+    background-color: #3c6a56;
     border-color: #3c6a56;
-    box-shadow: 0 0 8px rgba(60, 106, 86, 0.3); /* Greenish glow */
 }
 
-/* Customize the dropdown list */
-.choices__list--dropdown {
-    background-color: #f7faf9; /* Slightly off-white to match the second screenshot */
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.05); /* Subtle shadow for dropdown */
-    margin-top: 0.5rem;
-    z-index: 1000;
-    position: relative !important; /* Ensure dropdown appears inline with content */
+.btn-primary:hover {
+    background-color: #2d4c3e;
+    border-color: #2d4c3e;
 }
 
-/* Customize the options */
-.choices__list--dropdown .choices__item--selectable {
-    padding: 10px 15px;
-    font-size: 1rem;
-    color: #2d4c3e; /* Dark green text for consistency */
-    background-color: #ffffff; /* White background for dropdown items */
-    border-radius: 4px; /* Subtle rounded corners */
-    transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effects */
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
 }
 
-/* Highlighted option */
-.choices__list--dropdown .choices__item--selectable.is-highlighted {
-    background-color: #d9e7e5; /* Light green highlight */
-    color: #2d4c3e; /* Dark green text */
+.btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
 }
-
-/* Hover effect */
-.choices__list--dropdown .choices__item--selectable:hover {
-    background-color: #e6f1ef; /* Light greenish background on hover */
-    color: #2d4c3e; /* Dark green text */
-}
-
-/* Active option */
-.choices__list--dropdown .choices__item--selectable.is-active {
-    background-color: #3c6a56; /* Dark green background for active item */
-    color: #ffffff; /* White text for active item */
-}
-
-
 

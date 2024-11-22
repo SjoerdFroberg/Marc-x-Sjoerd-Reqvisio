@@ -15,89 +15,68 @@
         <strong>RFP Description:</strong> {{ rfp.description }}
     </div>
 
-    
     <div id="dropdown-container">
-        <!-- Form to select questions -->
-        <form method="get" id="question-filter-form" class="mb-3">
-            <label for="question-select" class="form-label">Select Questions:</label>
-            <select id="question-select" name="question_ids[]" multiple="multiple">
-                {% if sku_specific_questions %}
-                    {% for question in sku_specific_questions %}
-                        <option value="{{ question.id }}"
-                            {% if question.id|stringformat:"s" in selected_question_ids %}selected{% endif %}>
-                            {{ question.question }}
-                        </option>
-                    {% endfor %}
-                {% else %}
-                    <option disabled>No choices to choose from</option>
-                {% endif %}
-            </select>
-        </form>
-
-    
-        <div>
-        <!-- Full-Screen Toggle Button -->
-        <button id="toggle-fullscreen-btn" class="btn btn-primary">Full Screen</button>
-        
+        <!-- Top Controls -->
+        <div class="top-controls mb-4">
+            <!-- Column Visibility Button -->
+            <button id="column-visibility-btn" class="btn btn-secondary me-2">Column Visibility</button>
+            <!-- Full-Screen Toggle Button -->
+            <button id="toggle-fullscreen-btn" class="btn btn-primary">Full Screen</button>
         </div>
 
         <div id="analysis-fullscreen" class="table-wrapper">
-
             <button id="exit-fullscreen-btn" class="btn btn-secondary d-none">Exit Full Screen</button>
-            <div id = "table-freeze" class="table-freeze">
+            <div id="table-freeze" class="table-freeze">
                 <div id="table-container">
                     {% include 'procurement01/sku_specific_question_table.html' %}
                 </div>
-
             </div>
         </div>
-
     </div>
+</div>
 
-    
+<!-- Modal -->
+<div class="modal fade" id="columnVisibilityModal" tabindex="-1" aria-labelledby="columnVisibilityModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- Use modal-lg if you have many questions -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Questions to Display</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Select All/Deselect All Buttons -->
+                <div class="mb-3">
+                    <button id="select-all-btn" type="button" class="btn btn-sm btn-primary me-2">Select All</button>
+                    <button id="deselect-all-btn" type="button" class="btn btn-sm btn-secondary">Deselect All</button>
+                </div>
+                <!-- Checkbox List -->
+                <form id="column-visibility-form">
+                    <div class="row">
+                        {% for question in sku_specific_questions %}
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="{{ question.id }}" id="questionCheckbox{{ question.id }}" {% if question.id|stringformat:"s" in selected_question_ids %}checked{% endif %}>
+                                    <label class="form-check-label" for="questionCheckbox{{ question.id }}">
+                                        {{ question.question }}
+                                    </label>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="apply-column-visibility-btn">
+                    <span id="apply-btn-text">Apply</span>
+                    <span id="apply-btn-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-
-    
 {% endblock %}
 
 {% block scripts %}
-<!-- Include Choices.js -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-
 <script src="{% static 'js/sku_specific_analysis.js' %}"></script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-    console.log('Choices.js initialization starting...');
-
-    const questionSelect = document.getElementById('question-select');
-    console.log('Select element found:', questionSelect);
-
-    if (questionSelect) {
-        const choicesData = JSON.parse('{{ sku_specific_questions_json|escapejs }}');
-        console.log('Choices data:', choicesData);
-
-        const choices = new Choices(questionSelect, {
-            removeItemButton: true,
-            searchEnabled: true,
-            placeholderValue: 'Select questions to display',
-            noResultsText: 'No questions found',
-            noChoicesText: '',
-            itemSelectText: '',
-            shouldSort: false,
-            shouldCloseOnSelect: true,
-            choices: choicesData
-        });
-
-        console.log('Choices.js initialized:', choices);
-    } else {
-        console.error('Failed to find #question-select for Choices.js.');
-    }
-});
-
-    
-</script>
-
-
 {% endblock %}
