@@ -1,0 +1,33 @@
+{% load custom_filters %}
+
+
+<!-- File Upload Section -->
+<h4>Attach Files</h4>
+<div class="form-group">
+    <!-- Hidden file input -->
+    <input type="file" name="new_files" id="id_new_files" class="d-none" multiple>
+    <!-- Custom upload button -->
+    <button type="button" class="btn btn-primary" id="upload-files-button">
+        <i class="bi bi-upload"></i> Upload Files
+    </button>
+</div>
+
+<!-- Display Files as Icons -->
+<div class="form-group">
+    <div class="existing-files-container" id="files-container">
+        {% if existing_files %}
+            {% for file in existing_files %}
+                <div class="file-icon" data-file-id="{{ file.id }}">
+                    <button type="button" class="remove-file-btn">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                    <a href="{{ file.file.url }}" target="_blank">
+                        <i class="bi bi-file-earmark"></i>
+                        <span>{{ file.file.name|filename }}</span>
+                    </a>
+                    <input type="hidden" name="delete_files" value="{{ file.id }}" disabled>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>

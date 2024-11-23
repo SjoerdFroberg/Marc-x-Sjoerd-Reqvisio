@@ -124,20 +124,50 @@ def create_supplier_view(request):
 
 
 @login_required
-# Step 1: Create RFP (Title, Description, and Files)
-def create_rfp_step1(request):
-    if request.method == 'POST':
-        form = RFPBasicForm(request.POST)
-        if form.is_valid():
-            rfp = form.save()
-            # Save each uploaded file
-            for file in request.FILES.getlist('files'):
-                RFPFile.objects.create(rfp=rfp, file=file)
-            return redirect('create_rfp_step2', rfp_id=rfp.id)
+def create_rfp_step1(request, rfp_id=None):
+    if rfp_id:
+        rfp = get_object_or_404(RFP, id=rfp_id)
     else:
-        form = RFPBasicForm()
+        rfp = None
 
-    return render(request, 'procurement01/create_rfp_step1.html', {'form': form})
+    if request.method == 'POST':
+        with transaction.atomic():
+
+            if rfp:
+                form = RFPBasicForm(request.POST, instance=rfp)
+            else:
+                form = RFPBasicForm(request.POST)
+
+
+            rfp_form_valid = form.is_valid()
+
+        if rfp_form_valid:
+            rfp = form.save()
+
+            # Handle file deletions
+            files_to_delete = request.POST.getlist('delete_files')
+            if files_to_delete:
+                RFPFile.objects.filter(id__in=files_to_delete, rfp=rfp).delete()
+
+            # Handle new file uploads
+            for file in request.FILES.getlist('new_files'):
+                RFPFile.objects.create(rfp=rfp, file=file)
+
+            return redirect('create_rfp_step2', rfp_id=rfp.id)
+        
+    else:
+        if rfp:
+            form = RFPBasicForm(instance=rfp)
+            existing_files = rfp.files.all()
+        else:
+            form = RFPBasicForm()
+            existing_files = None
+
+    return render(request, 'procurement01/create_rfp_step1.html', {
+        'form': form,
+        'existing_files': existing_files,
+        'rfp': rfp,  # Include if needed in the template
+    })
 
 
 @login_required

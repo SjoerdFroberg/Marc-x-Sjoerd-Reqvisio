@@ -14,6 +14,8 @@ urlpatterns = [
     path('suppliers/create/', views.create_supplier_view, name='create_supplier'),
 
     path('rfp/create/step1/', views.create_rfp_step1, name='create_rfp_step1'),
+    path('rfp/create/step1/<int:rfp_id>/', views.create_rfp_step1, name='create_rfp_step1'),  # Optional rfp_id
+
     path('rfp/create/step2/<int:rfp_id>/', views.create_rfp_step2, name='create_rfp_step2'),
     path('search_skus/', views.search_skus, name='search_skus'),  # Add this line
     

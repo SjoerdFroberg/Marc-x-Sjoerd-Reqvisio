@@ -909,7 +909,6 @@ textarea.form-control:focus {
     text-align: left;
     padding: 10px 15px;
     border: none;
-    position: sticky; /* Sticky header */
     top: 0;
     z-index: 2;
     white-space: normal; /* Enable wrapping */
