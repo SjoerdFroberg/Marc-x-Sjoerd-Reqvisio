@@ -24,253 +24,6 @@ h2 {
 }
 
 
-/* Table Wrapper for Horizontal Scrolling */
-.table-wrapper {
-    overflow-x: auto; /* Enable horizontal scrolling */
-    border-radius: 12px;
-    background-color: #ffffff;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
-    margin-top: 20px;
-    padding: 15px;
-    width: 100%;
-    max-width: 100%; /* Ensure wrapper does not exceed the viewport width */
-    display: block;
-    white-space: nowrap; /* Prevent wrapping of table content */
-}
-
-
-
-
-/* neeew
-
-/* Adjust Table Layout for Dynamic Column Widths */
-.sheet-table {
-    border-collapse: collapse;
-    width: 100%;
-    table-layout: auto; /* Let the browser decide column width based on content */
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-
-
-/* Header Styling for Dynamic Widths */
-.sheet-table th {
-    background-color: #2d4c3e;
-    color: white;
-    font-weight: 600;
-    text-align: left;
-    padding: 8px;
-    white-space: normal; /* Allow wrapping of long text */
-    word-wrap: break-word; /* Break long words if necessary */
-    border: 1px solid #e0e0e0; /* Ensure consistent borders */
-}
-
-
-/* Prevent Rounded Corners on Second Header Row */
-.sheet-table thead tr:first-child th:first-child {
-    border-top-left-radius: 12px;
-}
-
-.sheet-table thead tr:first-child th:last-child {
-    border-top-right-radius: 12px;
-}
-
-.sheet-table thead tr:nth-child(2) th:first-child,
-.sheet-table thead tr:nth-child(2) th:last-child {
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-}
-
-/* Data Cell Styling */
-.sheet-table td {
-    background-color: #ffffff;
-    color: #333;
-    padding: 8px;
-    text-align: left;
-    white-space: normal; /* Allow wrapping for long text */
-    word-wrap: break-word; /* Ensure text doesn't overflow */
-    border: 1px solid #e0e0e0; /* Consistent borders */
-}
-
-/* Alternate Row Colors */
-.sheet-table tbody tr:nth-child(even) {
-    background-color: #f7faf9;
-}
-
-/* Row Hover Effect */
-.sheet-table tbody tr:hover {
-    background-color: #e6f1ef;
-    transition: background-color 0.3s ease;
-}
-
-/* Sticky Header for Scrollable Tables */
-.sheet-table th {
-    position: sticky;
-    top: 0;
-    z-index: 2; /* Ensure headers stay on top */
-}
-
-/* Wrapper for Horizontal and Vertical Scrolling */
-.table-wrapper {
-    overflow-x: auto;
-    overflow-y: auto;
-    max-height: calc(100vh - 200px); /* Constrain table height for scrolling */
-    border-radius: 12px;
-    background-color: #ffffff;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for the container */
-}
-
-
-/* Greenish Focus Style for Editable Cells */
-.sheet-table td:focus {
-    background-color: #e6f1ef; /* Light greenish background when focused */
-    box-shadow: 0 0 5px rgba(60, 106, 86, 0.5); /* Greenish border shadow for focus */
-}
-
-
-/* neeew */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Remove Column Button */
-.remove-column-x {
-    background: transparent;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: none;
-}
-
-.sheet-table th:hover .remove-column-x {
-    display: inline;
-}
-
-.remove-column-x:hover {
-    opacity: 0.8;
-}
-
-/* Bootstrap Icon for Close Button */
-.bi-x-circle {
-    font-size: 1.2em;
-    color: #9e9e9e; /* Light gray to match Chrome-like styling */
-    transition: color 0.2s;
-}
-
-.remove-column-x:hover .bi-x-circle {
-    color: #757575; /* Darker gray on hover for better interactivity */
-}
-
-/* Buttons */
-.btn {
-    font-size: 0.9em;
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border: none;
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-    transition: background-color 0.3s;
-}
-
-.btn-primary {
-    background-color: #3c6a56;
-    color: #ffffff;
-}
-
-.btn-primary:hover {
-    background-color: #2d4c3e;
-}
-
-/* Action Buttons */
-.action-btn {
-    background-color: #3c6a56;
-    color: #ffffff;
-    font-size: 0.9em;
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border: none;
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-    transition: background-color 0.3s;
-}
-
-.action-btn:hover {
-    background-color: #2d4c3e;
-}
-
-/* Ensure all buttons have the same size */
-.button-container .action-btn {
-    flex: 1;
-    max-width: 200px;
-}
-
-/* Search Input */
-#sku-search-input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 10px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    background-color: #ffffff;
-    color: #333;
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-#sku-search-input:focus {
-    border-color: #3c6a56;
-    box-shadow: 0 0 10px rgba(60, 106, 86, 0.4); /* Greenish focus color for search input */
-}
-
-/* SKU Cards */
-.table-wrapper .sheet-table tbody tr {
-    transition: background-color 0.3s, box-shadow 0.3s;
-}
-
-.table-wrapper .sheet-table tbody tr:hover {
-    background-color: #f7faf9;
-    box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.05);
-}
-
-/* Actions Column */
-.table-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.search-result-item {
-    padding: 10px;
-    background-color: #f7faf9;
-    border-radius: 8px;
-    margin-top: 5px;
-    color: #333;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.search-result-item:hover {
-    background-color: #e6f1ef;
-}
 
 /* Sidebar */
 .sidebar {
@@ -352,6 +105,269 @@ h2 {
     align-items: center;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
 }
+
+
+
+
+/* tables*/
+
+/* Table Wrapper for Horizontal Scrolling */
+
+
+.table-wrapper {
+    overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: auto;
+    border-radius: 12px; /* Consistent corner radius */
+    background-color: #ffffff; /* White background for all */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    width: 100%; /* Full width */
+    margin-left: auto; /* Center the table */
+    margin-right: auto;
+    max-height: calc(100vh - 200px); /* Constrain table height for scrolling */
+    display: block; /* Ensures the table-wrapper behaves as a block */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    white-space: nowrap;
+
+}
+
+/* Gray out table wrapper on search */
+.table-wrapper.dimmed {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* SKU Cards */
+.table-wrapper .sheet-table tbody tr {
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.table-wrapper .sheet-table tbody tr:hover {
+    background-color: #f7faf9;
+    box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.05);
+}
+
+
+
+
+/* neeew sheet table */
+
+/* Adjust Table Layout for Dynamic Column Widths */
+.sheet-table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: auto; /* Let the browser decide column width based on content */
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+
+
+
+/* Header Styling for Dynamic Widths and sticky header */
+.sheet-table th {
+    background-color: #2d4c3e;
+    color: white;
+    font-weight: 600;
+    text-align: left;
+    padding: 8px;
+    white-space: normal; /* Allow wrapping of long text */
+    word-wrap: break-word; /* Break long words if necessary */
+    border: 1px solid #e0e0e0; /* Ensure consistent borders */
+    position: sticky;
+    top: 0;
+    z-index: 2; /* Ensure headers stay on top */
+    font-size: 0.9rem;
+}
+
+/* Table Borders */
+.sheet-table, .sheet-table th, .sheet-table td {
+    border: 1px solid #e0e0e0; /* Light gray border */
+    border-collapse: collapse;
+}
+
+
+/* Cell Padding */
+.sheet-table td {
+    padding: 8px;
+    text-align: left;
+}
+
+/* Smaller Cell Size and Font */
+.sheet-table th, .sheet-table td {
+    padding: 6px 8px; /* Reduced padding */
+    font-size: 0.875rem; /* Smaller font size */
+}
+
+
+
+
+/* Prevent Rounded Corners on Second Header Row */
+.sheet-table thead tr:first-child th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.sheet-table thead tr:first-child th:last-child {
+    border-top-right-radius: 12px;
+}
+
+.sheet-table thead tr:nth-child(2) th:first-child,
+.sheet-table thead tr:nth-child(2) th:last-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* Data Cell Styling */
+.sheet-table td {
+    background-color: #ffffff;
+    color: #333;
+    padding: 8px;
+    text-align: left;
+    white-space: normal; /* Allow wrapping for long text */
+    word-wrap: break-word; /* Ensure text doesn't overflow */
+    border: 1px solid #e0e0e0; /* Consistent borders */
+}
+
+/* Alternate Row Colors */
+.sheet-table tbody tr:nth-child(even) {
+    background-color: #f7faf9;
+}
+
+/* Row Hover Effect */
+.sheet-table tbody tr:hover {
+    background-color: #e6f1ef;
+    transition: background-color 0.3s ease;
+}
+
+
+/* Greenish Focus Style for Editable Cells */
+.sheet-table td:focus {
+    background-color: #e6f1ef; /* Light greenish background when focused */
+    box-shadow: 0 0 5px rgba(60, 106, 86, 0.5); /* Greenish border shadow for focus */
+}
+
+
+/* neeew */
+
+
+/* Remove Column Button */
+.remove-column-x {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: none;
+}
+
+.sheet-table th:hover .remove-column-x {
+    display: inline;
+}
+
+.remove-column-x:hover {
+    opacity: 0.8;
+}
+
+/* Bootstrap Icon for Close Button */
+.bi-x-circle {
+    font-size: 1.2em;
+    color: #9e9e9e; /* Light gray to match Chrome-like styling */
+    transition: color 0.2s;
+}
+
+.remove-column-x:hover .bi-x-circle {
+    color: #757575; /* Darker gray on hover for better interactivity */
+}
+
+
+
+/* Buttons */
+.btn {
+    font-size: 0.9em;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s;
+}
+
+.btn-primary {
+    background-color: #3c6a56;
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background-color: #2d4c3e;
+}
+
+/* Action Buttons */
+.action-btn {
+    background-color: #3c6a56;
+    color: #ffffff;
+    font-size: 0.9em;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s;
+}
+
+.action-btn:hover {
+    background-color: #2d4c3e;
+}
+
+/* Ensure all buttons have the same size */
+.button-container .action-btn {
+    flex: 1;
+    max-width: 200px;
+}
+
+/* Search Input */
+#sku-search-input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #333;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+#sku-search-input:focus {
+    border-color: #3c6a56;
+    box-shadow: 0 0 10px rgba(60, 106, 86, 0.4); /* Greenish focus color for search input */
+}
+
+
+/* Actions Column */
+.table-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.search-result-item {
+    padding: 10px;
+    background-color: #f7faf9;
+    border-radius: 8px;
+    margin-top: 5px;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.search-result-item:hover {
+    background-color: #e6f1ef;
+}
+
 
 /* Card Styles */
 .card-header {
@@ -450,37 +466,7 @@ textarea.form-control:focus {
 
 
 
-/* Table Borders */
-.sheet-table, .sheet-table th, .sheet-table td {
-    border: 1px solid #e0e0e0; /* Light gray border */
-    border-collapse: collapse;
-}
 
-/* Header Background */
-.sheet-table th {
-    background-color: #2d4c3e; /* Dark green background */
-    color: white; /* White text for headers */
-    font-weight: 600;
-    text-align: left;
-    padding: 8px;
-}
-
-/* Cell Padding */
-.sheet-table td {
-    padding: 8px;
-    text-align: left;
-}
-
-/* Smaller Cell Size and Font */
-.sheet-table th, .sheet-table td {
-    padding: 6px 8px; /* Reduced padding */
-    font-size: 0.875rem; /* Smaller font size */
-}
-
-/* Adjust Header Font Size Separately, if Needed */
-.sheet-table th {
-    font-size: 0.9rem; /* Slightly larger for headers */
-}
 
 /* Centered Remove Button */
 .remove-sku-btn {
@@ -531,12 +517,6 @@ textarea.form-control:focus {
     height: 100%; /* Ensure the height matches the row's height */
 }
 
-/* Icon Styling for Remove Button */
-.remove-sku-btn i {
-    font-size: 1rem; /* Smaller icon size */
-    color: #9e9e9e; /* Light gray to match the style */
-    transition: color 0.2s;
-}
 
 .remove-sku-btn:hover i {
     color: #757575; /* Darker gray on hover */
@@ -618,11 +598,7 @@ textarea.form-control:focus {
 }
 
 
-/* Gray out table wrapper on search */
-.table-wrapper.dimmed {
-    opacity: 0.3;
-    pointer-events: none;
-}
+
 
 /* Tooltip icon styling */
 .tooltip-icon {
@@ -943,22 +919,6 @@ textarea.form-control:focus {
 
 
 
-
-/* Table Wrapper */
-.table-wrapper {
-    width: 100%; /* Full width */
-    margin-left: auto; /* Center the table */
-    margin-right: auto;
-    border-radius: 12px;
-    background-color: #ffffff;
-    z-index: 2;
-    padding: 20px;
-    overflow-x: auto;
-    overflow-y: hidden; /* Allow vertical scrolling */
-    max-height: calc(100vh - 200px);; /* Set a maximum height to enable scrolling */
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Softer shadow */
-}
-
 .table-freeze {
     border-radius: 0px;
     background-color: #ffffff;
@@ -970,8 +930,8 @@ textarea.form-control:focus {
     max-height: calc(100vh - 220px); /* Set a maximum height to enable scrolling */
     box-sizing: border-box;
 
-
 }
+
 
 
 
@@ -1008,41 +968,11 @@ textarea.form-control:focus {
     border-top-right-radius: 0; /* Remove right rounding for the second row */
 }
 
-
-/* Supplier columns styles */
-/* Supplier Cells */
-.supplier-cell.supplier-0 {
-    background-color: #e6f1ef; /* Light green */
+.styled-table thead tr:nth-child(2) th {
+    position: sticky;
+    z-index: 1; /* Ensure it stays on top of the table body */
+    background-color: #2d4c3e; /* Match the header background color */
 }
-
-.supplier-cell.supplier-1 {
-    background-color: #f0f7f5; /* Even lighter green */
-}
-
-.supplier-cell.supplier-2 {
-    background-color: #d9e7e5; /* Slightly darker light green */
-}
-
-/* Supplier Headers */
-.supplier-header.supplier-0 {
-    background-color: #3c6a56; /* Match primary button color */
-    color: #ffffff;
-}
-
-.supplier-header.supplier-1 {
-    background-color: #2d4c3e; /* Darker green */
-    color: #ffffff;
-}
-
-.supplier-header.supplier-2 {
-    background-color: #4f7b66; /* Intermediate green */
-    color: #ffffff;
-}
-
-
-
-
-
 
 
 

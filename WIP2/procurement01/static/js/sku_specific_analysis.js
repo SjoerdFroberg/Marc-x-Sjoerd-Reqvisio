@@ -111,4 +111,21 @@ document.addEventListener('DOMContentLoaded', () => {
             exitFullscreenButton.classList.add('d-none'); // Hide exit button
         }
     });
+
+    // Select the first and second header rows
+    const firstHeaderRow = document.querySelector('.styled-table thead tr:nth-child(1)');
+    const secondHeaderRow = document.querySelector('.styled-table thead tr:nth-child(2)');
+
+    if (firstHeaderRow && secondHeaderRow) {
+        // Get the height of the first header row
+        const firstHeaderHeight = firstHeaderRow.offsetHeight;
+
+        // Apply the height dynamically as the 'top' value for the second row
+        const secondHeaderCells = secondHeaderRow.querySelectorAll('th');
+        secondHeaderCells.forEach(cell => {
+            cell.style.top = `${firstHeaderHeight}px`;
+        });
+    }
+
+    
 });

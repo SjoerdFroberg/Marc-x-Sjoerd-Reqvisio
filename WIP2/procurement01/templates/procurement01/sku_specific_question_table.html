@@ -1,16 +1,19 @@
 {% load custom_filters %}
-
 <table class="styled-table">
     <thead>
-        <tr>
+        <!-- First row: Supplier-level headers -->
+        <tr class="supplier-level-row">
             <th colspan="{{ extra_columns|length|add:"1" }}" style="text-align: center;">SKU Details</th>
             {% for supplier in supplier_responses %}
                 {% if selected_questions %}
-                    <th colspan="{{ selected_questions|length }}" class="supplier-header supplier-{{ forloop.counter0 }}" style="text-align: center;">{{ supplier.supplier.name }}</th>
+                    <th colspan="{{ selected_questions|length }}" class="supplier-header supplier-{{ forloop.counter0 }}" style="text-align: center;">
+                        {{ supplier.supplier.name }}
+                    </th>
                 {% endif %}
             {% endfor %}
         </tr>
-        <tr>
+        <!-- Second row: Question-level headers -->
+        <tr class="question-level-row">
             <th>SKU</th>
             {% for column in extra_columns %}
                 <th>{{ column }}</th>
@@ -18,12 +21,14 @@
 
             {% for supplier in supplier_responses %}
                 {% for question in selected_questions %}
-                    <th class="supplier-header supplier-{{ forloop.parentloop.counter0 }}">{{ question.question }}</th>
+                    <th class="question-header supplier-{{ forloop.parentloop.counter0 }}">
+                        {{ question.question }}
+                    </th>
                 {% endfor %}
             {% endfor %}
         </tr>
     </thead>
-
+    <!-- Table body remains unchanged -->
     <tbody>
         {% for sku in processed_skus %}
             <tr>
