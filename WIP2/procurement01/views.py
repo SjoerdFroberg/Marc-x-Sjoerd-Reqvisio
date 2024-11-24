@@ -230,7 +230,7 @@ def create_rfp_step2(request, rfp_id):
                 rfp_sku.save()
 
             # Get the navigation destination and dynamically construct the redirect URL name
-            navigation_destination = request.POST.get('navigation_destination', 'step3')
+            navigation_destination = request.POST.get('navigation_destination')
             return redirect(f'create_rfp_{navigation_destination}', rfp_id=rfp.id)
     else:
         # Handle GET request: Retrieve existing SKUs
@@ -273,39 +273,54 @@ def create_rfp_step3(request, rfp_id):
     else:
         extra_forms = 1
 
+    # Initialize the GeneralQuestionFormSet
+    GeneralQuestionFormSet = modelformset_factory(
+        GeneralQuestion, form=GeneralQuestionForm, extra=extra_forms, can_delete=True
+    )
 
-    # Create a formset for handling multiple GeneralQuestion instances
-    GeneralQuestionFormSet = modelformset_factory(GeneralQuestion, form=GeneralQuestionForm, extra=extra_forms, can_delete=True)
-
-    # If the form is submitted
     if request.method == 'POST':
-        formset = GeneralQuestionFormSet(request.POST, queryset=GeneralQuestion.objects.filter(rfp=rfp))
+        with transaction.atomic():
+            # Process General Questions FormSet
+            general_questions_formset = GeneralQuestionFormSet(
+                request.POST, queryset=GeneralQuestion.objects.filter(rfp=rfp)
+            )
+            general_questions_formset_valid = general_questions_formset.is_valid()
 
-        # Validate the formset
-        if formset.is_valid():
-            # Process each form in the formset
-            instances = formset.save(commit=False)
-            for instance in instances:
-                # Link the question to the RFP
-                instance.rfp = rfp
-                instance.save()  # Save the instance to the database
-            
-            # Delete any questions marked for deletion
-            for deleted_instance in formset.deleted_objects:
-                deleted_instance.delete()
-            
-            # After saving, redirect to the next step (Step 4)
-            return redirect('create_rfp_step4', rfp_id=rfp.id)
-            
+            if general_questions_formset_valid:
 
-    # If the form is not submitted, display the existing questions
+                # Save General Questions
+                general_questions = general_questions_formset.save(commit=False)
+                for question in general_questions:
+                    question.rfp = rfp
+                    question.save()
+                # Delete any questions marked for deletion
+                for deleted_question in general_questions_formset.deleted_objects:
+                    deleted_question.delete()
+
+
+            # Get the navigation destination and dynamically construct the redirect URL name
+            navigation_destination = request.POST.get('navigation_destination')
+            return redirect(f'create_rfp_{navigation_destination}', rfp_id=rfp.id)
+    
     else:
-        formset = GeneralQuestionFormSet(queryset=GeneralQuestion.objects.filter(rfp=rfp))
 
-    return render(request, 'procurement01/create_rfp_step3.html', {
-        'rfp': rfp,
-        'formset': formset,
-    })
+        # Initialize the General Questions FormSet with existing questions
+        general_questions_formset = GeneralQuestionFormSet(
+            queryset=GeneralQuestion.objects.filter(rfp=rfp)
+        )
+         
+
+        context = {
+            'rfp': rfp,
+            'general_questions_formset': general_questions_formset,
+
+        }
+
+        return render(request, 'procurement01/create_rfp_step3.html', context)
+
+            
+
+
 
 
 @login_required

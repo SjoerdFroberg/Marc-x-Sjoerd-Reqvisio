@@ -1,0 +1,44 @@
+<div class="container mt-4">
+    <div class="card shadow-lg border-0">
+        <div class="card-header">
+            <h3 class="mb-0">General Questions</h3>
+        </div>
+        <div class="card-body">
+            {{ general_questions_formset.management_form }}
+            {% if general_questions_formset.non_form_errors %}
+                <div class="alert alert-danger">
+                    {{ general_questions_formset.non_form_errors }}
+                </div>
+            {% endif %}
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Question Text</th>
+                        <th>Question Type</th>
+                        <th>Multiple Choice Options</th>
+                    </tr>
+                </thead>
+                <tbody id="question-table-body">
+                    {% for form in general_questions_formset %}
+                    <tr>
+                        <td>
+                            <button type="button" class="btn btn-danger remove-question-btn">Remove</button>
+                            {{ form.id }}
+                        </td>
+                        <td>{{ form.question_text }}</td>
+                        <td>{{ form.question_type }}</td>
+                        <td>
+                            <input type="text" class="multiple-choice-input form-control" style="display: none;">
+                            <input type="hidden" name="{{ form.prefix }}-multiple_choice_options" class="hidden-multiple-choice-input" value="{{ form.multiple_choice_options.value }}">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <button type="button" class="btn btn-secondary" id="add-question-btn">Add Another Question</button>
+        </div>
+    </div>
+</div>
