@@ -15,11 +15,11 @@
     </thead>
     <tbody>
         {% for rfp in rfps %}
-        <tr>
-            <td>{{ rfp.title }}</td>
-            <td>{{ rfp.description }}</td>
-            <td>{{ rfp.created_at }}</td>
-        </tr>
+            <tr class="clickable-row" data-href="{% url 'rfp_detail' rfp.id %}">
+                <td>{{ rfp.title }}</td>
+                <td>{{ rfp.description }}</td>
+                <td>{{ rfp.created_at }}</td>
+            </tr>
         {% empty %}
         <tr>
             <td colspan="3">No RFPs available.</td>
@@ -27,4 +27,21 @@
         {% endfor %}
     </tbody>
 </table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Attach click event to all rows with the class 'clickable-row'
+    document.addEventListener('DOMContentLoaded', () => {
+    const rows = document.querySelectorAll('.clickable-row');
+    rows.forEach(row => {
+        row.addEventListener('click', () => {
+            const href = row.getAttribute('data-href');
+            if (href) {
+                window.location.href = href;
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

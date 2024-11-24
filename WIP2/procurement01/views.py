@@ -127,8 +127,10 @@ def create_supplier_view(request):
 def create_rfp_step1(request, rfp_id=None):
     if rfp_id:
         rfp = get_object_or_404(RFP, id=rfp_id)
+        existing_files = rfp.files.all()  # Fetch existing files
     else:
         rfp = None
+        existing_files = None  # Initialize for new RFP
 
     if request.method == 'POST':
         with transaction.atomic():
@@ -190,34 +192,74 @@ def search_skus(request):
 RFP_SKUFormSet = inlineformset_factory(RFP, RFP_SKUs, fields=('sku',), extra=1)
 
 
+
+
+
 @login_required
 def create_rfp_step2(request, rfp_id):
     rfp = get_object_or_404(RFP, id=rfp_id)
 
     if request.method == 'POST':
-        sku_ids = request.POST.getlist('skus[]')
-        extra_columns_data = request.POST.get('extra_columns_data')
-        extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
+        with transaction.atomic():
+            # Get existing SKUs associated with the RFP
+            existing_sku_ids = set(
+                RFP_SKUs.objects.filter(rfp=rfp).values_list('sku_id', flat=True)
+            )
 
-        for sku_data in extra_columns_json:
-            sku_id = sku_data['sku_id']
-            sku = get_object_or_404(SKU, id=sku_id)
-            rfp_sku = RFP_SKUs.objects.create(rfp=rfp, sku=sku)
+            # Get SKU IDs from the form
+            sku_ids = request.POST.getlist('skus[]')
+            submitted_sku_ids = set(int(sku_id) for sku_id in sku_ids)
 
-            # Convert dataArray back into a dictionary, maintaining order
-            data_ordered = OrderedDict(sku_data['data'])
-            rfp_sku.set_extra_data(data_ordered)
+            # Remove SKUs that are no longer in the form
+            skus_to_remove = existing_sku_ids - submitted_sku_ids
+            if skus_to_remove:
+                RFP_SKUs.objects.filter(rfp=rfp, sku_id__in=skus_to_remove).delete()
 
-            rfp_sku.save()
 
-        return redirect('create_rfp_step3', rfp_id=rfp.id)
+            # Update or create RFP_SKUs and their extra data
+            extra_columns_data = request.POST.get('extra_columns_data')
+            extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
 
-    sku_search_form = SKUSearchForm()
+            for sku_data in extra_columns_json:
+                sku_id = sku_data['sku_id']
+                sku = get_object_or_404(SKU, id=sku_id)
+                rfp_sku, _ = RFP_SKUs.objects.get_or_create(rfp=rfp, sku=sku)
+                # Convert dataArray back into an ordered dictionary
+                data_ordered = OrderedDict(sku_data['data'])
+                rfp_sku.set_extra_data(data_ordered)
+                rfp_sku.save()
 
-    return render(request, 'procurement01/create_rfp_step2.html', {
-        'rfp': rfp,
-        'sku_search_form': sku_search_form,
-    })
+            # Get the navigation destination and dynamically construct the redirect URL name
+            navigation_destination = request.POST.get('navigation_destination', 'step3')
+            return redirect(f'create_rfp_{navigation_destination}', rfp_id=rfp.id)
+    else:
+        # Handle GET request: Retrieve existing SKUs
+        # Prepare SKUs and Extra Data for the template
+        rfp_skus = RFP_SKUs.objects.filter(rfp=rfp)
+        processed_skus = []
+        extra_columns = []
+
+        for rfp_sku in rfp_skus:
+            extra_data = rfp_sku.get_extra_data()
+            if not extra_columns and extra_data:
+                extra_columns = list(extra_data.keys())
+            processed_skus.append({
+                'sku_id': rfp_sku.sku.id,
+                'sku_name': rfp_sku.sku.name,
+                'extra_data': extra_data,
+                'extra_columns': extra_columns,
+
+            })
+        sku_search_form = SKUSearchForm()
+
+        context = {
+            'rfp': rfp,
+            'sku_search_form': sku_search_form,
+            'processed_skus': processed_skus,
+            'extra_columns': extra_columns
+        }
+
+        return render(request, 'procurement01/create_rfp_step2.html', context)
 
 
 
@@ -934,3 +976,24 @@ def sku_specific_question_responses_analysis(request, rfp_id):
     else:
         # Render the full page
         return render(request, 'procurement01/sku_specific_question_responses_analysis.html', context)
+
+
+@login_required
+def rfp_detail(request, rfp_id):
+    # Fetch the RFP instance
+    rfp = get_object_or_404(RFP, id=rfp_id)
+
+    # Count the number of invitations sent for this RFP
+    invitations_sent = rfp.invitations.count()
+
+    # Count the number of responses received for this RFP
+    responses_received = rfp.responses.filter(is_finalized=True).count()
+
+    # Pass the data to the template
+    context = {
+        'rfp': rfp,
+        'invitations_sent': invitations_sent,
+        'responses_received': responses_received,
+    }
+
+    return render(request, 'procurement01/rfp_detail.html', context)

@@ -23,6 +23,7 @@ urlpatterns = [
     path('rfp/create/step4/<int:rfp_id>/', views.create_rfp_step4, name='create_rfp_step4'),   
 
     path('rfps/', views.rfp_list_view, name='rfp_list'),
+    path('rfp_detail/<int:rfp_id>/', views.rfp_detail, name = 'rfp_detail'),
     
 
 

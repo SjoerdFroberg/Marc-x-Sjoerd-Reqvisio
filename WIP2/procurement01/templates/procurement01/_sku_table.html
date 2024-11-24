@@ -1,0 +1,133 @@
+{% load static%}
+{% load custom_filters %}
+
+<!-- procurement01/_sku_table.html -->
+
+<div id="full-screen-container">
+    <!-- Controls -->
+    <div class="top-controls">
+        <div id="left-controls">
+            <button type="button" id="full-screen-toggle" class="action-btn">Full Screen</button>
+            
+            {% if sku_specific_questions %}
+                <button type="button" id="add-extra-column" class="action-btn">Add Extra Data Column</button>
+                <button type="button" id="add-sku-question-btn" class="action-btn">Add SKU-specific Question</button>
+                <button type="button" id="finalize-rfp-btn" class="action-btn">Finalize RFP</button>
+            {% else %}
+                <button type="button" id="add-column" class="action-btn">Add Extra Column</button>
+                <button type="button" id="back-to-step-1-btn" class="action-btn">Back to Step 1</button>
+                <button type="button" id="continue-to-step-3-btn" class="action-btn">Continue to Step 3</button>
+                
+
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SKU Search -->
+    <div class="search-container">
+        <label for="sku-search-input">Search and Add SKU</label>
+        <span class="tooltip-icon" title="Type an SKU name to add it to the table">ℹ️</span>
+    </div>
+    <input type="text" id="sku-search-input" class="form-control" placeholder="Search SKU to Add" autocomplete="off" autofocus>
+    <div id="sku-search-results" class="sku-search-results"></div>
+
+    <!-- Hidden Inputs -->
+    <input type="hidden" id="extra_columns_data" name="extra_columns_data" />
+    {% if sku_specific_questions %}
+        <input type="hidden" id="sku_specific_data" name="sku_specific_data" />
+    {% endif %}
+
+    <!-- The SKU Table -->
+    <div class="table-wrapper">
+        <table class="table sheet-table" id="sku-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th><input type="text" class="column-input" value="SKU Name" disabled></th>
+                    
+                    {% if extra_columns %}
+                        {% for column in extra_columns %}
+                            <th>
+                                <input type="text" class="column-input" value="{{ column }}">
+                                <button type="button" class="remove-column-x">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </th>
+                        {% endfor %}
+                    {% elif not extra_columns and not sku_specific_questions %}
+                        <th>
+                            <input type="text" class="column-input" value="Quantity">
+                            <button type="button" class="remove-column-x">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </th>
+
+                    {% endif %}
+                    
+                    {% for question in sku_specific_questions %}
+                        <th class="sku-specific-question">
+                            <input type="text" class="column-input" value="{{ question.question }}">
+                            <button type="button" class="remove-column-x">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </th>
+                    {% endfor %}
+                </tr>
+
+                {% if sku_specific_questions %}
+                
+                    <tr>
+                        <th></th>
+                        <th></th>
+
+                        {% for column in extra_columns %}
+                            <th>
+                                
+                            </th>
+                        {% endfor %}
+                        
+                        
+                            <!-- SKU-specific Questions Types -->
+                            {% for question in sku_specific_questions %}
+                                <th class="sku-specific-question">
+                                    <select class="form-control question-type-select">
+                                        <option value="text" {% if question.question_type == 'text' %}selected{% endif %}>Text</option>
+                                        <option value="number" {% if question.question_type == 'number' %}selected{% endif %}>Number</option>
+                                        <option value="file" {% if question.question_type == 'file' %}selected{% endif %}>File Upload</option>
+                                        <option value="date" {% if question.question_type == 'date' %}selected{% endif %}>Date</option>
+                                    </select>
+                                </th>
+                            {% endfor %}
+
+                    </tr>
+                {% endif %}
+
+            </thead>
+            <tbody>
+                {% for sku in processed_skus %}
+                    <tr data-sku-id="{{ sku.sku_id }}">
+                        <td>
+                            <button type="button" class="remove-sku-btn">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </td>
+                        <td contenteditable="false">
+                            {{ sku.sku_name }}
+                            <input type="hidden" name="skus[]" value="{{ sku.sku_id }}">
+                        </td>
+                        
+                        {% for value in sku.extra_data.values %}
+                            <td contenteditable="true">{{ value }}</td>
+                        {% endfor %}
+                        
+                        {% for _ in sku_specific_questions %}
+                            <td contenteditable="true"></td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        
+    </div>
+</div>

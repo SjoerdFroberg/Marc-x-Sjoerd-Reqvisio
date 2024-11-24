@@ -1,0 +1,16 @@
+{% extends 'procurement01/layout.html' %}
+
+{% block content %}
+<h2>RFP: {{ rfp.title }}</h2>
+
+<p><strong>Description:</strong> {{ rfp.description }}</p>
+
+<div class="rfp-stats">
+    <p><strong>Invitations Sent:</strong> {{ invitations_sent }}</p>
+    <p><strong>Responses Received:</strong> {{ responses_received }}</p>
+</div>
+
+<a href="{% url 'invite_suppliers' rfp.id %}" class="btn btn-primary">Invite Suppliers</a>
+<a href="{% url 'general_question_table' rfp.id %}" class="btn btn-secondary">Analyze responses</a>
+
+{% endblock %}
