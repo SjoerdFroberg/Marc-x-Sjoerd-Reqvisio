@@ -18,12 +18,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const addSkuQuestionButton = document.getElementById('add-sku-question-btn');
 
     const continueToStep3Button = document.getElementById('continue-to-step-3-btn');
+    const continueToStep5Button = document.getElementById('continue-to-step-5-btn');
     const backToStep1Button = document.getElementById('back-to-step-1-btn');
-    const finalizeRFPButton = document.getElementById('finalize-rfp-btn');
+    const backToStep3Button = document.getElementById('back-to-step-3-btn');
+    const backToStep4Button = document.getElementById('back-to-step-4-btn');
+    const finalizeRFPButton = document.getElementById('finalize-rfp-btn')
+
+
+
 
     // Hidden Inputs
     const extraColumnsDataInput = document.getElementById('extra_columns_data');
     const skuSpecificDataInput = document.getElementById('sku_specific_data');
+    const step = document.getElementById('step_number');
 
     // Determine if SKU-specific questions are present
     const hasSkuSpecificQuestions = !!addSkuQuestionButton;
@@ -44,10 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener('fullscreenchange', handleFullScreenChange);
         }
 
-        // Add Extra Column
-        if (addColumnButton) {
-            addColumnButton.addEventListener('click', addExtraColumn);
-        }
 
         if (addExtraColumnButton) {
             addExtraColumnButton.addEventListener('click', addExtraDataColumn);
@@ -69,6 +72,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Continue to Step 5
+        if (continueToStep5Button) {
+            continueToStep5Button.addEventListener('click', function(event){
+                // Update the navigation destination to Step 5
+                document.getElementById('navigation_destination').value = 'step5';
+                // Submit the form
+                submitFormStep4(event);
+
+            });
+        }
+
         // Back to step 1
         if(backToStep1Button){
             backToStep1Button.addEventListener('click', function(event){
@@ -81,10 +95,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
         }
 
-        // Finalize RFP
-        if (finalizeRFPButton) {
-            finalizeRFPButton.addEventListener('click', finalizeRFP);
+        // Back to step 3
+        if(backToStep3Button){
+            backToStep3Button.addEventListener('click', function(event){
+                // Update the navigation destination to Step 3
+                document.getElementById('navigation_destination').value = 'step3';
+                // Submit the form
+                submitFormStep4(event);
+
+            });
+
         }
+
+        // Back to step 4
+        if(backToStep4Button){
+            backToStep4Button.addEventListener('click', function(event){
+                // Update the navigation destination to Step 4
+                document.getElementById('navigation_destination').value = 'step4';
+                // Submit the form
+                finalizeRFP(event);
+
+            });
+
+        }
+
+        // finalize rfp
+
+        if(finalizeRFPButton){
+            finalizeRFPButton.addEventListener('click', function(event){
+                document.getElementById('navigation_destination').value = 'invite_suppliers';
+                // Submit the form
+                finalizeRFP(event);
+            })
+        }
+
+        
 
         // Initialize Remove SKU Buttons
         document.querySelectorAll('.remove-sku-btn').forEach(button => {
@@ -246,29 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Add Extra Column (Step 2)
-    function addExtraColumn() {
-        const tableHead = skuTable.querySelector('thead tr:first-child');
-        const newTh = document.createElement('th');
-        newTh.innerHTML = `<input type="text" class="column-input" placeholder="Column Name">
-                           <button type="button" class="remove-column-x">
-                               <i class="bi bi-x-circle"></i>
-                           </button>`;
-        tableHead.appendChild(newTh);
-
-        // Add new cells to each row in the table body
-        skuTable.querySelectorAll('tbody tr').forEach(row => {
-            const newTd = document.createElement('td');
-            newTd.contentEditable = "true";
-            newTd.addEventListener('paste', handlePaste);
-            newTd.addEventListener('keydown', handleCellNavigation);
-            row.appendChild(newTd);
-        });
-
-        // Rebind remove column listeners
-        addRemoveColumnListeners();
-    }
-
+    
     // Add Extra Data Column (Step 5)
     function addExtraDataColumn() {
         const tableHeadRow1 = skuTable.querySelector('thead tr:first-child');
@@ -280,6 +303,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                <i class="bi bi-x-circle"></i>
                            </button>`;
         tableHeadRow1.appendChild(newTh);
+        
+        if (tableHeadRow2){
+            const newThType = document.createElement('th');
+            newThType.innerHTML = `<th></th>`;
+            tableHeadRow2.appendChild(newThType);
+
+        }
+
+        
 
         // Add new cells to each row in the table body
         skuTable.querySelectorAll('tbody tr').forEach(row => {
@@ -360,7 +392,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Remove the column header
         headerCellsRow1[index].remove();
-        headerCellsRow2[index].remove();
+
+        // Check if the second header row exists before trying to remove its cell
+        if (headerCellsRow2.length > 0 && headerCellsRow2[index]) {
+            headerCellsRow2[index].remove();
+        }
 
         // Remove the corresponding cells from each row in the table body
         rows.forEach(row => {
@@ -579,6 +615,78 @@ document.addEventListener('DOMContentLoaded', () => {
         // Submit the form
         form.submit();
     }
+
+    // submit form step 4
+
+    function submitFormStep4(){
+        const skuData = [];
+        const tableBody = skuTable.querySelector('tbody');
+
+        // Collect Extra Data Column Indices and Headers
+        const extraDataColumns = [];
+        skuTable.querySelectorAll('thead tr:first-child th').forEach((th, index) => {
+            if (!th.classList.contains('sku-specific-question') && index >= 2) {
+                const header = th.querySelector('.column-input') ? th.querySelector('.column-input').value.trim() : th.textContent.trim();
+                extraDataColumns.push({ index: index, header: header });
+            }
+        });
+
+        // Collect SKU-specific Question Column Indices, Headers, and Types
+        const skuSpecificColumns = [];
+        skuTable.querySelectorAll('thead tr:first-child th').forEach((th, index) => {
+            if (th.classList.contains('sku-specific-question')) {
+                const header = th.querySelector('.column-input') ? th.querySelector('.column-input').value.trim() : '';
+                const typeSelect = skuTable.querySelector(`thead tr:nth-child(2) th:nth-child(${index + 1}) select.question-type-select`);
+                const questionType = typeSelect ? typeSelect.value : '';
+                skuSpecificColumns.push({ index: index, header: header, question_type: questionType });
+            }
+        });
+
+        // Collect SKU Data
+        tableBody.querySelectorAll('tr').forEach(row => {
+            const skuId = row.querySelector('input[name="skus[]"]').value;
+            const cells = row.querySelectorAll('td');
+
+            // Extract Extra Data Values
+            const dataArray = [];
+            extraDataColumns.forEach(col => {
+                const cell = cells[col.index];
+                const value = cell ? cell.innerText.trim() : '';
+                dataArray.push([col.header, value]);
+            });
+
+            skuData.push({
+                sku_id: skuId,
+                data: dataArray
+            });
+        });
+
+        // Set the SKU Data in Hidden Input
+        extraColumnsDataInput.value = JSON.stringify(skuData);
+
+        // Collect SKU-specific Questions Data
+        const questionsData = [];
+        skuSpecificColumns.forEach(col => {
+            const question = col.header;
+            const questionType = col.question_type;
+            if (question && questionType) {
+                questionsData.push({
+                    question: question,
+                    question_type: questionType
+                });
+            }
+        });
+
+        // Set the SKU-specific Questions Data in Hidden Input
+        if (skuSpecificDataInput) {
+            skuSpecificDataInput.value = JSON.stringify(questionsData);
+        }
+
+
+        document.getElementById('rfp-sku-questions-form').submit();
+
+    }
+
 
     // Finalize RFP Function (Step 5)
     function finalizeRFP() {

@@ -11,6 +11,7 @@
     <h2>Finalize RFP</h2>
     <!-- Wrap the entire content in a single form -->
     <form method="POST" enctype="multipart/form-data" id="finalize-rfp-form">
+        <input type="hidden" id="navigation_destination" name="navigation_destination" value="">
     {% csrf_token %}
 
         <!-- RFP Basic Information Section -->
@@ -41,120 +42,13 @@
         {% include 'procurement01/general_questions_section.html' %}
         
         <!-- SKUs and SKU-specific Questions Section -->
-        <div class="container mt-5">
-            <div class="card shadow-lg border-0">
-                <div class="card-header">
-                    <h3 class="mb-0">SKUs and SKU-specific Questions</h3>
-                </div>
-                <div class="card-body">
-
-                    <div id="full-screen-container">
-
-                        <!-- Controls -->
-                        <div class="top-controls">
-                            <div id="left-controls">
-                            <!-- Full screen toggle -->
-                            <button type="button" id="full-screen-toggle" class="action-btn">Full Screen</button>
-
-                            <!-- Button to add extra data column -->
-                            <button type="button" id="add-extra-column" class="action-btn">Add Extra Data Column</button>
-
-                            <!-- Button to add SKU-specific question -->
-                            <button type="button" id="add-sku-question-btn" class="action-btn">Add SKU-specific Question</button>
-                        </div>
-                    </div>
-
-                        <!-- SKU Search -->
-                        <div class="search-container">
-                            <label for="sku-search-input">Search and Add SKU</label>
-                            <span class="tooltip-icon" title="Type an SKU name to add it to the table">ℹ️</span>
-                        </div>
-                        <input type="text" id="sku-search-input" class="form-control" placeholder="Search SKU to Add" autocomplete="off" autofocus>
-                        <div id="sku-search-results" class="sku-search-results"></div>
-
-                        <!-- Hidden inputs to store extra data -->
-                        <input type="hidden" id="extra_columns_data" name="extra_columns_data" />
-                        <input type="hidden" id="sku_specific_data" name="sku_specific_data" />
-
-                        <!-- The table -->
-                        <div class="table-wrapper">
-                            <table class="table sheet-table" id="sku-table">
-                                <thead>
-                                    <tr>
-                                        <th></th>
-                                        <th><input type="text" class="column-input" value="SKU Name" disabled></th>
-                                        {% for column in extra_columns %}
-                                            <th>
-                                                <input type="text" class="column-input" value="{{ column }}">
-                                                <button type="button" class="remove-column-x">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </button>
-                                            </th>
-                                        {% endfor %}
-                                        <!-- SKU-specific Questions Headers -->
-                                        {% for question in sku_specific_questions %}
-                                            <th class="sku-specific-question">
-                                                <input type="text" class="column-input" value="{{ question.question }}">
-                                                <button type="button" class="remove-column-x">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </button>
-                                            </th>
-                                        {% endfor %}
-                                    </tr>
-                                    <tr>
-                                        <th></th>
-                                        <th></th>
-                                        {% for column in extra_columns %}
-                                            <th></th>
-                                        {% endfor %}
-                                        <!-- SKU-specific Questions Types -->
-                                        {% for question in sku_specific_questions %}
-                                            <th class="sku-specific-question">
-                                                <select class="form-control question-type-select">
-                                                    <option value="text" {% if question.question_type == 'text' %}selected{% endif %}>Text</option>
-                                                    <option value="number" {% if question.question_type == 'number' %}selected{% endif %}>Number</option>
-                                                    <option value="file" {% if question.question_type == 'file' %}selected{% endif %}>File Upload</option>
-                                                    <option value="date" {% if question.question_type == 'date' %}selected{% endif %}>Date</option>
-                                                </select>
-                                            </th>
-                                        {% endfor %}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for sku in processed_skus %}
-                                        <tr data-sku-id="{{ sku.sku_id }}">
-                                            <td>
-                                                <button type="button" class="remove-sku-btn">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </button>
-                                            </td>
-                                            <td contenteditable="false">{{ sku.sku_name }}
-                                                <input type="hidden" name="skus[]" value="{{ sku.sku_id }}">
-                                            </td>
-                                            {% for value in sku.extra_data.values %}
-                                                <td contenteditable="true">{{ value }}</td>
-                                            {% endfor %}
-                                            {% for _ in sku_specific_questions %}
-                                                <td contenteditable="true"></td>
-                                            {% endfor %}
-                                        </tr>
-                                    {% endfor %}
-
-
-                                    
-                                </tbody>
-                            </table>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% include 'procurement01/__sku_specific_questions_creation_table.html' %}
 
         <!-- Finalize RFP Button -->
         <div class="container mt-5">
             <div class="d-flex justify-content-end">
-                <button type="button" class="btn btn-primary" onclick="finalizeRFP()">Finalize RFP</button>
+                <button type="button" id="back-to-step-4-btn" class="btn btn-primary" >Back to step 4</button>
+                <button type="button" id = "finalize-rfp-btn" class="btn btn-primary">Finalize RFP</button>
             </div>
         </div>
     </form>
@@ -175,6 +69,7 @@
 
 <script src="{% static 'js/shared_sku.js' %}"></script>
 <script src="{% static 'js/general_questions_shared.js' %}"></script>
+
 
 
 {% endblock %}

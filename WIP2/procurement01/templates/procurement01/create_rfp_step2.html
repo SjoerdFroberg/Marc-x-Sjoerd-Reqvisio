@@ -12,6 +12,8 @@
     <form id="rfp-skus-form" method="POST">
         {% csrf_token %}
         <input type="hidden" id="navigation_destination" name="navigation_destination" value="">
+        <input type = "hidden" id ="step_number" name = "step_number"/>
+
         {% include 'procurement01/_sku_table.html' %}
     </form>
 {% endblock %}

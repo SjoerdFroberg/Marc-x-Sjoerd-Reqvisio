@@ -252,11 +252,14 @@ def create_rfp_step2(request, rfp_id):
             })
         sku_search_form = SKUSearchForm()
 
+        step = "step2"
+
         context = {
             'rfp': rfp,
             'sku_search_form': sku_search_form,
             'processed_skus': processed_skus,
-            'extra_columns': extra_columns
+            'extra_columns': extra_columns,
+            'step': step
         }
 
         return render(request, 'procurement01/create_rfp_step2.html', context)
@@ -320,11 +323,94 @@ def create_rfp_step3(request, rfp_id):
 
             
 
+@login_required
+def create_rfp_step4(request, rfp_id):
+    # Get the RFP instance
+    rfp = get_object_or_404(RFP, id=rfp_id)
+
+    if request.method == 'POST':
+        with transaction.atomic():
+
+            # Process SKUs and Extra Data
+            # Get existing SKUs associated with the RFP
+            existing_sku_ids = set(
+                RFP_SKUs.objects.filter(rfp=rfp).values_list('sku_id', flat=True)
+            )
+
+            # Get SKU IDs from the form
+            sku_ids = request.POST.getlist('skus[]')
+            submitted_sku_ids = set(int(sku_id) for sku_id in sku_ids)
+
+            # Remove SKUs that are no longer in the form
+            skus_to_remove = existing_sku_ids - submitted_sku_ids
+            RFP_SKUs.objects.filter(rfp=rfp, sku_id__in=skus_to_remove).delete()
+
+            # Update or create RFP_SKUs and their extra data
+            extra_columns_data = request.POST.get('extra_columns_data')
+            extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
+
+            for sku_data in extra_columns_json:
+                sku_id = sku_data['sku_id']
+                sku = get_object_or_404(SKU, id=sku_id)
+                rfp_sku, _ = RFP_SKUs.objects.get_or_create(rfp=rfp, sku=sku)
+                # Convert dataArray back into an ordered dictionary
+                data_ordered = OrderedDict(sku_data['data'])
+                rfp_sku.set_extra_data(data_ordered)
+                rfp_sku.save()
+
+            # Process SKU-Specific Questions
+            # Remove existing SKU-specific questions
+            SKUSpecificQuestion.objects.filter(rfp=rfp).delete()
+
+            # Add new SKU-specific questions
+            sku_specific_data = request.POST.get('sku_specific_data')
+            sku_specific_json = json.loads(sku_specific_data) if sku_specific_data else []
+
+            for question_data in sku_specific_json:
+                SKUSpecificQuestion.objects.create(
+                    rfp=rfp,
+                    question=question_data['question'],
+                    question_type=question_data['question_type']
+                )
+            
+            # Get the navigation destination and dynamically construct the redirect URL name
+            navigation_destination = request.POST.get('navigation_destination')
+            return redirect(f'create_rfp_{navigation_destination}', rfp_id=rfp.id)
+    else:
+        # Prepare SKUs and Extra Data for the template
+        rfp_skus = RFP_SKUs.objects.filter(rfp=rfp)
+        processed_skus = []
+        extra_columns = []
+
+        for rfp_sku in rfp_skus:
+            extra_data = rfp_sku.get_extra_data()
+            if not extra_columns and extra_data:
+                extra_columns = list(extra_data.keys())
+            processed_skus.append({
+                'sku_id': rfp_sku.sku.id,
+                'sku_name': rfp_sku.sku.name,
+                'extra_data': extra_data,
+            })
+
+        # Get existing SKU-specific questions
+        sku_specific_questions = SKUSpecificQuestion.objects.filter(rfp=rfp)
+
+        context = {
+            'rfp': rfp,
+            'extra_columns': extra_columns,
+            'processed_skus': processed_skus,
+            'sku_specific_questions': sku_specific_questions,
+        }
+
+        return render(request, 'procurement01/create_rfp_step4.html', context)
+
+
+
 
 
 
 @login_required
-def create_rfp_step4(request, rfp_id):
+def create_rfp_step4a(request, rfp_id):
     # Get the RFP instance
     rfp = get_object_or_404(RFP, id=rfp_id)
     
@@ -568,7 +654,11 @@ def create_rfp_step5(request, rfp_id):
                     )
 
                 # Finalize RFP and redirect to RFP list or a success page
-                return redirect('invite_suppliers', rfp_id=rfp.id)
+                navigation_destination = request.POST.get('navigation_destination')
+                if navigation_destination == 'step4':
+                    return redirect(f'create_rfp_{navigation_destination}', rfp_id=rfp.id)
+                else:
+                    return redirect( 'invite_suppliers', rfp_id=rfp.id)
 
             else:
                 # If forms are invalid, re-render the page with errors

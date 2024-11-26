@@ -6,80 +6,30 @@
 {% block title %}Create RFP - Step 4{% endblock %}
 
 {% block content %}
+
 <h2>Create RFP - Step 4: Add SKU-Specific Questions to "{{ rfp.title }}"</h2>
 
-<!-- Hidden div to store extra_columns in JSON format -->
-<div id="extra-columns-data" style="display: none;">{{ extra_columns|json_script }}</div>
 
-
-<div id="full-screen-container">
-
-<div class="button-container">
-
-    <!-- Button to toggle full screen -->
-    <button type="button" id="full-screen-toggle" class="action-btn">Full Screen</button>
-    <!-- Button to add a new question -->
-    <button type="button" id="add-question-btn" class="btn btn-primary">Add Question</button>
-
+<div class="d-flex justify-content-between mt-4">
     <!-- Button to submit the form and continue to the next step -->
-    <button type="button" class="btn btn-primary" onclick="submitForm()">Continue to Step 5</button>
+    <button type="button" id="back-to-step-3-btn" class="btn btn-primary" >Back to step 3</button>
+    <button type="button" id="continue-to-step-5-btn" class="btn btn-primary" >Continue to Step 5</button>
 </div>
 
 
 <form id="rfp-sku-questions-form" method="POST" >
     {% csrf_token %}
+    <input type="hidden" id="navigation_destination" name="navigation_destination" value="">
 
-    <!-- Hidden input to store the SKU-specific questions data -->
-    <input type="hidden" id="sku_specific_data" name="sku_specific_data" />
+    {% include 'procurement01/__sku_specific_questions_creation_table.html' %}
 
-    <div class="table-wrapper">
-        <table class="table sheet-table" id="sku-specific-table">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th><input type="text" class="column-input" value="SKU Name" disabled></th>
-                    {% for column in extra_columns %}
-                        <th>
-                            <input type="text" class="column-input" value="{{ column }}" disabled>
-                        </th>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <th></th>
-                    <th></th>
-                    {% for column in extra_columns %}
-                        <th></th>
-                    {% endfor %}
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for sku in processed_skus %}
-                    <tr data-sku-id="{{ sku.sku_id }}">
-                        <td>
-                            <button type="button" class="remove-sku-btn">
-                                <i class="bi bi-x-circle"></i>
-                              </button>
-                        </td>
-                        <td contenteditable="false">{{ sku.sku_name }}</td>
-                        {% for column in extra_columns %}
-                            <td contenteditable="false">{{ sku.extra_data|get_item:column }}</td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    
-    
 </form>
 
-</div>
+
 {% endblock %}
 
 {% block scripts %}
 <!-- Include JavaScript file for handling SKU-specific questions -->
-<script src="{% static 'js/sku_specific_questions.js' %}"></script>
+<script src="{% static 'js/shared_sku.js' %}"></script>
 {% endblock %}
 

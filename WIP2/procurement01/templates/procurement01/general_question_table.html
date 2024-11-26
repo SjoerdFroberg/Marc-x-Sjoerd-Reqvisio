@@ -43,7 +43,11 @@
                                         {% elif question.question_type in multi_choice_types %}
                                             {{ answer.answer_choice }}
                                         {% elif question.question_type == 'File upload' %}
-                                            <a href="{{ answer.answer_file.url }}" target="_blank">Download</a>
+                                            {% if answer.answer_file %}
+                                                <a href="{{ answer.answer_file.url }}" target="_blank">Download</a>
+                                            {% else %}
+                                                <em>No file uploaded</em>
+                                            {% endif %}
                                         {% endif %}
                                     {% else %}
                                         <em>No response</em>
