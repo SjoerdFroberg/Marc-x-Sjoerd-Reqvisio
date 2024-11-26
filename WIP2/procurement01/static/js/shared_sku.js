@@ -14,9 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const fullScreenButton = document.getElementById('full-screen-toggle');
 
     // Control Buttons
-    const addColumnButton = document.getElementById('add-column');
     const addExtraColumnButton = document.getElementById('add-extra-column');
     const addSkuQuestionButton = document.getElementById('add-sku-question-btn');
+
     const continueToStep3Button = document.getElementById('continue-to-step-3-btn');
     const backToStep1Button = document.getElementById('back-to-step-1-btn');
     const finalizeRFPButton = document.getElementById('finalize-rfp-btn');
@@ -100,11 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 applyListenersToRow(row);
             });
         }
-
-        // Initialize General Questions Formset if present (only in Step 5)
-        if (hasSkuSpecificQuestions) {
-            initializeSkuSpecificQuestions();
-        }
+ 
     }
 
     // SKU Search Functions
@@ -125,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearSearch();
         }
     }
+    
 
     function renderSearchResults(skus) {
         searchResults.innerHTML = '';
@@ -379,8 +376,20 @@ document.addEventListener('DOMContentLoaded', () => {
         row.querySelectorAll('td[contenteditable="true"]').forEach(cell => {
             cell.addEventListener('paste', handlePaste);
             cell.addEventListener('keydown', handleCellNavigation);
+            cell.addEventListener('input', handleEmptyCell); // Add listener for input events
         });
     }
+
+    function handleEmptyCell(event) {
+        const cell = event.target;
+    
+        // Check if the cell is empty after content deletion
+        if (!cell.textContent.trim()) {
+            console.log('trimming');
+            cell.textContent = ''; // Ensure it's explicitly empty
+        }
+    }
+    
 
     // Handle Paste Function
     function handlePaste(event) {
@@ -389,29 +398,66 @@ document.addEventListener('DOMContentLoaded', () => {
         const pasteData = (event.clipboardData || window.clipboardData).getData('text');
         const rows = pasteData.trim().split('\n').map(row => row.split('\t'));
 
-        const startRow = event.target.parentNode.rowIndex - 2; // Adjusted for header rows
+        const startRow = event.target.parentNode.rowIndex - 1;
         const startCol = event.target.cellIndex;
+        console.log(startRow);
+        console.log(startCol);
 
         rows.forEach((rowData, rowIndex) => {
-            let tableRow = skuTable.querySelector('tbody').rows[startRow + rowIndex];
-            if (!tableRow) {
-                tableRow = addNewRow();
-            }
+            
+            let tableRow = document.querySelector(`#sku-table tbody`).rows[startRow + rowIndex];
+            if (tableRow) console.log(tableRow);
+            if (!tableRow) tableRow = addNewRow(); console.log('added new row');
 
             rowData.forEach((cellData, colIndex) => {
-                const currentCol = startCol + colIndex;
-                if (currentCol >= skuTable.querySelectorAll('thead tr:first-child th').length) {
-                    if (hasSkuSpecificQuestions) {
-                        addExtraDataColumn();
-                    } else {
-                        addExtraColumn();
-                    }
+                if (startCol + colIndex >= document.querySelectorAll('#sku-table thead th').length) {
+                    addNewExtraDataColumn();
+                    console.log('added new col')
                 }
                 const cell = tableRow.cells[startCol + colIndex];
-                if (cell && cell.getAttribute('contenteditable') === "true") {
-                    cell.textContent = cellData.trim();
-                }
+                if (cell && cell.contentEditable === "true") cell.textContent = cellData.trim();
             });
+        });
+    }
+
+    function addNewExtraDataColumn() {
+        const tableHead = document.querySelector('#sku-table thead tr');
+        const newTh = document.createElement('th');
+        newTh.innerHTML = `<input type="text" class="column-input" placeholder="Column Name">
+                           <button type="button" class="remove-column-x">
+                               <i class="bi bi-x-circle"></i>
+                           </button>`;
+        tableHead.appendChild(newTh);
+
+        // Add new cells to each row in the table body
+        document.querySelectorAll('#sku-table tbody tr').forEach(row => {
+            const newTd = document.createElement('td');
+            newTd.contentEditable = "true";
+            newTd.addEventListener('paste', handlePaste);
+            newTd.addEventListener('input', handleEmptyCell); // Add listener for input events
+            row.appendChild(newTd);
+        applyCellNavigation();
+        });
+
+        // Rebind the remove column event after adding the new column
+        addRemoveColumnListeners();
+        // Reapply cell navigation after adding new columns
+        applyCellNavigation();
+
+
+    }
+
+
+    // Apply cell navigation listeners to headers and body cells
+    function applyCellNavigation() {
+        // Apply to header cells
+        document.querySelectorAll('#sku-table thead .column-input').forEach(input => {
+            input.addEventListener('keydown', handleCellNavigation);
+        });
+
+        // Apply to body cells
+        document.querySelectorAll('#sku-table tbody td[contenteditable="true"]').forEach(cell => {
+            cell.addEventListener('keydown', handleCellNavigation);
         });
     }
 
@@ -458,6 +504,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (targetCell && targetCell.getAttribute("contenteditable") === "true") {
             event.preventDefault();
             targetCell.focus();
+
+            
         }
     }
 
@@ -490,6 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         newRow.querySelector('.remove-sku-btn').addEventListener('click', removeSkuRow);
         applyListenersToRow(newRow);
+        applyCellNavigation(); // Rebind cell navigation listeners
         return newRow;
     }
 
@@ -600,11 +649,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('finalize-rfp-form').submit();
     }
 
-    // SKU-specific Questions Initialization (Step 5)
-    function initializeSkuSpecificQuestions() {
-        // Placeholder for any additional initialization related to SKU-specific questions
-        // For example, initializing Tagify for SKU-specific questions if needed
-    }
 
     // Shared: Add New Row Functionality
     function addNewRow() {
