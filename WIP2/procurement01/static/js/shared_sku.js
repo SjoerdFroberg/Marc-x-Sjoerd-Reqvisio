@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
 
     function initEventListeners() {
+
+        applyCellNavigation();
         // SKU Search Input
         if (searchInput) {
             searchInput.addEventListener('input', handleSkuSearchInput);
@@ -53,7 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         if (addExtraColumnButton) {
-            addExtraColumnButton.addEventListener('click', addExtraDataColumn);
+            addExtraColumnButton.addEventListener('click', () => {
+                addNewExtraDataColumn();
+            });
         }
 
         // Add SKU-specific Question
@@ -292,39 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     
-    // Add Extra Data Column (Step 5)
-    function addExtraDataColumn() {
-        const tableHeadRow1 = skuTable.querySelector('thead tr:first-child');
-        const tableHeadRow2 = skuTable.querySelector('thead tr:nth-child(2)');
-
-        const newTh = document.createElement('th');
-        newTh.innerHTML = `<input type="text" class="column-input" placeholder="Column Name">
-                           <button type="button" class="remove-column-x">
-                               <i class="bi bi-x-circle"></i>
-                           </button>`;
-        tableHeadRow1.appendChild(newTh);
-        
-        if (tableHeadRow2){
-            const newThType = document.createElement('th');
-            newThType.innerHTML = `<th></th>`;
-            tableHeadRow2.appendChild(newThType);
-
-        }
-
-        
-
-        // Add new cells to each row in the table body
-        skuTable.querySelectorAll('tbody tr').forEach(row => {
-            const newTd = document.createElement('td');
-            newTd.contentEditable = "true";
-            newTd.addEventListener('paste', handlePaste);
-            newTd.addEventListener('keydown', handleCellNavigation);
-            row.appendChild(newTd);
-        });
-
-        // Rebind remove column listeners
-        addRemoveColumnListeners();
-    }
+   
 
     // Add SKU-specific Question (Step 5)
     function addSkuSpecificQuestion() {
@@ -459,11 +431,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function addNewExtraDataColumn() {
         const tableHead = document.querySelector('#sku-table thead tr');
         const newTh = document.createElement('th');
+        console.log('king'); // This should log if the function is called
         newTh.innerHTML = `<input type="text" class="column-input" placeholder="Column Name">
                            <button type="button" class="remove-column-x">
                                <i class="bi bi-x-circle"></i>
                            </button>`;
         tableHead.appendChild(newTh);
+        console.log('added th'); // This should also log if the function is called
+
 
         // Add new cells to each row in the table body
         document.querySelectorAll('#sku-table tbody tr').forEach(row => {
@@ -472,7 +447,6 @@ document.addEventListener('DOMContentLoaded', () => {
             newTd.addEventListener('paste', handlePaste);
             newTd.addEventListener('input', handleEmptyCell); // Add listener for input events
             row.appendChild(newTd);
-        applyCellNavigation();
         });
 
         // Rebind the remove column event after adding the new column
@@ -486,6 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Apply cell navigation listeners to headers and body cells
     function applyCellNavigation() {
+
         // Apply to header cells
         document.querySelectorAll('#sku-table thead .column-input').forEach(input => {
             input.addEventListener('keydown', handleCellNavigation);
@@ -504,7 +479,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Handle navigation for header cells
         if (cell.tagName === 'INPUT') {
-            const currentCellIndex = Array.from(cell.parentNode.children).indexOf(cell.parentNode);
+            console.log('hit enter');
+            const currentCellIndex = Array.from(cell.parentNode.parentNode.children).indexOf(cell.parentNode);
+
             if (event.key === "ArrowDown" || event.key === "Enter") {
                 event.preventDefault();
                 const firstBodyRow = skuTable.querySelector('tbody tr');
@@ -512,6 +489,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     targetCell = firstBodyRow.children[currentCellIndex];
                 }
             }
+
+
         } else {
             // Handle navigation for body cells
             const currentRow = cell.parentNode;
@@ -587,9 +566,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const tableBody = skuTable.querySelector('tbody');
         const skuData = [];
 
+
         // Get the headers in the exact order they appear in the table
         const allColumnHeaders = Array.from(skuTable.querySelectorAll('thead tr:first-child th'))
             .map(th => th.querySelector('.column-input') ? th.querySelector('.column-input').value.toString() : th.textContent.trim());
+
 
         tableBody.querySelectorAll('tr').forEach(row => {
             const skuId = row.querySelector('input[name="skus[]"]').value;
@@ -608,6 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 data: dataArray
             });
         });
+
 
         // Add SKU data to the hidden input field
         extraColumnsDataInput.value = JSON.stringify(skuData);

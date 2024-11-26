@@ -7,12 +7,11 @@
 {% block title %}Create RFP - Step 2{% endblock %}
 
 {% block content %}
-    <h2>Create RFP - Step 2: Add SKUs to "{{ rfp.title }}"</h2>
 
     <form id="rfp-skus-form" method="POST">
         {% csrf_token %}
         <input type="hidden" id="navigation_destination" name="navigation_destination" value="">
-        <input type = "hidden" id ="step_number" name = "step_number"/>
+        <input type = "hidden" id ="step_number" name = "step_number" value = {{step}} />
 
         {% include 'procurement01/_sku_table.html' %}
     </form>
