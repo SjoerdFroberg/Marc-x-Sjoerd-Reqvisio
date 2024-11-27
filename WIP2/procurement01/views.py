@@ -254,12 +254,15 @@ def create_rfp_step2(request, rfp_id):
 
         step = "step2"
 
+        current_step = 2 
+
         context = {
             'rfp': rfp,
             'sku_search_form': sku_search_form,
             'processed_skus': processed_skus,
             'extra_columns': extra_columns,
-            'step': step
+            'step': step,
+            'current_step': current_step,
         }
 
         return render(request, 'procurement01/create_rfp_step2.html', context)

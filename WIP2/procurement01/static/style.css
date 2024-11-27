@@ -1125,3 +1125,182 @@ body.fullscreen-active {
 }
 
 
+.navigation-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.navigation-buttons .action-btn {
+    flex: 0 0 auto;
+}
+
+
+
+.progress-bar-container {
+    margin: 20px auto;
+    text-align: center;
+    width: 80%; /* Adjust width as needed */
+}
+
+.progress-bar.horizontal {
+    display: flex;
+    justify-content: space-between; /* Evenly distribute items */
+    align-items: center; /* Align vertically */
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.progress-bar.horizontal li {
+    flex: 1; /* Evenly distribute width */
+    text-align: center;
+    position: relative;
+}
+
+.progress-bar.horizontal li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -50%;
+    width: 100%; /* Full width between steps */
+    height: 4px;
+    background-color: #e0e0e0;
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.progress-bar.horizontal li.active:not(:last-child)::after {
+    background-color: #2d4c3e; /* Match active step color */
+}
+
+.progress-bar.horizontal li .step-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+    border: 2px solid #e0e0e0;
+    border-radius: 50%; /* Circular shape */
+    background-color: #fff;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #cccccc;
+    z-index: 2;
+    position: relative;
+}
+
+.progress-bar.horizontal li.active .step-icon {
+    border-color: #2d4c3e;
+    background-color: #2d4c3e;
+    color: #fff;
+}
+
+.progress-bar.horizontal li .step-label {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: #cccccc;
+}
+
+.progress-bar.horizontal li.active .step-label {
+    color: #2d4c3e; /* Highlight active step */
+}
+
+.progress-bar.horizontal li .step-icon,
+.progress-bar.horizontal li .step-label {
+    transition: all 0.3s ease-in-out;
+}
+
+.progress-bar.horizontal li {
+    padding: 0 10px;
+}
+/* Ensure progress bar container is centered and spans full width */
+.progress-bar-container {
+    margin: 20px auto; /* Center horizontally */
+    width: 80%; /* Adjust width as needed */
+    text-align: center;
+}
+
+/* Horizontal progress bar layout */
+.progress-bar.horizontal {
+    display: flex;
+    justify-content: space-between; /* Evenly distribute items */
+    align-items: center; /* Vertically center items */
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Style for individual steps */
+.progress-bar.horizontal li {
+    flex: 1; /* Evenly distribute space for each step */
+    text-align: center;
+    position: relative;
+}
+
+/* Style connector lines between steps */
+.progress-bar.horizontal li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -50%;
+    width: 100%; /* Full width between steps */
+    height: 4px;
+    background-color: #e0e0e0; /* Connector color */
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+/* Active step connector line */
+.progress-bar.horizontal li.active:not(:last-child)::after {
+    background-color: #2d4c3e; /* Active step color */
+}
+
+/* Step circle */
+.progress-bar.horizontal li .step-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+    border: 2px solid #e0e0e0;
+    border-radius: 50%; /* Circular shape */
+    background-color: #fff;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #cccccc;
+    z-index: 2;
+    position: relative;
+}
+
+/* Active step circle */
+.progress-bar.horizontal li.active .step-icon {
+    border-color: #2d4c3e;
+    background-color: #2d4c3e;
+    color: #fff;
+}
+
+/* Step labels */
+.progress-bar.horizontal li .step-label {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: #cccccc;
+}
+
+.progress-bar.horizontal li.active .step-label {
+    color: #2d4c3e; /* Highlight active step */
+}
+
+
+.progress-bar.horizontal {
+    display: flex;
+    flex-direction: row !important; /* Force horizontal layout */
+    justify-content: space-between; /* Spread items evenly */
+    align-items: center; /* Align items vertically in the center */
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 10px; /* Optional: Add space between steps */
+}
