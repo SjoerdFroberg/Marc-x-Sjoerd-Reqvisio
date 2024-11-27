@@ -49,6 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <td>
                 <button type="button" class="btn btn-danger remove-question-btn">Remove</button>
                 <input type="hidden" name="form-${newFormIndex}-id" id="id_form-${newFormIndex}-id">
+                <input type="hidden" name="form-${newFormIndex}-DELETE" id="id_form-${newFormIndex}-DELETE">
             </td>
             <td><input type="text" name="form-${newFormIndex}-question_text" class="form-control"></td>
             <td>
@@ -70,23 +71,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
         initializeRow(newRow);
 
-        newRow.querySelector(".remove-question-btn").addEventListener("click", () => {
-            newRow.remove();
-            updateFormIndices();
+        const removeBtn = newRow.querySelector(".remove-question-btn");
+        removeBtn.addEventListener("click", function() {
+            removeQuestionRow(removeBtn);
         });
     }
 
     function updateFormIndices() {
         const rows = document.querySelectorAll("#question-table-body tr");
         const totalFormsInput = document.querySelector("#id_form-TOTAL_FORMS");
-
+    
         rows.forEach((row, index) => {
             row.querySelectorAll("input, select").forEach((input) => {
-                input.name = input.name.replace(/form-\d+-/, `form-${index}-`);
-                input.id = input.id.replace(/form-\d+-/, `form-${index}-`);
+                if (input.name) {
+                    input.name = input.name.replace(/form-\d+-/, `form-${index}-`);
+                }
+                if (input.id) {
+                    input.id = input.id.replace(/form-\d+-/, `form-${index}-`);
+                }
             });
         });
-
+    
         totalFormsInput.value = rows.length;
     }
 
@@ -97,12 +102,59 @@ document.addEventListener("DOMContentLoaded", function () {
         addQuestionBtn.addEventListener("click", addQuestionRow);
     }
 
+
+
+        function removeQuestionRow(btn) {
+            const row = btn.closest("tr");
+            const idInput = row.querySelector('input[name$="-id"]');
+            const deleteInput = row.querySelector('input[name$="-DELETE"]');
+    
+            if (idInput && idInput.value) {
+                // Existing form, set DELETE field and hide row
+                if (deleteInput) {
+                    deleteInput.value = 'on';  // Mark the form for deletion
+                }
+                row.style.display = 'none';
+            } else {
+                // New form, remove from DOM and update indices
+                row.remove();
+                updateFormIndices();
+            }
+    }
+
+        // Update event listeners for remove buttons
     const removeButtons = document.querySelectorAll(".remove-question-btn");
     removeButtons.forEach((btn) => {
         btn.addEventListener("click", function () {
-            const row = btn.closest("tr");
-            row.remove();
-            updateFormIndices();
+            removeQuestionRow(btn);
         });
     });
+
+
+
+
+
+    const continueToStep4Button = document.getElementById('continue-to-step-4-btn');
+    const backToStep2Button = document.getElementById('back-to-step-2-btn');
+
+    // Continue to Step 4
+    if (continueToStep4Button) {
+        continueToStep4Button.addEventListener('click', function(event){
+            // Update the navigation destination to Step 4
+            document.getElementById('navigation_destination').value = 'step4';
+            
+
+        });
+    }
+
+    // Back to Step 2
+    if (backToStep2Button) {
+        backToStep2Button.addEventListener('click', function(event){
+            // Update the navigation destination to Step 2
+            document.getElementById('navigation_destination').value = 'step2';
+            
+
+        });
+    }
+
 });

@@ -318,6 +318,7 @@ h2 {
     border: none;
     box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
     transition: background-color 0.3s;
+    
 }
 
 .action-btn:hover {
@@ -378,6 +379,14 @@ h2 {
     text-align: center;
     border-bottom: none;
 }
+
+.card {
+    min-height: 80vh; /* Ensure the card takes at least 80% of the viewport height */
+    display: flex;
+    flex-direction: column; /* Align items within the card vertically */
+    justify-content: space-between; /* Push navigation buttons and progress bar apart from the content */
+}
+
 
 /* Form Elements */
 .form-group {
@@ -442,7 +451,7 @@ textarea.form-control:focus {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin: 20px;
     padding: 0 20px;
     flex-wrap: wrap; /* Prevent overlap in full-screen */
     gap: 15px; /* Ensure spacing between elements */
@@ -1125,182 +1134,150 @@ body.fullscreen-active {
 }
 
 
+
+/*  */
+
+
+/* Navigation Buttons */
 .navigation-buttons {
     display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
+    justify-content: space-between; /* Distribute items horizontally */
+    align-items: center; /* Align items vertically */
+    flex-wrap: wrap; /* Allow wrapping for smaller screens */
+    gap: 10px; /* Spacing between items */
+    width: 100%; /* Full width */
+
+    margin-bottom: 20px; /* Add spacing below the navigation */
+    border-bottom: 1px solid #e0e0e0; /* Light gray divider below navigation */
+    padding-bottom: 10px; /* Add some padding for separation */
 }
 
-.navigation-buttons .action-btn {
-    flex: 0 0 auto;
+
+
+
+/* Action Buttons */
+.action-btn {
+    height: auto;
+    min-height: 40px; /* Consistent button height */
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    white-space: nowrap; /* Prevent text wrapping */
 }
 
+/* Media Query for Mobile Screens */
+@media (max-width: 768px) {
+    .navigation-buttons {
+        flex-direction: column; /* Stack items vertically on small screens */
+        align-items: stretch; /* Buttons span full width */
+        gap: 15px; /* Space between rows */
+    }
 
+    .progress-bar-container {
+        width: 100%; /* Make progress bar span full width */
+        text-align: center; /* Center the progress bar */
+        margin: 15px 0; /* Add vertical spacing */
+    }
+}
 
+/* Progress Bar Container */
 .progress-bar-container {
-    margin: 20px auto;
+    flex-grow: 1; /* Make progress bar expand to fill space */
+    margin: 0 20px; /* Add horizontal spacing */
     text-align: center;
-    width: 80%; /* Adjust width as needed */
 }
 
+/* Horizontal Progress Bar */
 .progress-bar.horizontal {
-    display: flex;
-    justify-content: space-between; /* Evenly distribute items */
-    align-items: center; /* Align vertically */
-    list-style: none;
+    display: flex; /* Set flex layout */
+    flex-direction: row; /* Ensure horizontal alignment */
+    justify-content: space-between; /* Spread steps evenly */
+    align-items: center; /* Align items vertically */
+    list-style: none; /* Remove default list styling */
     padding: 0;
     margin: 0;
 }
 
+/* Individual Steps in Progress Bar */
 .progress-bar.horizontal li {
-    flex: 1; /* Evenly distribute width */
-    text-align: center;
+    flex: 1; /* Each step takes equal space */
     position: relative;
+    text-align: center;
 }
 
+/* Connector Lines Between Steps */
 .progress-bar.horizontal li:not(:last-child)::after {
     content: '';
     position: absolute;
-    top: 50%;
-    right: -50%;
+    top: 50%; /* Vertically center the connector */
+    right: -50%; /* Connector spans halfway to the next step */
     width: 100%; /* Full width between steps */
     height: 4px;
-    background-color: #e0e0e0;
+    background-color: #e0e0e0; /* Inactive connector color */
     transform: translateY(-50%);
-    z-index: 1;
+    z-index: 1; /* Place behind step circles */
 }
 
+/* Active Connector Line */
 .progress-bar.horizontal li.active:not(:last-child)::after {
-    background-color: #2d4c3e; /* Match active step color */
+    background-color: #2d4c3e; /* Active connector color */
 }
 
+/* Step Circles */
 .progress-bar.horizontal li .step-icon {
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     width: 40px;
     height: 40px;
     margin: 0 auto;
-    border: 2px solid #e0e0e0;
+    border: 2px solid #e0e0e0; /* Inactive circle border */
     border-radius: 50%; /* Circular shape */
     background-color: #fff;
+    color: #cccccc; /* Inactive text color */
     font-size: 1rem;
     font-weight: bold;
-    color: #cccccc;
-    z-index: 2;
     position: relative;
+    z-index: 2; /* Above connector line */
 }
 
+/* Active Step Circle */
 .progress-bar.horizontal li.active .step-icon {
-    border-color: #2d4c3e;
-    background-color: #2d4c3e;
-    color: #fff;
+    border-color: #2d4c3e; /* Active border color */
+    background-color: #2d4c3e; /* Active background color */
+    color: #fff; /* White text */
 }
 
+/* Step Labels */
 .progress-bar.horizontal li .step-label {
     margin-top: 8px;
     font-size: 0.9rem;
-    color: #cccccc;
+    color: #cccccc; /* Inactive label color */
 }
 
+/* Active Step Label */
 .progress-bar.horizontal li.active .step-label {
-    color: #2d4c3e; /* Highlight active step */
+    color: #2d4c3e; /* Active label color */
 }
 
-.progress-bar.horizontal li .step-icon,
-.progress-bar.horizontal li .step-label {
-    transition: all 0.3s ease-in-out;
-}
-
+/* Add Spacing Between Progress Bar Items */
 .progress-bar.horizontal li {
     padding: 0 10px;
 }
-/* Ensure progress bar container is centered and spans full width */
-.progress-bar-container {
-    margin: 20px auto; /* Center horizontally */
-    width: 80%; /* Adjust width as needed */
-    text-align: center;
+
+
+/* Step in progress */
+.progress-bar.horizontal li.in-progress .step-icon {
+    border-color: #2d4c3e; /* Yellow border to indicate work in progress */
+    color: #2d4c3e; /* Yellow text/icon */
+    font-weight: bold; /* Make it stand out */
 }
 
-/* Horizontal progress bar layout */
-.progress-bar.horizontal {
-    display: flex;
-    justify-content: space-between; /* Evenly distribute items */
-    align-items: center; /* Vertically center items */
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.progress-bar.horizontal li.in-progress .step-label {
+    color: #2d4c3e; /* Yellow label to match the step icon */
+    font-weight: bold; /* Make the text bold for visibility */
 }
 
-/* Style for individual steps */
-.progress-bar.horizontal li {
-    flex: 1; /* Evenly distribute space for each step */
-    text-align: center;
-    position: relative;
-}
-
-/* Style connector lines between steps */
-.progress-bar.horizontal li:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: -50%;
-    width: 100%; /* Full width between steps */
-    height: 4px;
-    background-color: #e0e0e0; /* Connector color */
-    transform: translateY(-50%);
-    z-index: 1;
-}
-
-/* Active step connector line */
-.progress-bar.horizontal li.active:not(:last-child)::after {
-    background-color: #2d4c3e; /* Active step color */
-}
-
-/* Step circle */
-.progress-bar.horizontal li .step-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    margin: 0 auto;
-    border: 2px solid #e0e0e0;
-    border-radius: 50%; /* Circular shape */
-    background-color: #fff;
-    font-size: 1rem;
-    font-weight: bold;
-    color: #cccccc;
-    z-index: 2;
-    position: relative;
-}
-
-/* Active step circle */
-.progress-bar.horizontal li.active .step-icon {
-    border-color: #2d4c3e;
-    background-color: #2d4c3e;
-    color: #fff;
-}
-
-/* Step labels */
-.progress-bar.horizontal li .step-label {
-    margin-top: 8px;
-    font-size: 0.9rem;
-    color: #cccccc;
-}
-
-.progress-bar.horizontal li.active .step-label {
-    color: #2d4c3e; /* Highlight active step */
-}
-
-
-.progress-bar.horizontal {
-    display: flex;
-    flex-direction: row !important; /* Force horizontal layout */
-    justify-content: space-between; /* Spread items evenly */
-    align-items: center; /* Align items vertically in the center */
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    gap: 10px; /* Optional: Add space between steps */
+/* Optional: Add an animation to highlight the in-progress state */
+.progress-bar.horizontal li.in-progress .step-icon {
+    animation: pulse 1.5s infinite; /* Pulsating effect for visibility */
 }

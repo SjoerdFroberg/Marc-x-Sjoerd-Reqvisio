@@ -12,8 +12,49 @@
             <h3 class="mb-0">Create RFP - Step 1: Title and Description</h3>
         </div>
         <div class="card-body">
+
+
+
+
+
+
             <form method="post" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
+                <!-- Navigation Buttons -->
+            <div class="navigation-buttons">
+                <div class="button-group">
+                    
+                </div>
+
+                <div class="progress-bar-container">
+                    <ul class="progress-bar horizontal">
+                        <li class="in-progress">
+                            <span class="step-icon">1</span>
+                            <span class="step-label">Basic Info</span>
+                        </li>
+                        <li class="step-icon">
+                            <span class="step-icon">2</span>
+                            <span class="step-label">Add SKUs</span>
+                        </li>
+                        <li>
+                            <span class="step-icon">3</span>
+                            <span class="step-label">General Questions</span>
+                        </li>
+                        <li>
+                            <span class="step-icon">4</span>
+                            <span class="step-label">SKU Questions</span>
+                        </li>
+                        <li>
+                            <span class="step-icon">5</span>
+                            <span class="step-label">Review</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" id="continue-to-step-2-btn" class="action-btn">Continue to Step 2</button>
+                </div>
+            </div>
 
                 <div class="form-group mb-4">
                     <label for="id_title" class="form-label fw-bold text-secondary">RFP Title</label>
@@ -38,9 +79,7 @@
                 <!-- Include the shared file upload section -->
                 {% include 'procurement01/file_upload_section.html' %}
 
-                <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn btn-primary">Next: Add SKUs</button>
-                </div>
+                    
             </form>
         </div>
     </div>

@@ -7,9 +7,53 @@
 <div class="container mt-5">
     <div class="card shadow-lg border-0">
         <div class="card-header">
-            <h3 class="mb-0">SKUs and SKU-specific Questions</h3>
+            {% if step == "step4" %}
+                <h3 class="mb-0">Create RFP - Step 4: Add SKU-Specific Questions to "{{ rfp.title }}"</h3>
+
+            {% else %}
+                <h3 class="mb-0">SKUs and SKU-specific Questions</h3>
+            {% endif %}
         </div>
         <div class="card-body">
+            {% if step == "step4" %}
+
+                <!-- Navigation Buttons -->
+                <div class="navigation-buttons">
+                    <div class="button-group">
+                        <button type="button" id="back-to-step-3-btn" class="action-btn">Back to Step 3</button>
+                    </div>
+
+                    <div class="progress-bar-container">
+                        <ul class="progress-bar horizontal">
+                            <li class="active">
+                                <span class="step-icon">✔</span>
+                                <span class="step-label">Basic Info</span>
+                            </li>
+                            <li class="active">
+                                <span class="step-icon">✔</span>
+                                <span class="step-label">Add SKUs</span>
+                            </li>
+                            <li class = 'active'>
+                                <span class="step-icon">✔</span>
+                                <span class="step-label">General Questions</span>
+                            </li>
+                            <li class = 'in-progress'>
+                                <span class="step-icon">4</span>
+                                <span class="step-label">SKU Questions</span>
+                            </li>
+                            <li>
+                                <span class="step-icon">5</span>
+                                <span class="step-label">Review</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" id="continue-to-step-5-btn" class="action-btn">Continue to Step 5</button>
+                    </div>
+                </div>
+            {% endif %}
+
 
 
             <div id="full-screen-container">

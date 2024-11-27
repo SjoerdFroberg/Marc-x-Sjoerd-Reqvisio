@@ -286,22 +286,27 @@ def create_rfp_step3(request, rfp_id):
 
     if request.method == 'POST':
         with transaction.atomic():
-            # Process General Questions FormSet
             general_questions_formset = GeneralQuestionFormSet(
                 request.POST, queryset=GeneralQuestion.objects.filter(rfp=rfp)
             )
+
+
             general_questions_formset_valid = general_questions_formset.is_valid()
 
-            if general_questions_formset_valid:
+            
 
-                # Save General Questions
+            if general_questions_formset.is_valid():
+                # Save the formset (updates and additions)
                 general_questions = general_questions_formset.save(commit=False)
                 for question in general_questions:
+                    print(question)
                     question.rfp = rfp
                     question.save()
-                # Delete any questions marked for deletion
+
+                # Handle deletions
                 for deleted_question in general_questions_formset.deleted_objects:
-                    deleted_question.delete()
+                    print(deleted_question)
+                    deleted_question.delete()  # This removes the marked object from the DB
 
 
             # Get the navigation destination and dynamically construct the redirect URL name
@@ -315,10 +320,12 @@ def create_rfp_step3(request, rfp_id):
             queryset=GeneralQuestion.objects.filter(rfp=rfp)
         )
          
+        step = "step3"
 
         context = {
             'rfp': rfp,
             'general_questions_formset': general_questions_formset,
+            'step': step
 
         }
 
@@ -398,11 +405,14 @@ def create_rfp_step4(request, rfp_id):
         # Get existing SKU-specific questions
         sku_specific_questions = SKUSpecificQuestion.objects.filter(rfp=rfp)
 
+        step= "step4"
+
         context = {
             'rfp': rfp,
             'extra_columns': extra_columns,
             'processed_skus': processed_skus,
             'sku_specific_questions': sku_specific_questions,
+            'step': step,
         }
 
         return render(request, 'procurement01/create_rfp_step4.html', context)
@@ -613,6 +623,7 @@ def create_rfp_step5(request, rfp_id):
                 # Delete any questions marked for deletion
                 for deleted_question in general_questions_formset.deleted_objects:
                     deleted_question.delete()
+                    print('deleted')
 
                 # Process SKUs and Extra Data
                 # Get existing SKUs associated with the RFP

@@ -1,7 +1,12 @@
 {% load static%}
 {% load custom_filters %}
 
+
+
 <!-- procurement01/_sku_table.html -->
+
+
+
 
 <div class="container mt-5">
     <div class="card shadow-lg border-0">
@@ -16,13 +21,50 @@
         </div>
 
         <div class="card-body">
+
+            <!-- Navigation Buttons -->
+            <div class="navigation-buttons">
+                <div class="button-group">
+                    <button type="button" id="back-to-step-1-btn" class="action-btn">Back to Step 1</button>
+                </div>
+
+                <div class="progress-bar-container">
+                    <ul class="progress-bar horizontal">
+                        <li class="active">
+                            <span class="step-icon">✔</span>
+                            <span class="step-label">Basic Info</span>
+                        </li>
+                        <li class="in-progress">
+                            <span class="step-icon">2</span>
+                            <span class="step-label">Add SKUs</span>
+                        </li>
+                        <li>
+                            <span class="step-icon">3</span>
+                            <span class="step-label">General Questions</span>
+                        </li>
+                        <li>
+                            <span class="step-icon">4</span>
+                            <span class="step-label">SKU Questions</span>
+                        </li>
+                        <li>
+                            <span class="step-icon">5</span>
+                            <span class="step-label">Review</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" id="continue-to-step-3-btn" class="action-btn">Continue to Step 3</button>
+                </div>
+            </div>
+
+            
+
             <div id="full-screen-container">
 
                 
                 <!-- Controls -->
                 <div class="top-controls">
-
-                    
 
                     <div id="left-controls">
                         <button type="button" id="full-screen-toggle" class="action-btn">Full Screen</button>
@@ -101,41 +143,7 @@
                     
                 </div>
 
-                <!-- Navigation Buttons -->
-                <div class="navigation-buttons">
-                    <button type="button" id="back-to-step-1-btn" class="action-btn">Back to Step 1</button>
-                
-
-                    <div class="progress-bar-container">
-                        <ul class="progress-bar horizontal">
-                            <li class="active">
-                                <span class="step-icon">✔</span>
-                                <span class="step-label">Basic Info</span>
-                            </li>
-                            <li class="active">
-                                <span class="step-icon">✔</span>
-                                <span class="step-label">Add SKUs</span>
-                            </li>
-                            <li>
-                                <span class="step-icon">3</span>
-                                <span class="step-label">General Questions</span>
-                            </li>
-                            <li>
-                                <span class="step-icon">4</span>
-                                <span class="step-label">SKU Questions</span>
-                            </li>
-                            <li>
-                                <span class="step-icon">5</span>
-                                <span class="step-label">Review</span>
-                            </li>
-                        </ul>
-                    </div>
-                    
-
-
-                    <button type="button" id="continue-to-step-3-btn" class="action-btn">Continue to Step 3</button>
-                </div>
-            </div>
+                            </div>
         </div>
     </div>
 </div>

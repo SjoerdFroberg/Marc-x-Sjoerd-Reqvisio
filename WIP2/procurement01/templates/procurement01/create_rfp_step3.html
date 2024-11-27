@@ -9,10 +9,8 @@
 <form method="POST" id="question-form">
     {% csrf_token %}
     {% include 'procurement01/general_questions_section.html' %}
-    <div class="d-flex justify-content-between mt-4">
-        <button type="submit" class="btn btn-secondary" name="navigation_destination" value="step2">Back to Step 2</button>
-        <button type="submit" class="btn btn-primary" name="navigation_destination" value="step4">Save and Continue to Step 4</button>
-    </div>
+    <input type="hidden" id="navigation_destination" name="navigation_destination" value="">
+    
 </form>
 
 
