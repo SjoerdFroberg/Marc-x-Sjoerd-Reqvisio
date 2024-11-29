@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Company, CustomUser, RFP, GeneralQuestion, RFP_SKUs, SKUSpecificQuestion, RFPFile, RFPInvitation, SupplierResponse, SKUSpecificQuestionResponse, GeneralQuestionResponse
+from .models import Company, CustomUser, RFP, GeneralQuestion, RFP_SKUs, SKUSpecificQuestion, RFPFile, RFPInvitation, SupplierResponse, SKUSpecificQuestionResponse, GeneralQuestionResponse, RFP_SKUSpecificationData
 
 
 admin.site.register(Company)
@@ -15,6 +15,8 @@ admin.site.register(RFPInvitation)
 admin.site.register(SupplierResponse)
 admin.site.register(SKUSpecificQuestionResponse)
 admin.site.register(GeneralQuestionResponse)
+admin.site.register(RFP_SKUSpecificationData)
+
 
 # Register your CustomUser model with UserAdmin to get all the features
 

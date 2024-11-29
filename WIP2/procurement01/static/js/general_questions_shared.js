@@ -1,3 +1,5 @@
+
+
 document.addEventListener("DOMContentLoaded", function () {
     function initializeRow(row) {
         const questionTypeSelect = row.querySelector(".question-type-select");
@@ -8,17 +10,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function toggleMultipleChoiceInput() {
             const selectedType = questionTypeSelect.value;
+        
             if (selectedType === "Single-select" || selectedType === "Multi-select") {
                 multipleChoiceInput.style.display = "block";
+        
                 if (!tagify) {
+                    // Initialize Tagify if not already initialized
                     tagify = new Tagify(multipleChoiceInput);
-                    if (hiddenMultipleChoiceInput.value) {
+        
+                    // Restore options from hidden input, but only if not already in Tagify
+                    if (hiddenMultipleChoiceInput.value && !tagify.value.length) {
                         tagify.addTags(
                             hiddenMultipleChoiceInput.value
                                 .split(",")
                                 .map((item) => ({ value: item }))
                         );
                     }
+        
+                    // Update hidden input whenever tags change
                     tagify.on("change", () => {
                         hiddenMultipleChoiceInput.value = tagify.value
                             .map((tag) => tag.value)
@@ -26,14 +35,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                 }
             } else {
+                // Hide multiple-choice input
                 multipleChoiceInput.style.display = "none";
+        
+                // Retain hidden input value but destroy Tagify instance to prevent duplicates
                 if (tagify) {
                     tagify.destroy();
                     tagify = null;
                 }
-                hiddenMultipleChoiceInput.value = "";
             }
         }
+        
 
         questionTypeSelect.addEventListener("change", toggleMultipleChoiceInput);
         toggleMultipleChoiceInput();
@@ -132,8 +144,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-
-
     const continueToStep4Button = document.getElementById('continue-to-step-4-btn');
     const backToStep2Button = document.getElementById('back-to-step-2-btn');
 
@@ -156,5 +166,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
         });
     }
+
+
+    function processGeneralQuestionsBeforeSubmit(formId) {
+        // Select the question table rows within the specified form
+        const rows = document.querySelectorAll(`#${formId} #question-table-body tr`);
+    
+        rows.forEach((row) => {
+            const questionTypeSelect = row.querySelector(".question-type-select");
+            const hiddenMultipleChoiceInput = row.querySelector(".hidden-multiple-choice-input");
+    
+            if (
+                questionTypeSelect.value !== "Single-select" &&
+                questionTypeSelect.value !== "Multi-select"
+            ) {
+                // Clear the hidden input for non-SS/MS types
+                hiddenMultipleChoiceInput.value = "";
+            }
+        });
+    }
+
+    // Attach event listener to the `question-form` (Step 3)
+    const questionForm = document.getElementById("question-form");
+    if (questionForm) {
+        questionForm.addEventListener("submit", function (event) {
+            processGeneralQuestionsBeforeSubmit("question-form");
+        });
+    }
+
+    
 
 });

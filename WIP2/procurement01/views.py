@@ -220,14 +220,13 @@ def create_rfp_step2(request, rfp_id):
             extra_columns_data = request.POST.get('extra_columns_data')
             extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
 
+
             for sku_data in extra_columns_json:
                 sku_id = sku_data['sku_id']
                 sku = get_object_or_404(SKU, id=sku_id)
                 rfp_sku, _ = RFP_SKUs.objects.get_or_create(rfp=rfp, sku=sku)
-                # Convert dataArray back into an ordered dictionary
                 data_ordered = OrderedDict(sku_data['data'])
-                rfp_sku.set_extra_data(data_ordered)
-                rfp_sku.save()
+                rfp_sku.set_specification_data(OrderedDict(data_ordered))
 
             # Get the navigation destination and dynamically construct the redirect URL name
             navigation_destination = request.POST.get('navigation_destination')
@@ -240,7 +239,7 @@ def create_rfp_step2(request, rfp_id):
         extra_columns = []
 
         for rfp_sku in rfp_skus:
-            extra_data = rfp_sku.get_extra_data()
+            extra_data = rfp_sku.get_specification_data()
             if not extra_columns and extra_data:
                 extra_columns = list(extra_data.keys())
             processed_skus.append({
@@ -365,8 +364,7 @@ def create_rfp_step4(request, rfp_id):
                 rfp_sku, _ = RFP_SKUs.objects.get_or_create(rfp=rfp, sku=sku)
                 # Convert dataArray back into an ordered dictionary
                 data_ordered = OrderedDict(sku_data['data'])
-                rfp_sku.set_extra_data(data_ordered)
-                rfp_sku.save()
+                rfp_sku.set_specification_data(OrderedDict(data_ordered))
 
             # Process SKU-Specific Questions
             # Remove existing SKU-specific questions
@@ -393,7 +391,8 @@ def create_rfp_step4(request, rfp_id):
         extra_columns = []
 
         for rfp_sku in rfp_skus:
-            extra_data = rfp_sku.get_extra_data()
+            extra_data = rfp_sku.get_specification_data()
+
             if not extra_columns and extra_data:
                 extra_columns = list(extra_data.keys())
             processed_skus.append({
@@ -476,36 +475,6 @@ def create_rfp_step4a(request, rfp_id):
         'question_types': SKUSpecificQuestion.QUESTION_TYPES,
     }
     return render(request, 'procurement01/create_rfp_step4.html', context)
-
-
-@login_required
-def view_rfp_skus(request, rfp_id):
-    rfp = get_object_or_404(RFP, id=rfp_id)
-    rfp_skus = RFP_SKUs.objects.filter(rfp=rfp)
-    
-    processed_skus = []
-    extra_columns = []
-
-    for rfp_sku in rfp_skus:
-        extra_data = rfp_sku.get_extra_data()  # This should return the JSON data in the original order
-        print(extra_data)
-        if not extra_columns:
-            # Collect columns based on the first SKU's extra data keys in order
-            extra_columns = list(extra_data.keys())
-            print(extra_columns)
-        processed_skus.append({
-            'sku_name': rfp_sku.sku.name,
-            'extra_data': extra_data,
-        })
-        print(processed_skus)
-    
-    context = {
-        'rfp': rfp,
-        'extra_columns': extra_columns,
-        'processed_skus': processed_skus,
-    }
-    print(context)
-    return render(request, 'procurement01/view_rfp_skus.html', context)
 
 
     
@@ -639,6 +608,7 @@ def create_rfp_step5(request, rfp_id):
                 skus_to_remove = existing_sku_ids - submitted_sku_ids
                 RFP_SKUs.objects.filter(rfp=rfp, sku_id__in=skus_to_remove).delete()
 
+                
                 # Update or create RFP_SKUs and their extra data
                 extra_columns_data = request.POST.get('extra_columns_data')
                 extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
@@ -649,8 +619,8 @@ def create_rfp_step5(request, rfp_id):
                     rfp_sku, _ = RFP_SKUs.objects.get_or_create(rfp=rfp, sku=sku)
                     # Convert dataArray back into an ordered dictionary
                     data_ordered = OrderedDict(sku_data['data'])
-                    rfp_sku.set_extra_data(data_ordered)
-                    rfp_sku.save()
+                    rfp_sku.set_specification_data(OrderedDict(data_ordered))
+
 
                 # Process SKU-Specific Questions
                 # Remove existing SKU-specific questions
@@ -665,8 +635,9 @@ def create_rfp_step5(request, rfp_id):
                         rfp=rfp,
                         question=question_data['question'],
                         question_type=question_data['question_type']
-                    )
+                )
 
+                    
                 # Finalize RFP and redirect to RFP list or a success page
                 navigation_destination = request.POST.get('navigation_destination')
                 if navigation_destination == 'step4':
@@ -681,14 +652,21 @@ def create_rfp_step5(request, rfp_id):
                 processed_skus = []
                 extra_columns = []
 
+                
+
                 for rfp_sku in rfp_skus:
-                    extra_data = rfp_sku.get_extra_data()
-                    if not extra_columns:
-                        extra_columns = list(extra_data.keys())
+                    # Retrieve specification data using the `get_specification_data` method
+                    specification_data = rfp_sku.get_specification_data()
+                    
+                    if not extra_columns and specification_data:
+                        # Populate extra_columns only if it's empty and specification data exists
+                        extra_columns = list(specification_data.keys())
+                    
+                    # Append the SKU data and its specification data
                     processed_skus.append({
                         'sku_id': rfp_sku.sku.id,
                         'sku_name': rfp_sku.sku.name,
-                        'extra_data': extra_data,
+                        'extra_data': specification_data,  # Ensure the same key is used as in Step 4
                     })
 
                 sku_specific_questions = SKUSpecificQuestion.objects.filter(rfp=rfp)
@@ -720,15 +698,22 @@ def create_rfp_step5(request, rfp_id):
         processed_skus = []
         extra_columns = []
 
+        
         for rfp_sku in rfp_skus:
-            extra_data = rfp_sku.get_extra_data()
-            if not extra_columns and extra_data:
-                extra_columns = list(extra_data.keys())
+            # Retrieve specification data using the `get_specification_data` method
+            specification_data = rfp_sku.get_specification_data()
+            
+            if not extra_columns and specification_data:
+                # Populate extra_columns only if it's empty and specification data exists
+                extra_columns = list(specification_data.keys())
+            
+            # Append the SKU data and its specification data
             processed_skus.append({
                 'sku_id': rfp_sku.sku.id,
                 'sku_name': rfp_sku.sku.name,
-                'extra_data': extra_data,
+                'extra_data': specification_data,  # Ensure the same key is used as in Step 4
             })
+
 
         # Get existing SKU-specific questions
         sku_specific_questions = SKUSpecificQuestion.objects.filter(rfp=rfp)
@@ -821,13 +806,18 @@ def supplier_rfp_response(request, token):
     extra_columns = []
 
     for rfp_sku in rfp_skus:
-        extra_data = rfp_sku.get_extra_data()
-        if extra_data:
-            extra_columns = list(extra_data.keys())
+        # Retrieve specification data using the `get_specification_data` method
+        specification_data = rfp_sku.get_specification_data()
+        
+        if not extra_columns and specification_data:
+            # Populate extra_columns only if it's empty and specification data exists
+            extra_columns = list(specification_data.keys())
+        
+        # Append the SKU data and its specification data
         processed_skus.append({
             'sku_id': rfp_sku.sku.id,
             'sku_name': rfp_sku.sku.name,
-            'extra_data': extra_data,
+            'extra_data': specification_data,  # Ensure the same key is used as in Step 4
         })
 
     # Prepare options lists for questions
@@ -1022,13 +1012,18 @@ def sku_specific_question_responses_analysis(request, rfp_id):
     extra_columns = []
 
     for rfp_sku in rfp_skus:
-        extra_data = rfp_sku.get_extra_data()  # Assume this method returns a dict
-        if not extra_columns and extra_data:
-            extra_columns = list(extra_data.keys())  # Store column names from the first SKU with extra data
+        # Retrieve specification data using the `get_specification_data` method
+        specification_data = rfp_sku.get_specification_data()
+        
+        if not extra_columns and specification_data:
+            # Populate extra_columns only if it's empty and specification data exists
+            extra_columns = list(specification_data.keys())
+        
+        # Append the SKU data and its specification data
         processed_skus.append({
             'sku_id': rfp_sku.sku.id,
             'sku_name': rfp_sku.sku.name,
-            'extra_data': extra_data,
+            'extra_data': specification_data,  
         })
 
     # Step 3: Retrieve SKU-specific questions for the RFP

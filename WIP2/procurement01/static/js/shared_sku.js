@@ -1,5 +1,9 @@
 // static/js/shared_sku.js
 
+
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
     let currentIndex = -1;
 
@@ -132,6 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 finalizeRFP(event);
             })
         }
+
+        
+        
+        
 
         
 
@@ -429,15 +437,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addNewExtraDataColumn() {
-        const tableHead = document.querySelector('#sku-table thead tr');
-        const newTh = document.createElement('th');
-        console.log('king'); // This should log if the function is called
+        const tableHeadRow1 = skuTable.querySelector('thead tr:first-child');
+        const tableHeadRow2 = skuTable.querySelector('thead tr:nth-child(2)');
+        
+        let newTh = document.createElement('th');
         newTh.innerHTML = `<input type="text" class="column-input" placeholder="Column Name">
-                           <button type="button" class="remove-column-x">
-                               <i class="bi bi-x-circle"></i>
-                           </button>`;
-        tableHead.appendChild(newTh);
-        console.log('added th'); // This should also log if the function is called
+                        <button type="button" class="remove-column-x">
+                            <i class="bi bi-x-circle"></i>
+                        </button>`;
+        tableHeadRow1.appendChild(newTh);
+
+        if (tableHeadRow2) {
+            let newThTypeRow = document.createElement('th');
+            tableHeadRow2.appendChild(newThTypeRow);
+        } 
 
 
         // Add new cells to each row in the table body
@@ -672,6 +685,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Finalize RFP Function (Step 5)
     function finalizeRFP() {
+
+        // process general questions before submit
+        processGeneralQuestionsBeforeSubmit('finalize-rfp-form');
+            
         const skuData = [];
         const tableBody = skuTable.querySelector('tbody');
 
@@ -771,4 +788,24 @@ document.addEventListener('DOMContentLoaded', () => {
         applyListenersToRow(newRow);
         return newRow;
     }
+
+    function processGeneralQuestionsBeforeSubmit(formId) {
+        // Select the question table rows within the specified form
+        const rows = document.querySelectorAll(`#${formId} #question-table-body tr`);
+    
+        rows.forEach((row) => {
+            const questionTypeSelect = row.querySelector(".question-type-select");
+            const hiddenMultipleChoiceInput = row.querySelector(".hidden-multiple-choice-input");
+    
+            if (
+                questionTypeSelect.value !== "Single-select" &&
+                questionTypeSelect.value !== "Multi-select"
+            ) {
+                // Clear the hidden input for non-SS/MS types
+                hiddenMultipleChoiceInput.value = "";
+            }
+        });
+    }
+    
+
 });

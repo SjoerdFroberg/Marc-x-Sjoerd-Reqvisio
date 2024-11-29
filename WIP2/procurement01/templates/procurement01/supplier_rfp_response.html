@@ -94,8 +94,8 @@
                                 {% for sku in processed_skus %}
                                     <tr>
                                         <td>{{ sku.sku_name }}</td>
-                                        {% for value in sku.extra_data.values %}
-                                            <td>{{ value }}</td>
+                                        {% for key, value in sku.extra_data.items %}
+                                        <td contenteditable="true">{{ value }}</td>
                                         {% endfor %}
 
                                         {% for question in sku_specific_questions %}

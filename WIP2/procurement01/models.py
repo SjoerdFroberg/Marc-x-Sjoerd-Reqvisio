@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.crypto import get_random_string
 from django.utils import timezone
 
+from collections import OrderedDict
 
 
 
@@ -51,18 +52,32 @@ class RFP_SKUs(models.Model):
     rfp = models.ForeignKey('RFP', on_delete=models.CASCADE)
     sku = models.ForeignKey('SKU', on_delete=models.CASCADE)
     added_at = models.DateTimeField(auto_now_add=True)
-    extra_data = models.TextField(null=True, blank=True)  # Use TextField to store JSON data
 
-    def set_extra_data(self, data):
-        """Serialize Python dictionary to JSON string and save in extra_data"""
-        self.extra_data = json.dumps(data)
+    def set_specification_data(self, data):
+        # Remove existing specification data
+        self.specification_data.all().delete()
+        # Add new specification data
+        for key, value in data.items():
+            RFP_SKUSpecificationData.objects.create(
+                rfp_sku=self,
+                key=key,
+                value=value
+            )
 
-    def get_extra_data(self):
-        """Deserialize JSON string from extra_data into Python dictionary"""
-        if self.extra_data:
-            return json.loads(self.extra_data)
-        return {}
+    def get_specification_data(self):
+        data = OrderedDict()
+        for spec in self.specification_data.all():
+            data[spec.key] = spec.value
+        return data
 
+class RFP_SKUSpecificationData(models.Model):
+    rfp_sku = models.ForeignKey(
+        'RFP_SKUs',
+        on_delete=models.CASCADE,
+        related_name='specification_data'
+    )
+    key = models.CharField(max_length=255)
+    value = models.TextField()
 
 
 class RFP(models.Model):

@@ -137,7 +137,7 @@
                                     <td contenteditable="false">{{ sku.sku_name }}
                                         <input type="hidden" name="skus[]" value="{{ sku.sku_id }}">
                                     </td>
-                                    {% for value in sku.extra_data.values %}
+                                    {% for key, value in sku.extra_data.items %}
                                         <td contenteditable="true">{{ value }}</td>
                                     {% endfor %}
                                     {% for _ in sku_specific_questions %}
