@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const backToStep1Button = document.getElementById('back-to-step-1-btn');
     const backToStep3Button = document.getElementById('back-to-step-3-btn');
     const backToStep4Button = document.getElementById('back-to-step-4-btn');
-    const finalizeRFPButton = document.getElementById('finalize-rfp-btn')
+    const finalizeRFXButton = document.getElementById('finalize-rfx-btn')
 
 
 
@@ -121,19 +121,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Update the navigation destination to Step 4
                 document.getElementById('navigation_destination').value = 'step4';
                 // Submit the form
-                finalizeRFP(event);
+                finalizeRFX(event);
 
             });
 
         }
 
-        // finalize rfp
+        // finalize rfx
 
-        if(finalizeRFPButton){
-            finalizeRFPButton.addEventListener('click', function(event){
+        if(finalizeRFXButton){
+            finalizeRFXButton.addEventListener('click', function(event){
                 document.getElementById('navigation_destination').value = 'invite_suppliers';
                 // Submit the form
-                finalizeRFP(event);
+                finalizeRFX(event);
             })
         }
 
@@ -575,7 +575,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Prevent the default form submission to handle it manually
         event.preventDefault();
 
-        const form = document.getElementById('rfp-skus-form');
+        const form = document.getElementById('rfx-skus-form');
         const tableBody = skuTable.querySelector('tbody');
         const skuData = [];
 
@@ -678,16 +678,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
 
-        document.getElementById('rfp-sku-questions-form').submit();
+        document.getElementById('rfx-sku-questions-form').submit();
 
     }
 
 
-    // Finalize RFP Function (Step 5)
-    function finalizeRFP() {
+    // Finalize RFX Function (Step 5)
+    function finalizeRFX() {
 
         // process general questions before submit
-        processGeneralQuestionsBeforeSubmit('finalize-rfp-form');
+        processGeneralQuestionsBeforeSubmit('finalize-rfx-form');
             
         const skuData = [];
         const tableBody = skuTable.querySelector('tbody');
@@ -753,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Submit the Form
-        document.getElementById('finalize-rfp-form').submit();
+        document.getElementById('finalize-rfx-form').submit();
     }
 
 

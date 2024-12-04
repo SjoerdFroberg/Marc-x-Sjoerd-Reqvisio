@@ -9,10 +9,10 @@
         <h2>SKU-Specific Question Responses Analysis</h2>
     </div>
 
-    <!-- Display RFP details -->
+    <!-- Display RFX details -->
     <div class="mb-3">
-        <strong>RFP Title:</strong> {{ rfp.title }}<br>
-        <strong>RFP Description:</strong> {{ rfp.description }}
+        <strong>RFX Title:</strong> {{ rfx.title }}<br>
+        <strong>RFX Description:</strong> {{ rfx.description }}
     </div>
 
     <div id="dropdown-container">
@@ -22,7 +22,7 @@
             <button id="column-visibility-btn" class="btn btn-secondary me-2">Column Visibility</button>
             <!-- Full-Screen Toggle Button -->
             <button id="toggle-fullscreen-btn" class="btn btn-primary">Full Screen</button>
-            <a href="{% url 'general_question_table' rfp.id %}" class="btn btn-secondary">General Question Responses</a>
+            <a href="{% url 'general_question_table' rfx.id %}" class="btn btn-secondary">General Question Responses</a>
         </div>
 
         <div id="analysis-fullscreen" class="table-wrapper">

@@ -2,30 +2,30 @@
 {% load static %}
 {% load custom_filters %}
 
-{% block title %}Create RFP - Step 5{% endblock %}
+{% block title %}Create RFX - Step 5{% endblock %}
 
 {% block content %}
 
 <div id="main-content-wrapper">
 
-    <h2>Finalize RFP</h2>
+    <h2>Finalize RFX</h2>
     <!-- Wrap the entire content in a single form -->
-    <form method="POST" enctype="multipart/form-data" id="finalize-rfp-form">
+    <form method="POST" enctype="multipart/form-data" id="finalize-rfx-form">
         <input type="hidden" id="navigation_destination" name="navigation_destination" value="">
     {% csrf_token %}
 
-        <!-- RFP Basic Information Section -->
+        <!-- RFX Basic Information Section -->
         <div class="container mt-5">
             <div class="card shadow-lg border-0">
                 <div class="card-header">
-                    <h3 class="mb-0">RFP Basic Information</h3>
+                    <h3 class="mb-0">RFX Basic Information</h3>
                 </div>
                 <div class="card-body">
-                    <!-- Render RFP Basic Form -->
-                    {{ rfp_form.as_p }}
-                    {% if rfp_form.errors %}
+                    <!-- Render RFX Basic Form -->
+                    {{ rfx_form.as_p }}
+                    {% if rfx_form.errors %}
                         <div class="alert alert-danger">
-                            {{ rfp_form.errors }}
+                            {{ rfx_form.errors }}
                         </div>
                     {% endif %}
 
@@ -44,11 +44,11 @@
         <!-- SKUs and SKU-specific Questions Section -->
         {% include 'procurement01/__sku_specific_questions_creation_table.html' %}
 
-        <!-- Finalize RFP Button -->
+        <!-- Finalize RFX Button -->
         <div class="container mt-5">
             <div class="d-flex justify-content-end">
                 <button type="button" id="back-to-step-4-btn" class="btn btn-primary" >Back to step 4</button>
-                <button type="button" id = "finalize-rfp-btn" class="btn btn-primary">Finalize RFP</button>
+                <button type="button" id = "finalize-rfx-btn" class="btn btn-primary">Finalize RFX</button>
             </div>
         </div>
     </form>

@@ -3,13 +3,13 @@
 {% load static %}
 {% load custom_filters %}
 
-{% block title %}Create RFP - Step 1{% endblock %}
+{% block title %}Create RFX - Step 1{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <div class="card shadow-lg border-0">
         <div class="card-header">
-            <h3 class="mb-0">Create RFP - Step 1: Title and Description</h3>
+            <h3 class="mb-0">Create RFX - Step 1: Title and Description</h3>
         </div>
         <div class="card-body">
 
@@ -57,7 +57,7 @@
             </div>
 
                 <div class="form-group mb-4">
-                    <label for="id_title" class="form-label fw-bold text-secondary">RFP Title</label>
+                    <label for="id_title" class="form-label fw-bold text-secondary">RFX Title</label>
                     {{ form.title }}
                     {% if form.title.errors %}
                         <div class="text-danger small mt-1">
@@ -67,7 +67,7 @@
                 </div>
 
                 <div class="form-group mb-4">
-                    <label for="id_description" class="form-label fw-bold text-secondary">RFP Description</label>
+                    <label for="id_description" class="form-label fw-bold text-secondary">RFX Description</label>
                     {{ form.description }}
                     {% if form.description.errors %}
                         <div class="text-danger small mt-1">

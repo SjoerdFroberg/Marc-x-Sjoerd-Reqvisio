@@ -1,17 +1,17 @@
-<!-- procurement01/create_rfp_step2.html -->
+<!-- procurement01/create_rfx_step2.html -->
 
 {% extends 'procurement01/layout.html' %}
 {% load static%}
 {% load custom_filters %}
 
-{% block title %}Create RFP - Step 2{% endblock %}
+{% block title %}Create RFX - Step 2{% endblock %}
 
 {% block content %}
 
     
     
 
-    <form id="rfp-skus-form" method="POST">
+    <form id="rfx-skus-form" method="POST">
         {% csrf_token %}
         <input type="hidden" id="navigation_destination" name="navigation_destination" value="">
         <input type = "hidden" id ="step_number" name = "step_number" value = {{step}} />

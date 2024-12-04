@@ -2,12 +2,12 @@
 
 {% load dict_access %} <!-- Add this line to load custom filters -->
 
-{% block title %}Create RFP - Step 4{% endblock %}
+{% block title %}Create RFX - Step 4{% endblock %}
 
 {% block content %}
-<h2>Create RFP - Step 4: Define SKU-specific Questions for "{{ rfp.title }}"</h2>
+<h2>Create RFX - Step 4: Define SKU-specific Questions for "{{ rfx.title }}"</h2>
 
-<form id="rfp-sku-specific-questions-form" method="POST">
+<form id="rfx-sku-specific-questions-form" method="POST">
     {% csrf_token %}
 
     <div class="table-wrapper">
@@ -42,7 +42,7 @@
             <tbody>
                 {% for data in context_data %}
                     <tr>
-                        <td>{{ data.rfp_sku.sku.name }}</td>
+                        <td>{{ data.rfx_sku.sku.name }}</td>
                         {% for column in extra_columns %}
                             <td>{{ data.extra_data|get_item:column }}</td>
                         {% endfor %}

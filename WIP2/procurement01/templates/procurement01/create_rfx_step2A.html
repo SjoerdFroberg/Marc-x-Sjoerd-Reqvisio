@@ -1,9 +1,9 @@
 {% extends 'procurement01/layout.html' %}
 
-{% block title %}Create RFP - Step 2A{% endblock %}
+{% block title %}Create RFX - Step 2A{% endblock %}
 
 {% block content %}
-<h2>Create RFP - Step 2A: Add SKUs to "{{ rfp.title }}"</h2>
+<h2>Create RFX - Step 2A: Add SKUs to "{{ rfx.title }}"</h2>
 
 <div id="full-screen-container">
 
@@ -15,7 +15,7 @@
         </div>
     </div>
 
-    <form id="rfp-skus-form" method="POST">
+    <form id="rfx-skus-form" method="POST">
         {% csrf_token %}
 
         <div class="table-wrapper">

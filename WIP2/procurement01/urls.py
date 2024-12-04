@@ -13,33 +13,33 @@ urlpatterns = [
     path('suppliers/', views.supplier_list_view, name='supplier_list'),
     path('suppliers/create/', views.create_supplier_view, name='create_supplier'),
 
-    path('rfp/create/step1/', views.create_rfp_step1, name='create_rfp_step1'),
-    path('rfp/create/step1/<int:rfp_id>/', views.create_rfp_step1, name='create_rfp_step1'),  # Optional rfp_id
+    path('rfx/create/step1/', views.create_rfx_step1, name='create_rfx_step1'),
+    path('rfx/create/step1/<int:rfx_id>/', views.create_rfx_step1, name='create_rfx_step1'),  # Optional rfx_id
 
-    path('rfp/create/step2/<int:rfp_id>/', views.create_rfp_step2, name='create_rfp_step2'),
+    path('rfx/create/step2/<int:rfx_id>/', views.create_rfx_step2, name='create_rfx_step2'),
     path('search_skus/', views.search_skus, name='search_skus'),  # Add this line
     
-    path('rfp/create/step3/<int:rfp_id>/', views.create_rfp_step3, name='create_rfp_step3'),
-    path('rfp/create/step4/<int:rfp_id>/', views.create_rfp_step4, name='create_rfp_step4'),   
+    path('rfx/create/step3/<int:rfx_id>/', views.create_rfx_step3, name='create_rfx_step3'),
+    path('rfx/create/step4/<int:rfx_id>/', views.create_rfx_step4, name='create_rfx_step4'),   
 
-    path('rfps/', views.rfp_list_view, name='rfp_list'),
-    path('rfp_detail/<int:rfp_id>/', views.rfp_detail, name = 'rfp_detail'),
+    path('rfxs/', views.rfx_list_view, name='rfx_list'),
+    path('rfx_detail/<int:rfx_id>/', views.rfx_detail, name = 'rfx_detail'),
     
 
 
 
 
-    path('create_rfp_step2a/<int:rfp_id>/', views.create_rfp_step2a, name='create_rfp_step2a'),
+    path('create_rfx_step2a/<int:rfx_id>/', views.create_rfx_step2a, name='create_rfx_step2a'),
     path('create_sku/', views.create_sku, name='create_sku'),
 
-    path('rfp/create/step5/<int:rfp_id>/', views.create_rfp_step5, name='create_rfp_step5'),  # New step 5 URL
+    path('rfx/create/step5/<int:rfx_id>/', views.create_rfx_step5, name='create_rfx_step5'),  # New step 5 URL
     
-    path('rfp/<int:rfp_id>/invite_suppliers/', views.invite_suppliers, name='invite_suppliers'),
-    path('respond_rfp/<str:token>/', views.supplier_rfp_response, name='supplier_rfp_response'),
+    path('rfx/<int:rfx_id>/invite_suppliers/', views.invite_suppliers, name='invite_suppliers'),
+    path('respond_rfx/<str:token>/', views.supplier_rfx_response, name='supplier_rfx_response'),
     path('supplierthankyou', views.supplier_thank_you, name = 'supplier_thank_you'),
 
-    path('rfp/<int:rfp_id>/general_question_table/', views.general_question_table_view, name='general_question_table'),
-    path('rfp/<int:rfp_id>/sku_specific_question_responses_analysis/', views.sku_specific_question_responses_analysis, name = 'sku_specific_question_responses_analysis'),
+    path('rfx/<int:rfx_id>/general_question_table/', views.general_question_table_view, name='general_question_table'),
+    path('rfx/<int:rfx_id>/sku_specific_question_responses_analysis/', views.sku_specific_question_responses_analysis, name = 'sku_specific_question_responses_analysis'),
 
 
 

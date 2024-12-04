@@ -48,8 +48,8 @@ class SKU(models.Model):
         return self.name 
     
 
-class RFP_SKUs(models.Model):
-    rfp = models.ForeignKey('RFP', on_delete=models.CASCADE)
+class RFX_SKUs(models.Model):
+    rfx = models.ForeignKey('RFX', on_delete=models.CASCADE)
     sku = models.ForeignKey('SKU', on_delete=models.CASCADE)
     added_at = models.DateTimeField(auto_now_add=True)
 
@@ -58,8 +58,8 @@ class RFP_SKUs(models.Model):
         self.specification_data.all().delete()
         # Add new specification data
         for key, value in data.items():
-            RFP_SKUSpecificationData.objects.create(
-                rfp_sku=self,
+            RFX_SKUSpecificationData.objects.create(
+                rfx_sku=self,
                 key=key,
                 value=value
             )
@@ -70,9 +70,9 @@ class RFP_SKUs(models.Model):
             data[spec.key] = spec.value
         return data
 
-class RFP_SKUSpecificationData(models.Model):
-    rfp_sku = models.ForeignKey(
-        'RFP_SKUs',
+class RFX_SKUSpecificationData(models.Model):
+    rfx_sku = models.ForeignKey(
+        'RFX_SKUs',
         on_delete=models.CASCADE,
         related_name='specification_data'
     )
@@ -80,7 +80,7 @@ class RFP_SKUSpecificationData(models.Model):
     value = models.TextField()
 
 
-class RFP(models.Model):
+class RFX(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank = True)
 
@@ -95,16 +95,16 @@ class RFP(models.Model):
 
     @property
     def skus(self):
-        return self.rfp_skus_set.all()  # This will return all related SKUs through the RFP_SKUs table
+        return self.rfx_skus_set.all()  # This will return all related SKUs through the RFX_SKUs table
 
 
-class RFPFile(models.Model):
-    rfp = models.ForeignKey(RFP, related_name='files', on_delete=models.CASCADE)
-    file = models.FileField(upload_to='rfp_files/')
+class RFXFile(models.Model):
+    rfx = models.ForeignKey(RFX, related_name='files', on_delete=models.CASCADE)
+    file = models.FileField(upload_to='rfx_files/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.rfp.title} - {self.file.name}"
+        return f"{self.rfx.title} - {self.file.name}"
 
 
 class GeneralQuestion(models.Model):
@@ -115,7 +115,7 @@ class GeneralQuestion(models.Model):
         ('File upload', 'File upload')
     ]
 
-    rfp = models.ForeignKey(RFP, related_name='general_questions', on_delete=models.CASCADE)
+    rfx = models.ForeignKey(RFX, related_name='general_questions', on_delete=models.CASCADE)
     question_text = models.CharField(max_length=255)
     question_type = models.CharField(max_length=200, choices=QUESTION_TYPES)
     multiple_choice_options = models.TextField(blank=True, null=True)  # Store options as comma-separated values
@@ -134,7 +134,7 @@ class SKUSpecificQuestion(models.Model):
         ('Multi-select', 'Multi-select'),
     ]
 
-    rfp = models.ForeignKey('RFP', on_delete=models.CASCADE, related_name='sku_specific_questions')
+    rfx = models.ForeignKey('RFX', on_delete=models.CASCADE, related_name='sku_specific_questions')
     question = models.CharField(max_length=255)
     question_type = models.CharField(max_length=50, choices=QUESTION_TYPES)
 
@@ -142,9 +142,9 @@ class SKUSpecificQuestion(models.Model):
         return f"{self.question} ({self.get_question_type_display()})"
 
 
-class RFPInvitation(models.Model):
-    rfp = models.ForeignKey(RFP, on_delete=models.CASCADE, related_name='invitations')
-    supplier = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='rfp_invitations')
+class RFXInvitation(models.Model):
+    rfx = models.ForeignKey(RFX, on_delete=models.CASCADE, related_name='invitations')
+    supplier = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='rfx_invitations')
     token = models.CharField(max_length=64, unique=True, blank=True)
     sent_at = models.DateTimeField(auto_now_add=True)
     responded_at = models.DateTimeField(null=True, blank=True)
@@ -163,21 +163,21 @@ class RFPInvitation(models.Model):
 
 
 class SupplierResponse(models.Model):
-    """A model to store a supplier's overall response to an RFP."""
-    rfp = models.ForeignKey(RFP, on_delete=models.CASCADE, related_name="responses")
+    """A model to store a supplier's overall response to an RFX."""
+    rfx = models.ForeignKey(RFX, on_delete=models.CASCADE, related_name="responses")
     supplier = models.ForeignKey(Company, on_delete=models.CASCADE)
     submitted_at = models.DateTimeField(auto_now_add=True)
     is_finalized = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Response to {self.rfp.title} by {self.supplier.name}"
+        return f"Response to {self.rfx.title} by {self.supplier.name}"
 
 
 class GeneralQuestionResponse(models.Model):
-    """Stores each response to a general question within an RFP."""
+    """Stores each response to a general question within an RFX."""
     response = models.ForeignKey(SupplierResponse, on_delete=models.CASCADE, related_name="general_responses")
     question = models.ForeignKey(GeneralQuestion, on_delete=models.CASCADE)
-    invitation = models.ForeignKey(RFPInvitation, on_delete=models.CASCADE)
+    invitation = models.ForeignKey(RFXInvitation, on_delete=models.CASCADE)
 
     # Separate fields for different types of answers
     answer_text = models.TextField(blank=True, null=True)   # For open text responses
@@ -191,7 +191,7 @@ class GeneralQuestionResponse(models.Model):
 
 class SKUSpecificQuestionResponse(models.Model):
     response = models.ForeignKey(SupplierResponse, on_delete=models.CASCADE, related_name="sku_question_responses")
-    rfp_sku = models.ForeignKey(RFP_SKUs, on_delete=models.CASCADE)
+    rfx_sku = models.ForeignKey(RFX_SKUs, on_delete=models.CASCADE)
     question = models.ForeignKey(SKUSpecificQuestion, on_delete=models.CASCADE)
     answer_text = models.TextField(blank=True, null=True)
     answer_number = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -200,4 +200,4 @@ class SKUSpecificQuestionResponse(models.Model):
     answer_choice = models.TextField(blank=True, null=True)  # Add this field
 
     def __str__(self):
-        return f"Response to SKU Question '{self.question}' for SKU '{self.rfp_sku.sku.name}' by {self.response.supplier.name}"
+        return f"Response to SKU Question '{self.question}' for SKU '{self.rfx_sku.sku.name}' by {self.response.supplier.name}"

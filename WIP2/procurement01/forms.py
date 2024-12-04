@@ -1,6 +1,6 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django import forms
-from .models import SKU, Company, RFP, GeneralQuestion, RFP_SKUs, SKUSpecificQuestion, GeneralQuestionResponse, SKUSpecificQuestionResponse
+from .models import SKU, Company, RFX, GeneralQuestion, RFX_SKUs, SKUSpecificQuestion, GeneralQuestionResponse, SKUSpecificQuestionResponse
 
 import json
 
@@ -39,23 +39,23 @@ class SupplierForm(forms.ModelForm):
 
 
 
-class RFPBasicForm(forms.ModelForm):
+class RFXBasicForm(forms.ModelForm):
     class Meta:
-        model = RFP
+        model = RFX
         fields = ['title', 'description']  # Ensure general_info_files is included here
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter RFP Title'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Enter RFP Description'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter RFX Title'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Enter RFX Description'}),
         }
 
 
-class RFP_SKUForm(forms.ModelForm):
+class RFX_SKUForm(forms.ModelForm):
     quantity = forms.IntegerField(min_value=1, label="Quantity")
     target_price = forms.DecimalField(decimal_places=2, max_digits=10, label="Target Price")
     unit_size = forms.CharField(max_length=100, label="Unit Size")
     
     class Meta:
-        model = RFP_SKUs
+        model = RFX_SKUs
         fields = ['sku', 'quantity', 'target_price', 'unit_size']
 
     def __init__(self, *args, **kwargs):
@@ -67,11 +67,11 @@ class RFP_SKUForm(forms.ModelForm):
 
 
 
-class RFPForm(forms.ModelForm):
+class RFXForm(forms.ModelForm):
     additional_columns = forms.CharField(widget=forms.HiddenInput(), required=False)  # Hidden field for custom columns
 
     class Meta:
-        model = RFP
+        model = RFX
         fields = ['title', 'description']
 
     def save(self, commit=True):
