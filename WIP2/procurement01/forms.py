@@ -1,6 +1,6 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django import forms
-from .models import SKU, Company, RFX, GeneralQuestion, RFX_SKUs, SKUSpecificQuestion, GeneralQuestionResponse, SKUSpecificQuestionResponse
+from .models import SKU, Company, RFX, GeneralQuestion, RFX_SKUs, SKUSpecificQuestion, GeneralQuestionResponse, SKUSpecificQuestionResponse, Project
 
 import json
 
@@ -38,17 +38,42 @@ class SupplierForm(forms.ModelForm):
         return email
 
 
+class ProjectForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ['name', 'description']
+
+    def save(self, commit=True, company=None):
+        project = super().save(commit=False)
+        if company:
+            project.company = company
+        if commit:
+            project.save()
+        return project
+
 
 class RFXBasicForm(forms.ModelForm):
     class Meta:
         model = RFX
-        fields = ['title', 'description']  # Ensure general_info_files is included here
+        fields = ['title', 'description', 'project']  
+
         widgets = {
+            'project': forms.Select(attrs={'class': 'form-control'}),
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter RFX Title'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Enter RFX Description'}),
         }
+        
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)  # Extract the user parameter
+        super().__init__(*args, **kwargs)
 
+        # Filter the project field by the user's company if the user is provided
+        if self.user and hasattr(self.user, 'company'):
+            self.fields['project'].queryset = Project.objects.filter(company=self.user.company)
+        else:
+            self.fields['project'].queryset = Project.objects.none()
 
+       
 class RFX_SKUForm(forms.ModelForm):
     quantity = forms.IntegerField(min_value=1, label="Quantity")
     target_price = forms.DecimalField(decimal_places=2, max_digits=10, label="Target Price")

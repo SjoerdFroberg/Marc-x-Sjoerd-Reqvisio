@@ -3,7 +3,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.forms import modelformset_factory, inlineformset_factory, formset_factory
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.template.loader import render_to_string
 import json 
 from django.db import transaction 
@@ -33,8 +33,8 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 
 
-from .models import SKU, Company, RFX, GeneralQuestion, RFX_SKUs,SKUSpecificQuestion, RFXFile, RFXInvitation, SupplierResponse, SKUSpecificQuestionResponse, GeneralQuestionResponse
-from .forms import SKUForm, SupplierForm, RFXBasicForm, SKUSearchForm, GeneralQuestionForm, RFX_SKUForm, RFXForm, SKUSpecificQuestionForm, GeneralQuestionResponseForm, SKUSpecificQuestionResponseForm
+from .models import SKU, Project, Company, RFX, GeneralQuestion, RFX_SKUs,SKUSpecificQuestion, RFXFile, RFXInvitation, SupplierResponse, SKUSpecificQuestionResponse, GeneralQuestionResponse
+from .forms import SKUForm, ProjectForm, SupplierForm, RFXBasicForm, SKUSearchForm, GeneralQuestionForm, RFX_SKUForm, RFXForm, SKUSpecificQuestionForm, GeneralQuestionResponseForm, SKUSpecificQuestionResponseForm
 
 
 
@@ -124,6 +124,65 @@ def create_supplier_view(request):
 
 
 @login_required
+def project_list_view(request):
+    # Get the user's company
+    user_company = request.user.company
+
+    # Fetch projects associated with the user's company
+    projects = Project.objects.filter(company=user_company)
+
+    context = {
+        'projects': projects,
+    }
+    return render(request, 'procurement01/project_list.html', context)
+
+
+
+
+
+
+@login_required
+def create_project(request):
+    # Ensure the logged-in user has a company
+    if not request.user.company:
+        return HttpResponseForbidden("You must belong to a company to create a project.")
+
+    if request.method == 'POST':
+        form = ProjectForm(request.POST)
+        if form.is_valid():
+            # Save the project with the user's company
+            project = form.save(commit=False)
+            project.company = request.user.company
+            project.save()
+            # Redirect to the project detail page after creation
+            return redirect('project_detail', project_id=project.id)
+    else:
+        form = ProjectForm()
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'procurement01/create_project.html', context)
+
+
+@login_required
+def project_detail(request, project_id):
+    # Get the project, ensuring it belongs to the user's company
+    project = get_object_or_404(Project, id=project_id, company=request.user.company)
+
+    # Get all RFXs associated with this project
+    rfxs = RFX.objects.filter(project=project)
+
+    context = {
+        'project': project,
+        'rfxs': rfxs,
+    }
+    return render(request, 'procurement01/project_detail.html', context)
+
+
+
+
+@login_required
 def create_rfx_step1(request, rfx_id=None):
     if rfx_id:
         rfx = get_object_or_404(RFX, id=rfx_id)
@@ -132,14 +191,27 @@ def create_rfx_step1(request, rfx_id=None):
         rfx = None
         existing_files = None  # Initialize for new RFX
 
+
+    # Check if there's a project_id in the query parameters
+    project_id = request.GET.get('project_id')
+    initial_data = {}
+    if project_id:
+        try:
+            # Check if the project belongs to the user's company
+            initial_project = Project.objects.get(id=project_id, company=request.user.company)
+            initial_data['project'] = initial_project
+        except Project.DoesNotExist:
+            pass
+
+    
+
     if request.method == 'POST':
         with transaction.atomic():
 
             if rfx:
-                form = RFXBasicForm(request.POST, instance=rfx)
+                form = RFXBasicForm(request.POST, request.FILES, instance=rfx, user=request.user, initial=initial_data)
             else:
-                form = RFXBasicForm(request.POST)
-
+                form = RFXBasicForm(request.POST, request.FILES, user=request.user, initial=initial_data)
 
             rfx_form_valid = form.is_valid()
 
@@ -159,10 +231,10 @@ def create_rfx_step1(request, rfx_id=None):
         
     else:
         if rfx:
-            form = RFXBasicForm(instance=rfx)
+            form = RFXBasicForm(instance=rfx, user=request.user, initial=initial_data)
             existing_files = rfx.files.all()
         else:
-            form = RFXBasicForm()
+            form = RFXBasicForm(user=request.user, initial=initial_data)
             existing_files = None
 
     return render(request, 'procurement01/create_rfx_step1.html', {
@@ -478,13 +550,20 @@ def create_rfx_step4a(request, rfx_id):
 
 
     
-
 @login_required
 def rfx_list_view(request):
-    rfxs = RFX.objects.all()  # You might want to filter by the user's company if needed
+    user = request.user  # Get the currently logged-in user
+    company = user.company  # Get the user's company
+
+    if company.company_type == 'Procurer':
+        # Procurer should see only their own RFXs
+        rfxs = RFX.objects.filter(rfx_skus__sku__company=company).distinct()
+    
+    else:
+        # If the user's company type is unknown, show nothing
+        rfxs = RFX.objects.none()
+
     return render(request, 'procurement01/rfx_list.html', {'rfxs': rfxs})
-
-
 
 
 @login_required

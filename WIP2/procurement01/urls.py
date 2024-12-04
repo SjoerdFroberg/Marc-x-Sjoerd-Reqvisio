@@ -42,6 +42,10 @@ urlpatterns = [
     path('rfx/<int:rfx_id>/sku_specific_question_responses_analysis/', views.sku_specific_question_responses_analysis, name = 'sku_specific_question_responses_analysis'),
 
 
+    path('projects/', views.project_list_view, name='project_list'),
+    path('projects/create/', views.create_project, name = 'create_project'),
+    path('projects/<int:project_id>/', views.project_detail, name='project_detail'),
+
 
 
 

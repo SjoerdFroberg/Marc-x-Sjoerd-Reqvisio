@@ -1,0 +1,51 @@
+{% extends 'procurement01/layout.html' %}
+
+{% block content %}
+<h1>{{ project.name }}</h1>
+
+<p>{{ project.description }}</p>
+
+<h2>RFXs for this Project</h2>
+
+<a href="{% url 'create_rfx_step1' %}?project_id={{ project.id }}" class="btn btn-primary">Create New RFX</a>  
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Date Created</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for rfx in rfxs %}
+            <tr class="clickable-row" data-href="{% url 'rfx_detail' rfx.id %}">
+                <td>{{ rfx.title }}</td>
+                <td>{{ rfx.description }}</td>
+                <td>{{ rfx.created_at }}</td>
+            </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">No RFXs available for this project.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Attach click event to all rows with the class 'clickable-row'
+    document.addEventListener('DOMContentLoaded', () => {
+        const rows = document.querySelectorAll('.clickable-row');
+        rows.forEach(row => {
+            row.addEventListener('click', () => {
+                const href = row.getAttribute('data-href');
+                if (href) {
+                    window.location.href = href;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

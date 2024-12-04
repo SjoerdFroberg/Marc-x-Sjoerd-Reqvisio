@@ -1,0 +1,49 @@
+{% extends 'procurement01/layout.html' %}
+
+{% block content %}
+<h2>Projects</h2>
+
+<!-- Add button for creating a new project -->
+<a href="{% url 'create_project' %}" id="create-project-btn" class="btn btn-primary">Create New Project</a>  
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Date Created</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for project in projects %}
+            <tr class="clickable-row" data-href="{% url 'project_detail' project.id %}">
+                <td>{{ project.name }}</td>
+                <td>{{ project.description }}</td>
+                <td>{{ project.created_at }}</td>
+            </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">No Projects available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Attach click event to all rows with the class 'clickable-row'
+    document.addEventListener('DOMContentLoaded', () => {
+        const rows = document.querySelectorAll('.clickable-row');
+        rows.forEach(row => {
+            row.addEventListener('click', () => {
+                const href = row.getAttribute('data-href');
+                if (href) {
+                    window.location.href = href;
+                }
+            });
+        });
+    });
+        
+</script>
+{% endblock %}

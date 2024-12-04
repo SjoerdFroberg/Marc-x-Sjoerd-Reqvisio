@@ -1,10 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Company, CustomUser, RFX, GeneralQuestion, RFX_SKUs, SKUSpecificQuestion, RFXFile, RFXInvitation, SupplierResponse, SKUSpecificQuestionResponse, GeneralQuestionResponse, RFX_SKUSpecificationData
+from .models import Company, CustomUser, RFX, GeneralQuestion, RFX_SKUs, SKUSpecificQuestion, RFXFile, RFXInvitation, SupplierResponse, SKUSpecificQuestionResponse, GeneralQuestionResponse, RFX_SKUSpecificationData, Project
 
 
 admin.site.register(Company)
+admin.site.register(Project)
 
 admin.site.register(RFX)
 admin.site.register(GeneralQuestion)

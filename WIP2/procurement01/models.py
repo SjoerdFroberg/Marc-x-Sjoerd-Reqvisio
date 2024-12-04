@@ -48,6 +48,21 @@ class SKU(models.Model):
         return self.name 
     
 
+
+class Project(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="projects")
+
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    
+
 class RFX_SKUs(models.Model):
     rfx = models.ForeignKey('RFX', on_delete=models.CASCADE)
     sku = models.ForeignKey('SKU', on_delete=models.CASCADE)
@@ -81,10 +96,9 @@ class RFX_SKUSpecificationData(models.Model):
 
 
 class RFX(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="rfxs", null = True)
     title = models.CharField(max_length=255)
     description = models.TextField(blank = True)
-
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
