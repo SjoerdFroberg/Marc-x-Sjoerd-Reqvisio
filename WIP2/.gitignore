@@ -1,0 +1,57 @@
+# Compiled Python #
+*.pyc
+*.pyo
+__pycache__/
+.ipynb_checkpoints
+
+# Logs and databases #
+*.log
+*.sql
+*.sqlite
+
+# OS generated files #
+.DS_Store
+Thumbs.db
+
+# data, excel, and other files #
+*.csv
+*.xlsx
+*.xls
+
+# IDEs and editors #
+.idea/
+.vscode/
+.emacs.d/
+
+# Temporary files #
+*.swp
+*.swo
+*.tmp
+*.temp
+
+# Coverage and Testing #
+*.coverage
+./pytest-cache
+
+# Personal configurations #
+.bash_history
+.gitconfig
+.bashrc
+.bash_profile
+.env
+
+# Other project-specific files or directories #
+# Add any other files or directories specific to your project that should be ignored.
+TODOs.txt
+latest_push_error.txt
+frontend/cache
+utils/dependencies/dependencies.dot
+utils/dependencies/raw_dependencies.dot
+utils/dependencies/dependencies.png
+pricing/cache
+storage/papi/allowed_ips.txt
+frontend/profiling/output.pstats
+pricing_v2/local_storage/*
+pricing_v2/local_storage
+pricing/local_storage/*
+pricing/local_storage
