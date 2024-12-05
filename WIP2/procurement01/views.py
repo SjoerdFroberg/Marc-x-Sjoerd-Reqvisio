@@ -1320,11 +1320,14 @@ def quick_quote_rebuy(request, rfx_id):
     if request.method == 'POST' and request.POST.get('action') == 'upload_file':
         upload_form = RebuyUploadForm(request.POST, request.FILES)
         if upload_form.is_valid():
-            print('form is valid')
             file = upload_form.cleaned_data['file']
 
             # Parse the file
-            processed_skus, warnings = parse_rebuy_csv(file, user_company, encoding=request.encoding or 'utf-8')
+            processed_skus, warnings = parse_rebuy_csv(
+                file=file, 
+                company=user_company,  
+                encoding=request.encoding or 'utf-8'
+            )
 
             # If we wanted to save these SKUs to the RFX_SKUs model, we could do so here:
             with transaction.atomic():
@@ -1437,7 +1440,6 @@ def quick_quote_rebuy(request, rfx_id):
         'upload_form': upload_form,
     })
 
-@login_required
 def parse_rebuy_csv(file, company, encoding='utf-8'):
     """
     Parses the uploaded CSV file for REBUY quick quote.
@@ -1463,7 +1465,6 @@ def parse_rebuy_csv(file, company, encoding='utf-8'):
         quantity_required = row.get("Quantity Required", "").strip()
         max_lead_time = row.get("Maximum Lead Time", "").strip()
 
-        print(line_num)
 
         # Lookup the SKU
         try:
@@ -1649,7 +1650,7 @@ def sku_allocation(request, rfx_id):
             'quantity_required': quantity_required,
             'maximum_lead_time': max_lead_time,
             'suppliers': ', '.join(assigned_suppliers),
-            'quantity_offered': sum(item['quantity_assigned'] for item in detailed_response_items),
+            'quantity_offered': sum(item['quantity_offered'] for item in detailed_response_items),
             'price': average_price,
             'quantity_assigned': total_assigned_quantity,
             'total_cost': total_cost,
