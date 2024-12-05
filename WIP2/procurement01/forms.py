@@ -1,6 +1,6 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django import forms
-from .models import SKU, Company, RFX, GeneralQuestion, RFX_SKUs, SKUSpecificQuestion, GeneralQuestionResponse, SKUSpecificQuestionResponse, Project
+from .models import OEM, SKU, Company, RFX, GeneralQuestion, RFX_SKUs, SKUSpecificQuestion, GeneralQuestionResponse, SKUSpecificQuestionResponse, Project
 
 import json
 
@@ -18,18 +18,27 @@ class SKUForm(forms.ModelForm):
 class SupplierForm(forms.ModelForm):
     class Meta:
         model = Company
-        fields = ['name', 'email']  # Include the email field
+        fields = ['name', 'email', 'oems']  
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Supplier Name'}),
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter Supplier Email'}),
+            'oems': forms.SelectMultiple(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        procurer = kwargs.pop('procurer', None)
+        super(SupplierForm, self).__init__(*args, **kwargs)
+        if procurer:
+            self.fields['oems'].queryset = OEM.objects.filter(procurer=procurer)
 
     def save(self, procurer, *args, **kwargs):
         supplier = super(SupplierForm, self).save(commit=False)
         supplier.company_type = 'Supplier'
         supplier.procurer = procurer
         supplier.save()
+        self.save_m2m()
         return supplier
+    
 
     def clean_email(self):
         email = self.cleaned_data.get('email')

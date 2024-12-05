@@ -112,15 +112,21 @@ def create_supplier_view(request):
     if not request.user.is_procurer:
         return render(request, 'procurement01/access_denied.html')  # Only procurers can create suppliers
 
+    procurer_company = request.user.company
+
     if request.method == 'POST':
-        form = SupplierForm(request.POST)
+        form = SupplierForm(request.POST, procurer=procurer_company)
         if form.is_valid():
-            form.save(procurer=request.user.company)  # Assign the supplier to the logged-in procurer's company
+            form.save(procurer=procurer_company)  # Assign the supplier to the logged-in procurer's company
             return redirect('supplier_list')  # Redirect to the supplier list page after creating the supplier
     else:
-        form = SupplierForm()
+        form = SupplierForm(procurer=procurer_company)
 
     return render(request, 'procurement01/supplier_form.html', {'form': form})
+
+
+
+
 
 
 @login_required
