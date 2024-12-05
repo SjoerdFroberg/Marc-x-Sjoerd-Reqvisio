@@ -1281,3 +1281,135 @@ body.fullscreen-active {
 .progress-bar.horizontal li.in-progress .step-icon {
     animation: pulse 1.5s infinite; /* Pulsating effect for visibility */
 }
+
+
+/* General Table Styling */
+#sku-allocation-table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: auto;
+    margin-top: 20px;
+    font-size: 0.9rem;
+    background-color: #ffffff;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#sku-allocation-table th {
+    background-color: #2d4c3e; /* Dark green for headers */
+    color: #ffffff;
+    font-weight: bold;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+#sku-allocation-table td {
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0; /* Light gray border */
+    text-align: left;
+    vertical-align: middle;
+}
+
+/* Alternate Row Colors */
+#sku-allocation-table tbody tr:nth-child(even) {
+    background-color: #f7faf9; /* Very light green */
+}
+
+#sku-allocation-table tbody tr:nth-child(odd) {
+    background-color: #ffffff; /* White for contrast */
+}
+
+/* Summary Row Styling */
+.sku-summary-row {
+    background-color: #eaf5ea; /* Light green for summary rows */
+    font-weight: bold;
+    border-top: 2px solid #d0e3d0;
+    cursor: pointer; /* Indicates row is expandable/collapsible */
+}
+
+.sku-summary-row:hover {
+    background-color: #d7eed6; /* Slightly darker green on hover */
+}
+
+/* Supplier Row Styling */
+.sku-detail-row {
+    background-color: #fcfcfc; /* Light gray for supplier rows */
+}
+
+.sku-detail-row td {
+    border-top: none; /* Remove top border for supplier rows */
+}
+
+/* Hover Effect for Supplier Rows */
+.sku-detail-row:hover {
+    background-color: #f0f5f0; /* Very light green hover for supplier rows */
+}
+
+/* Expand/Collapse Button */
+.toggle-suppliers {
+    background-color: transparent;
+    border: none;
+    color: #2d4c3e;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.toggle-suppliers:hover {
+    color: #1b3425; /* Darker green on hover */
+}
+
+/* Input Field Styling */
+.allocated-qty-input {
+    width: 80px;
+    text-align: right;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 5px;
+    font-size: 0.85rem;
+}
+
+.allocated-qty-input:focus {
+    border-color: #2d4c3e;
+    box-shadow: 0 0 5px rgba(60, 106, 86, 0.3);
+}
+
+/* Summary Total Cost Cell Highlight */
+.summary-total-cost {
+    font-weight: bold;
+    color: #2d4c3e; /* Match theme color */
+}
+
+/* Supplier Row Total Cost Cell */
+.detail-total-cost {
+    font-weight: bold;
+    color: #6b7280; /* Neutral gray */
+}
+
+/* Collapsible Supplier Rows */
+.sku-detail-row.d-none {
+    display: none;
+}
+
+.sku-detail-row.visible {
+    display: table-row; /* Make the rows visible when expanded */
+}
+
+/* Table Responsiveness */
+.table-responsive {
+    overflow-x: auto;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+/* Button for Expand/Collapse */
+.toggle-suppliers i {
+    font-size: 1.2em;
+}
+
+/* Highlight Supplier Name */
+.sku-detail-row td:nth-child(6) {
+    font-weight: bold;
+    color: #2d4c3e;
+}

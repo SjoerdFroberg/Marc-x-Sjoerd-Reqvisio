@@ -1,0 +1,82 @@
+{% extends 'procurement01/layout.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}SKU Allocation{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>SKU Allocation for: {{ rfx.title }}</h2>
+
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle" id="sku-allocation-table">
+            <thead class="table-light">
+                <tr>
+                    <th>SKU Name</th>
+                    <th>OEM</th>
+                    <th>SKU Code</th>
+                    <th>Quantity Required</th>
+                    <th>Maximum Lead Time</th>
+                    <th>Supplier(s)</th>
+                    <th>Total Quantity Offered</th>
+                    <th>Total Allocated Quantity</th>
+                    <th>(Avg) Price/Unit</th>
+                    <th>Total Cost</th>
+                    <th style="width: 50px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sku_data in assignment_data %}
+                    <!-- Summary Row for this SKU -->
+                    <tr class="sku-summary-row" data-sku="{{ sku_data.sku_code }}">
+                        <td>{{ sku_data.sku }}</td>
+                        <td>{{ sku_data.oem }}</td>
+                        <td>{{ sku_data.sku_code }}</td>
+                        <td>{{ sku_data.quantity_required }}</td>
+                        <td>{{ sku_data.maximum_lead_time }}</td>
+                        <td class="summary-suppliers">{{ sku_data.suppliers }}</td>
+                        <td class="summary-quantity-offered">{{ sku_data.quantity_offered }}</td>
+                        <td class="summary-quantity-assigned">{{ sku_data.quantity_assigned }}</td>
+                        <td class="summary-price">{{ sku_data.price|floatformat:2 }}</td>
+                        <td class="summary-total-cost">{{ sku_data.total_cost|floatformat:2 }}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary toggle-suppliers" data-sku="{{ sku_data.sku_code }}">
+                                <i class="bi bi-caret-down-square"></i> <!-- Use Bootstrap Icons or FontAwesome -->
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Detail Rows (Supplier Rows) for this SKU -->
+                    {% for detail in sku_data.detailed_response_items %}
+                        <tr class="sku-detail-row d-none" data-parent-sku="{{ sku_data.sku_code }}">
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td colspan="1">{{ detail.supplier }}</td>
+                            <td colspan="1">{{ detail.quantity_offered }}</td>
+                            <td colspan="1">
+                                <input type="number" min="0" class="form-control allocated-qty-input"
+                                       data-sku="{{ sku_data.sku_code }}"
+                                       data-supplier="{{ detail.supplier }}"
+                                       data-price="{{ detail.price }}"
+                                       value="{{ detail.quantity_assigned }}">
+                            </td>
+                            <td colspan="1">{{ detail.price|floatformat:2 }}</td>
+
+                            
+                            <td colspan="1" class="detail-total-cost">{{ detail.total_cost|floatformat:2 }}</td>
+                            <td colspan="5"></td> <!-- Fill empty cells to align columns -->
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/sku_allocation.js' %}"></script>
+{% endblock %}
