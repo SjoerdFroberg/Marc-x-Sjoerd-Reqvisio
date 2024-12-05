@@ -15,6 +15,8 @@
                 {% csrf_token %}
                 <input type="hidden" id="extra_columns_data" name="extra_columns_data" />
                 <input type="hidden" id="sku_specific_data" name="sku_specific_data" />
+                <input type="hidden" name="navigation_destination" id="navigation_destination" value="">
+
 
                 <!-- Editable Title Field -->
                 <div class="form-group mb-4">
@@ -131,6 +133,9 @@
                     <input type="hidden" name="action" value="save_changes">
 
                     <button type="submit" name="action" value="save_changes" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-success me-2" id="invite-suppliers-btn">Invite Suppliers</button>
+
+                    
                 </div>
             </form>
 
@@ -153,13 +158,14 @@
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const saveButton = document.querySelector("button[name='action'][value='save_changes']");
+        const inviteSuppliersButton = document.getElementById("invite-suppliers-btn");
         const extraColumnsDataInput = document.getElementById("extra_columns_data");
         const skuSpecificDataInput = document.getElementById("sku_specific_data");
         const skuTable = document.getElementById('sku-table');
-        console.log(skuTable);
+        const navigationDestinationInput = document.getElementById("navigation_destination");
+        const form = document.getElementById('rfx-sku-questions-form');
 
-        saveButton.addEventListener("click", (event) => {
-            console.log('clicked');
+        function saveAndSubmit(destination=null) {
             event.preventDefault(); // Prevent default form submission
             const rows = skuTable.querySelectorAll("tbody tr");
 
@@ -224,13 +230,25 @@
             // Set the SKU-specific Questions Data in Hidden Input
             if (skuSpecificDataInput) {
                 skuSpecificDataInput.value = JSON.stringify(questionsData);
-            }
-
-
-            document.getElementById('rfx-sku-questions-form').submit();
+            }            
             
 
+            if (destination) {
+                navigationDestinationInput.value = destination;
+            }
+            form.submit();
+        }
 
+
+        saveButton.addEventListener("click", (event) => {
+            event.preventDefault();
+            saveAndSubmit(); // Normal save with no redirect
+        });
+
+        inviteSuppliersButton.addEventListener("click", (event) => {
+            event.preventDefault();
+            // Save and then redirect to the invite suppliers page
+            saveAndSubmit("quick_quote_rebuy_invite_suppliers");
         });
 
 });

@@ -906,7 +906,29 @@ def supplier_rfx_response(request, token):
     rfx = invitation.rfx
     general_questions = GeneralQuestion.objects.filter(rfx=rfx)
     sku_specific_questions = SKUSpecificQuestion.objects.filter(rfx=rfx)
+
     rfx_skus = RFX_SKUs.objects.filter(rfx=rfx)
+
+    procurer_name = rfx.company.name
+
+    if procurer_name == "REBUY":
+        # Just get one SKU (if any)
+        first_rfx_sku = rfx_skus.first()
+        has_oem_column = False
+        if first_rfx_sku:
+            spec_data = first_rfx_sku.get_specification_data()
+            extra_columns = list(spec_data.keys()) if spec_data else []
+            if "OEM" in extra_columns:
+                has_oem_column = True
+    
+    if procurer_name == "REBUY" and has_oem_column:
+        # Supplier's served OEMs
+        served_oems = invitation.supplier.oems.all()
+        # Filter rfx_skus by these OEMs
+        rfx_skus = rfx_skus.filter(sku__oem__in=served_oems)
+
+
+
 
     processed_skus = []
     extra_columns = []
@@ -926,6 +948,7 @@ def supplier_rfx_response(request, token):
             'extra_data': specification_data,  # Ensure the same key is used as in Step 4
         })
 
+    
     # Prepare options lists for questions
     for question in general_questions:
         if question.question_type in ['Single-select', 'Multi-select']:
@@ -1347,7 +1370,6 @@ def quick_quote_rebuy(request, rfx_id):
             })
             
     elif request.method == 'POST' and request.POST.get('action') == 'save_changes':
-        print('saving changes')
         
 
         with transaction.atomic():
@@ -1397,8 +1419,11 @@ def quick_quote_rebuy(request, rfx_id):
                     question_type=question_data['question_type']
                 )
                 
-            # Finalize RFX and redirect to RFX list or a success page
-            return redirect('quick_quote_rebuy', rfx_id=rfx.id)
+            navigation_destination = request.POST.get('navigation_destination')
+            if navigation_destination == 'quick_quote_rebuy_invite_suppliers':
+                return redirect('quick_quote_rebuy_invite_suppliers', rfx_id=rfx.id)
+            else:
+                return redirect('quick_quote_rebuy', rfx_id=rfx.id)
 
 
 
@@ -1412,7 +1437,7 @@ def quick_quote_rebuy(request, rfx_id):
         'upload_form': upload_form,
     })
 
-
+@login_required
 def parse_rebuy_csv(file, company, encoding='utf-8'):
     """
     Parses the uploaded CSV file for REBUY quick quote.
@@ -1468,3 +1493,42 @@ def parse_rebuy_csv(file, company, encoding='utf-8'):
         print(processed_skus)
 
     return processed_skus, warnings
+
+
+@login_required
+def quick_quote_rebuy_invite_suppliers(request, rfx_id):
+    rfx = get_object_or_404(RFX, id=rfx_id, company=request.user.company)
+
+    # Ensure user is a procurer
+    if not request.user.is_procurer:
+        return render(request, 'procurement01/access_denied.html')
+
+    # Extract OEMs from the RFX SKUs
+    rfx_skus = RFX_SKUs.objects.filter(rfx=rfx)
+    oem_ids = rfx_skus.values_list('sku__oem', flat=True).distinct()
+    # Filter out None OEMs if any
+    oem_ids = [o for o in oem_ids if o is not None]
+
+    # Find suppliers who serve these OEMs
+    suppliers = Company.objects.filter(
+        company_type='Supplier',
+        procurer=request.user.company,
+        oems__in=oem_ids
+    ).distinct()
+
+    if request.method == 'POST':
+        supplier_ids = request.POST.getlist('suppliers')
+        for supplier_id in supplier_ids:
+            supplier = Company.objects.get(id=supplier_id)
+            # Create or get invitation
+            invitation, created = RFXInvitation.objects.get_or_create(rfx=rfx, supplier=supplier)
+            if created:
+                send_invitation_email(invitation)
+        return redirect('rfx_list')
+
+    # In GET request, we want to pre-select all these suppliers
+    # The template can just mark all checkboxes as checked by default
+    return render(request, 'procurement01/quick_quote_rebuy_invite_suppliers.html', {
+        'rfx': rfx,
+        'suppliers': suppliers,
+    })

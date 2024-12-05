@@ -1,0 +1,19 @@
+{% extends 'procurement01/layout.html' %}
+
+{% block content %}
+<h2>Invite Suppliers to {{ rfx.title }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <p>The following suppliers serve the OEMs present in this RFX's SKUs and are pre-selected:</p>
+    {% for supplier in suppliers %}
+        <div>
+            <input type="checkbox" name="suppliers" value="{{ supplier.id }}" id="supplier_{{ supplier.id }}" checked>
+            <label for="supplier_{{ supplier.id }}">{{ supplier.name }} ({{ supplier.email }})</label>
+        </div>
+    {% empty %}
+        <p>No suppliers found serving these OEMs. Please add relevant suppliers first.</p>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Send Invitations</button>
+</form>
+{% endblock %}

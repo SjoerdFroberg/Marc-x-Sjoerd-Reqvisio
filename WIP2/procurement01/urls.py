@@ -52,6 +52,9 @@ urlpatterns = [
     path('quick_quote_rebuy_initial_create/', views.quick_quote_rebuy_initial_create, name='quick_quote_rebuy_initial_create'),
 
     path('quick_quote_rebuy/<int:rfx_id>/', views.quick_quote_rebuy, name='quick_quote_rebuy'),
+    
+    path('quick_quote_rebuy/<int:rfx_id>/invite_suppliers/', views.quick_quote_rebuy_invite_suppliers, name='quick_quote_rebuy_invite_suppliers'),
+
 
 
 
