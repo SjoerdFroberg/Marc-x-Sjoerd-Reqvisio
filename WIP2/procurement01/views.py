@@ -31,10 +31,16 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 
 
+import csv
+from io import TextIOWrapper
+from .forms import RebuyUploadForm
 
 
 from .models import SKU, Project, Company, RFX, GeneralQuestion, RFX_SKUs,SKUSpecificQuestion, RFXFile, RFXInvitation, SupplierResponse, SKUSpecificQuestionResponse, GeneralQuestionResponse
 from .forms import SKUForm, ProjectForm, SupplierForm, RFXBasicForm, SKUSearchForm, GeneralQuestionForm, RFX_SKUForm, RFXForm, SKUSpecificQuestionForm, GeneralQuestionResponseForm, SKUSpecificQuestionResponseForm
+
+
+
 
 
 
@@ -71,7 +77,10 @@ def logout_view(request):
 # View to list all SKUs
 @login_required
 def sku_list_view(request):
-    skus = SKU.objects.all()
+
+    user_company = request.user.company
+
+    skus = SKU.objects.filter(company=user_company)
     return render(request, 'procurement01/sku_list.html', {'skus': skus})
 
 # View to see details of a single SKU
@@ -80,20 +89,27 @@ def sku_detail_view(request, sku_id):
     sku = get_object_or_404(SKU, id=sku_id)
     return render(request, 'procurement01/sku_detail.html', {'sku': sku})
 
-# view to create new skus
+
+
 @login_required
 def sku_create_view(request):
+    if not request.user.is_procurer:
+        return render(request, 'procurement01/access_denied.html')  # Only procurers can create SKUs
+
+    company = request.user.company
+
     if request.method == 'POST':
-        form = SKUForm(request.POST)
+        form = SKUForm(request.POST, company=company)
         if form.is_valid():
-            sku = form.save(commit=False)  # Don't save to the database yet
-            sku.company = request.user.company  # Set the company to the logged-in user's company
-            sku.save()  # Now save to the database
+            sku = form.save(commit=False)
+            sku.company = company
+            sku.save()
             return redirect('sku_list')
     else:
-        form = SKUForm()
+        form = SKUForm(company=company)
 
     return render(request, 'procurement01/sku_form.html', {'form': form})
+
 
 @login_required
 def supplier_list_view(request):
@@ -190,6 +206,8 @@ def project_detail(request, project_id):
 
 @login_required
 def create_rfx_step1(request, rfx_id=None):
+    user_company = request.user.company 
+
     if rfx_id:
         rfx = get_object_or_404(RFX, id=rfx_id)
         existing_files = rfx.files.all()  # Fetch existing files
@@ -200,7 +218,8 @@ def create_rfx_step1(request, rfx_id=None):
 
     # Check if there's a project_id in the query parameters
     project_id = request.GET.get('project_id')
-    initial_data = {}
+    initial_data = {'company': user_company}
+
     if project_id:
         try:
             # Check if the project belongs to the user's company
@@ -222,7 +241,9 @@ def create_rfx_step1(request, rfx_id=None):
             rfx_form_valid = form.is_valid()
 
         if rfx_form_valid:
-            rfx = form.save()
+            rfx = form.save(commit=False)
+            rfx.company = user_company  # Set the company explicitly
+            rfx.save()
 
             # Handle file deletions
             files_to_delete = request.POST.getlist('delete_files')
@@ -563,7 +584,7 @@ def rfx_list_view(request):
 
     if company.company_type == 'Procurer':
         # Procurer should see only their own RFXs
-        rfxs = RFX.objects.filter(rfx_skus__sku__company=company).distinct()
+        rfxs = RFX.objects.filter(company=company)
     
     else:
         # If the user's company type is unknown, show nothing
@@ -1196,3 +1217,254 @@ def rfx_detail(request, rfx_id):
     }
 
     return render(request, 'procurement01/rfx_detail.html', context)
+
+
+
+
+
+@login_required
+def quick_quote_rebuy_initial_create(request):
+    user_company = request.user.company
+
+    # Create the RFX and set the default name
+    with transaction.atomic():
+        rfx = RFX.objects.create(
+            title="Temporary Title",
+            description="Quick quote for REBUY parts",
+            company=user_company
+        )
+        rfx.title = f"REBUY Quotation for Parts {rfx.id}"
+        rfx.save()
+
+        # Preload SKU-specific questions if they do not already exist
+        sku_specific_questions = [
+            {"question": "All-In Price / Unit", "question_type": "number"},
+            {"question": "Quantity Offered", "question_type": "number"},
+            {"question": "Lead Time in Days", "question_type": "number"}
+        ]
+        for question in sku_specific_questions:
+            SKUSpecificQuestion.objects.get_or_create(
+                rfx=rfx,
+                question=question["question"],
+                question_type=question["question_type"]
+            )
+
+    # Redirect to the detailed RFX page
+    return redirect('quick_quote_rebuy', rfx_id=rfx.id)
+    
+
+
+
+@login_required
+def quick_quote_rebuy(request, rfx_id):
+    # Get the specific RFX
+    rfx = RFX.objects.get(id=rfx_id, company=request.user.company)
+
+    user_company = request.user.company
+
+
+    # Fetch preloaded SKU-specific questions to pass to the template
+    preloaded_sku_questions = SKUSpecificQuestion.objects.filter(rfx=rfx)
+
+    # No SKUs initially
+    processed_skus = []
+
+    rfx_skus = RFX_SKUs.objects.filter(rfx=rfx)
+    if rfx_skus:
+        extra_columns = []
+
+        for rfx_sku in rfx_skus:
+            extra_data = rfx_sku.get_specification_data()
+            if not extra_columns and extra_data:
+                extra_columns = list(extra_data.keys())
+            processed_skus.append({
+                'sku_id': rfx_sku.sku.id,
+                'sku_name': rfx_sku.sku.name,
+                'extra_data': extra_data,
+                'extra_columns': extra_columns,
+
+            })
+    else:
+        # Hard-coded extra columns
+        extra_columns = ["OEM", "SKU Code", "Quantity Required", "Maximum Lead Time"]
+
+    
+    # Instantiate the upload form
+    upload_form = RebuyUploadForm()
+
+
+    # Handle POST: If user uploads a file
+    if request.method == 'POST' and request.POST.get('action') == 'upload_file':
+        upload_form = RebuyUploadForm(request.POST, request.FILES)
+        if upload_form.is_valid():
+            print('form is valid')
+            file = upload_form.cleaned_data['file']
+
+            # Parse the file
+            processed_skus, warnings = parse_rebuy_csv(file, user_company, encoding=request.encoding or 'utf-8')
+
+            # If we wanted to save these SKUs to the RFX_SKUs model, we could do so here:
+            with transaction.atomic():
+                for sku_info in processed_skus:
+                    
+                    if not sku_info.get('invalid'):
+                        # SKU found in DB
+                        db_sku = sku_info['db_sku']  # Returned by the parse function
+                        print(db_sku)
+                        rfx_sku, created = RFX_SKUs.objects.get_or_create(rfx=rfx, sku=db_sku)
+                        # Set specification data
+                        data = {
+                            "OEM": sku_info['OEM'],
+                            "SKU Code": sku_info['SKU Code'],
+                            "Quantity Required": sku_info['Quantity Required'],
+                            "Maximum Lead Time": sku_info['Maximum Lead Time']
+                        }
+                        rfx_sku.set_specification_data(data)
+
+            # Recompute processed SKUs and extra columns for rendering
+            rfx_skus = RFX_SKUs.objects.filter(rfx=rfx)
+            processed_skus = []
+            extra_columns = []
+            for rfx_sku in rfx_skus:
+                extra_data = rfx_sku.get_specification_data()
+                if not extra_columns and extra_data:
+                    extra_columns = list(extra_data.keys())
+                processed_skus.append({
+                    'sku_id': rfx_sku.sku.id,
+                    'sku_name': rfx_sku.sku.name,
+                    'extra_data': extra_data,
+                    'extra_columns': extra_columns,
+                })
+
+            # Re-render template with processed SKUs and warnings
+            return render(request, 'procurement01/quick_quote_rebuy.html', {
+                'rfx': rfx,
+                'extra_columns': extra_columns,
+                'processed_skus': processed_skus,  # This will now reflect the CSV data
+                'sku_specific_questions': preloaded_sku_questions,
+                'upload_form': upload_form,
+                'warnings': warnings,
+            })
+            
+    elif request.method == 'POST' and request.POST.get('action') == 'save_changes':
+        print('saving changes')
+        
+
+        with transaction.atomic():
+            # Update RFX title
+            rfx.title = request.POST.get('title', rfx.title)
+            rfx.save()
+            print('saved title')
+
+            # Process SKUs and Extra Data
+            # Get existing SKUs associated with the RFX
+            existing_sku_ids = set(
+                RFX_SKUs.objects.filter(rfx=rfx).values_list('sku_id', flat=True)
+            )
+
+            # Get SKU IDs from the form
+            sku_ids = request.POST.getlist('skus[]')
+            submitted_sku_ids = set(int(sku_id) for sku_id in sku_ids)
+
+            # Remove SKUs that are no longer in the form
+            skus_to_remove = existing_sku_ids - submitted_sku_ids
+            RFX_SKUs.objects.filter(rfx=rfx, sku_id__in=skus_to_remove).delete()
+
+            # Update or create RFX_SKUs and their extra data
+            extra_columns_data = request.POST.get('extra_columns_data')
+            extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
+
+            for sku_data in extra_columns_json:
+                sku_id = sku_data['sku_id']
+                sku = get_object_or_404(SKU, id=sku_id)
+                rfx_sku, _ = RFX_SKUs.objects.get_or_create(rfx=rfx, sku=sku)
+                # Convert dataArray back into an ordered dictionary
+                data_ordered = OrderedDict(sku_data['data'])
+                rfx_sku.set_specification_data(OrderedDict(data_ordered))
+
+            # Process SKU-Specific Questions
+            # Remove existing SKU-specific questions
+            SKUSpecificQuestion.objects.filter(rfx=rfx).delete()
+
+            # Add new SKU-specific questions
+            sku_specific_data = request.POST.get('sku_specific_data')
+            sku_specific_json = json.loads(sku_specific_data) if sku_specific_data else []
+
+            for question_data in sku_specific_json:
+                SKUSpecificQuestion.objects.create(
+                    rfx=rfx,
+                    question=question_data['question'],
+                    question_type=question_data['question_type']
+                )
+                
+            # Finalize RFX and redirect to RFX list or a success page
+            return redirect('quick_quote_rebuy', rfx_id=rfx.id)
+
+
+
+    # If GET or not a file upload action, just render the template
+
+    return render(request, 'procurement01/quick_quote_rebuy.html', {
+        'rfx': rfx,
+        'extra_columns': extra_columns,
+        'processed_skus': processed_skus,
+        'sku_specific_questions': preloaded_sku_questions,
+        'upload_form': upload_form,
+    })
+
+
+def parse_rebuy_csv(file, company, encoding='utf-8'):
+    """
+    Parses the uploaded CSV file for REBUY quick quote.
+    Expected columns: SKU Name, Quantity Required, Maximum Lead Time
+    """
+    # Convert to text wrapper so csv.reader can handle it
+    f = TextIOWrapper(file.file, encoding=encoding, errors='replace')
+    reader = csv.DictReader(f)
+
+  
+
+
+    required_columns = ["SKU Name", "Quantity Required", "Maximum Lead Time"]
+    for col in required_columns:
+        if col not in reader.fieldnames:
+            raise ValueError(f"Missing column '{col}' in CSV.")
+
+    processed_skus = []
+    warnings = []
+
+    for line_num, row in enumerate(reader, start=2):  # start=2 assuming line 1 is header
+        sku_name = row.get("SKU Name", "").strip()
+        quantity_required = row.get("Quantity Required", "").strip()
+        max_lead_time = row.get("Maximum Lead Time", "").strip()
+
+        print(line_num)
+
+        # Lookup the SKU
+        try:
+            db_sku = SKU.objects.get(name__iexact=sku_name, company=company)
+            # Found SKU: get OEM and SKU code
+            oem_name = db_sku.oem.name if db_sku.oem else ""
+            sku_code = db_sku.sku_code
+            invalid = False
+        except SKU.DoesNotExist:
+            # SKU not found
+            db_sku = None
+            oem_name = ""
+            sku_code = ""
+            invalid = True
+            warnings.append(f"Line {line_num}: SKU '{sku_name}' not found in database.")
+
+        processed_skus.append({
+            "SKU Name": sku_name,
+            "OEM": oem_name,
+            "SKU Code": sku_code,
+            "Quantity Required": quantity_required,
+            "Maximum Lead Time": max_lead_time,
+            "db_sku": db_sku,
+            "invalid": invalid,
+        })
+
+        print(processed_skus)
+
+    return processed_skus, warnings

@@ -11,7 +11,21 @@ class LoginForm(AuthenticationForm):
 class SKUForm(forms.ModelForm):
     class Meta:
         model = SKU
-        fields = ['name', 'sku_code', 'image_url']  # All the fields you want to show
+        fields = ['name', 'sku_code', 'image_url', 'oem']  # All the fields you want to show
+
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter SKU Name'}),
+            'sku_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter SKU Code'}),
+            'image_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Enter Image URL'}),
+            'oem': forms.Select(attrs={'class': 'form-control'}),  # Dropdown for OEM selection
+        }
+
+    def __init__(self, *args, **kwargs):
+        company = kwargs.pop('company', None)  # Pass the company as a keyword argument
+        super().__init__(*args, **kwargs)
+        if company:
+            # Limit OEMs to those belonging to the user's company
+            self.fields['oem'].queryset = OEM.objects.filter(procurer=company)
 
 
 
@@ -75,6 +89,9 @@ class RFXBasicForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)  # Extract the user parameter
         super().__init__(*args, **kwargs)
+
+        # Make the project field optional
+        self.fields['project'].required = False
 
         # Filter the project field by the user's company if the user is provided
         if self.user and hasattr(self.user, 'company'):
@@ -236,3 +253,12 @@ class SKUSpecificQuestionResponseForm(forms.ModelForm):
             elif question.question_type == 'file':
                 self.fields['answer_file'].widget = forms.FileInput()
                 self.fields['answer_file'].required = True
+
+
+
+class RebuyUploadForm(forms.Form):
+    file = forms.FileField(
+        required=True,
+        label='Upload CSV File',
+        widget=forms.FileInput(attrs={'accept': '.csv'})
+    )

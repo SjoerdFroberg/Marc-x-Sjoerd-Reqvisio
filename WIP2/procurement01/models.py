@@ -58,6 +58,8 @@ class SKU(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     image_url = models.URLField(blank=True, null=True)  # Optional image URL
 
+    oem = models.ForeignKey(OEM, on_delete=models.SET_NULL, null=True, blank=True)
+
     def __str__(self):
         return self.name 
     
@@ -111,6 +113,7 @@ class RFX_SKUSpecificationData(models.Model):
 
 class RFX(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="rfxs", null = True)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="rfxs")
     title = models.CharField(max_length=255)
     description = models.TextField(blank = True)
     created_at = models.DateTimeField(auto_now_add=True)

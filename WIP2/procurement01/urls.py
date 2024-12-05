@@ -17,7 +17,7 @@ urlpatterns = [
     path('rfx/create/step1/<int:rfx_id>/', views.create_rfx_step1, name='create_rfx_step1'),  # Optional rfx_id
 
     path('rfx/create/step2/<int:rfx_id>/', views.create_rfx_step2, name='create_rfx_step2'),
-    path('search_skus/', views.search_skus, name='search_skus'),  # Add this line
+    path('search_skus/', views.search_skus, name='search_skus'), 
     
     path('rfx/create/step3/<int:rfx_id>/', views.create_rfx_step3, name='create_rfx_step3'),
     path('rfx/create/step4/<int:rfx_id>/', views.create_rfx_step4, name='create_rfx_step4'),   
@@ -32,7 +32,7 @@ urlpatterns = [
     path('create_rfx_step2a/<int:rfx_id>/', views.create_rfx_step2a, name='create_rfx_step2a'),
     path('create_sku/', views.create_sku, name='create_sku'),
 
-    path('rfx/create/step5/<int:rfx_id>/', views.create_rfx_step5, name='create_rfx_step5'),  # New step 5 URL
+    path('rfx/create/step5/<int:rfx_id>/', views.create_rfx_step5, name='create_rfx_step5'), 
     
     path('rfx/<int:rfx_id>/invite_suppliers/', views.invite_suppliers, name='invite_suppliers'),
     path('respond_rfx/<str:token>/', views.supplier_rfx_response, name='supplier_rfx_response'),
@@ -45,6 +45,13 @@ urlpatterns = [
     path('projects/', views.project_list_view, name='project_list'),
     path('projects/create/', views.create_project, name = 'create_project'),
     path('projects/<int:project_id>/', views.project_detail, name='project_detail'),
+
+
+    # REBUY
+
+    path('quick_quote_rebuy_initial_create/', views.quick_quote_rebuy_initial_create, name='quick_quote_rebuy_initial_create'),
+
+    path('quick_quote_rebuy/<int:rfx_id>/', views.quick_quote_rebuy, name='quick_quote_rebuy'),
 
 
 
