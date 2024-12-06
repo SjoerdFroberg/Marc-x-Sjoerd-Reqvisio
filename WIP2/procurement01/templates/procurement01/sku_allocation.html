@@ -5,12 +5,81 @@
 {% block title %}SKU Allocation{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2>SKU Allocation for: {{ rfx.title }}</h2>
+<style>
+    .project-header {
+        background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .project-table {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .project-table thead {
+        background: #f8f9fa;
+    }
+    .project-table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border: none;
+    }
+    .project-table td {
+        padding: 1rem;
+        border: none;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    .sku-detail-row {
+        background: #f8f9fa;
+        transition: all 0.2s ease;
+    }
+    .sku-summary-row {
+        transition: all 0.2s ease;
+    }
+    .sku-summary-row:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .allocated-qty-input {
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        padding: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    .allocated-qty-input:focus {
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+        border-color: #86b7fe;
+    }
+    .toggle-suppliers {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .toggle-suppliers:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+</style>
 
+<div class="project-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-2">SKU Allocation</h2>
+            <p class="text-muted mb-0">{{ rfx.title }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="project-table">
     <div class="table-responsive">
-        <table class="table table-bordered align-middle" id="sku-allocation-table">
-            <thead class="table-light">
+        <table class="table mb-0" id="sku-allocation-table">
+            <thead>
                 <tr>
                     <th>SKU Name</th>
                     <th>OEM</th>
@@ -41,7 +110,7 @@
                         <td class="summary-total-cost">{{ sku_data.total_cost|floatformat:2 }}</td>
                         <td>
                             <button type="button" class="btn btn-sm btn-outline-primary toggle-suppliers" data-sku="{{ sku_data.sku_code }}">
-                                <i class="bi bi-caret-down-square"></i> <!-- Use Bootstrap Icons or FontAwesome -->
+                                <i class="bi bi-caret-down-square"></i>
                             </button>
                         </td>
                     </tr>
@@ -64,10 +133,8 @@
                                        value="{{ detail.quantity_assigned }}">
                             </td>
                             <td colspan="1">{{ detail.price|floatformat:2 }}</td>
-
-                            
                             <td colspan="1" class="detail-total-cost">{{ detail.total_cost|floatformat:2 }}</td>
-                            <td colspan="5"></td> <!-- Fill empty cells to align columns -->
+                            <td colspan="5"></td>
                         </tr>
                     {% endfor %}
                 {% endfor %}

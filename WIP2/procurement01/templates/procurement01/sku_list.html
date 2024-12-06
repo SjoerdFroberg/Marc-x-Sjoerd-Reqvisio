@@ -1,39 +1,115 @@
 {% extends 'procurement01/layout.html' %}
 
-{% block title %}SKU List{% endblock %}
-
 {% block content %}
-<h2>SKU List</h2>
-<table class="table table-striped" id="sku-table">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>SKU Code</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for sku in skus %}
-        <tr class="clickable-row" data-href="{% url 'sku_detail' sku.id %}">
-            <td>{{ sku.id }}</td>
-            <td>{{ sku.name }}</td>
-            <td>{{ sku.sku_code }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<style>
+    .project-header {
+        background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .project-table {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .project-table thead {
+        background: #f8f9fa;
+    }
+    .project-table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border: none;
+    }
+    .project-table td {
+        padding: 1rem;
+        border: none;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    .clickable-row {
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .clickable-row:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+    .create-project-btn {
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .create-project-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+</style>
 
-<a href="{% url 'sku_create' %}" class="btn btn-primary">Create New SKU</a>
+<div class="project-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-2">SKUs</h2>
+            <p class="text-muted mb-0">Manage and track all your SKUs</p>
+        </div>
+        <a href="{% url 'sku_create' %}" class="btn btn-primary create-project-btn">
+            <i class="bi bi-plus-lg me-2"></i>Create New SKU
+        </a>
+    </div>
+</div>
 
+<div class="project-table">
+    <table class="table mb-0">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>SKU Code</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sku in skus %}
+                <tr class="clickable-row" data-href="{% url 'sku_detail' sku.id %}">
+                    <td class="fw-bold text-primary">{{ sku.id }}</td>
+                    <td>{{ sku.name }}</td>
+                    <td><span class="badge bg-light text-dark">{{ sku.sku_code }}</span></td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" class="empty-state">
+                        <i class="bi bi-box-seam display-4 d-block mb-3"></i>
+                        <h5>No SKUs Available</h5>
+                        <p class="text-muted">Start by creating your first SKU</p>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Attach click event to all rows with the class 'clickable-row'
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.clickable-row').forEach(function(row) {
-            row.addEventListener('click', function() {
-                window.location = row.getAttribute('data-href');
+    document.addEventListener('DOMContentLoaded', () => {
+        const rows = document.querySelectorAll('.clickable-row');
+        rows.forEach(row => {
+            row.addEventListener('click', () => {
+                const href = row.getAttribute('data-href');
+                if (href) {
+                    window.location.href = href;
+                }
             });
         });
     });

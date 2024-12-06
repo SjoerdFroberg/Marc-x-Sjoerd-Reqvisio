@@ -1,47 +1,117 @@
 {% extends 'procurement01/layout.html' %}
 
 {% block content %}
-<h2>RFXs</h2>
+<style>
+    .project-header {
+        background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .project-table {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .project-table thead {
+        background: #f8f9fa;
+    }
+    .project-table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border: none;
+    }
+    .project-table td {
+        padding: 1rem;
+        border: none;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    .clickable-row {
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .clickable-row:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+    .create-project-btn {
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .create-project-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+</style>
 
-<a href="{% url 'create_rfx_step1' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-2"></i>Create New RFX</a>  
+<div class="project-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-2">RFXs</h2>
+            <p class="text-muted mb-0">Manage and track all your RFX documents</p>
+        </div>
+        <a href="{% url 'create_rfx_step1' %}" class="btn btn-primary create-project-btn">
+            <i class="bi bi-plus-lg me-2"></i>Create New RFX
+        </a>
+    </div>
+</div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Date Created</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for rfx in rfxs %}
-            <tr class="clickable-row" data-href="{% url 'rfx_detail' rfx.id %}">
-                <td>{{ rfx.title }}</td>
-                <td>{{ rfx.description }}</td>
-                <td>{{ rfx.created_at }}</td>
+<div class="project-table">
+    <table class="table mb-0">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Created</th>
             </tr>
-        {% empty %}
-        <tr>
-            <td colspan="3">No RFXs available.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            {% for rfx in rfxs %}
+                <tr class="clickable-row" data-href="{% url 'rfx_detail' rfx.id %}">
+                    <td class="fw-bold text-primary">{{ rfx.title }}</td>
+                    <td class="text-muted">{{ rfx.description }}</td>
+                    <td><span class="badge bg-light text-dark">{{ rfx.created_at }}</span></td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" class="empty-state">
+                        <i class="bi bi-file-x display-4 d-block mb-3"></i>
+                        <h5>No RFXs Available</h5>
+                        <p class="text-muted">Start by creating your first RFX</p>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Attach click event to all rows with the class 'clickable-row'
     document.addEventListener('DOMContentLoaded', () => {
-    const rows = document.querySelectorAll('.clickable-row');
-    rows.forEach(row => {
-        row.addEventListener('click', () => {
-            const href = row.getAttribute('data-href');
-            if (href) {
-                window.location.href = href;
-            }
+        const rows = document.querySelectorAll('.clickable-row');
+        rows.forEach(row => {
+            row.addEventListener('click', () => {
+                const href = row.getAttribute('data-href');
+                if (href) {
+                    window.location.href = href;
+                }
+            });
         });
     });
-});
 </script>
 {% endblock %}
