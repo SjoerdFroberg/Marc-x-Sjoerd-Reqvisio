@@ -55,19 +55,15 @@
     <form method="post" class="login-form">
         {% csrf_token %}
         <div class="mb-3">
-            <div class="input-group">
-                <span class="input-group-text">
-                    <i class="bi bi-person-fill"></i>
-                </span>
-                {{ form.username }}
+            <div class="input-group d-flex">
+                <span class="input-group-text d-inline-block"><i class="bi bi-person-fill"></i></span>
+                <div class="d-inline-block">{{ form.username }}</div>
             </div>
         </div>
         <div class="mb-3">
-            <div class="input-group">
-                <span class="input-group-text">
-                    <i class="bi bi-lock-fill"></i>
-                </span>
-                {{ form.password }}
+            <div class="input-group d-flex">
+                <span class="input-group-text d-inline-block"><i class="bi bi-lock-fill"></i></span>
+                <div class="d-inline-block">{{ form.password }}</div>
             </div>
         </div>
         <button type="submit" class="btn btn-primary login-btn">

@@ -1,15 +1,144 @@
 {% extends 'procurement01/layout.html' %}
 
-{% block title %}Create New SKU{% endblock %}
+{% block title %}Create SKU{% endblock %}
 
 {% block content %}
-<h2>Create New SKU</h2>
+<style>
+    .project-header {
+        background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 2.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        position: relative;
+        overflow: hidden;
+    }
+    .project-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 300px;
+        height: 300px;
+        background: linear-gradient(145deg, rgba(45, 76, 62, 0.1) 0%, rgba(45, 76, 62, 0) 100%);
+        border-radius: 50%;
+        transform: translate(50%, -50%);
+    }
+    .form-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        padding: 2.5rem;
+        position: relative;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    .form-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #2d4c3e 0%, #3c6a56 100%);
+        border-radius: 15px 15px 0 0;
+    }
+    .form-group {
+        margin-bottom: 1.8rem;
+        position: relative;
+    }
+    .form-group label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+        color: #2d4c3e;
+        font-size: 0.95rem;
+    }
+    .form-group input, .form-group textarea {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background-color: #f8f9fa;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+        box-shadow: 0 0 0 3px rgba(60, 106, 86, 0.25);
+        border-color: #3c6a56;
+        background-color: white;
+        outline: none;
+    }
+    .form-group input:hover, .form-group textarea:hover {
+        background-color: white;
+        border-color: #3c6a56;
+    }
+    .submit-btn {
+        padding: 0.85rem 2rem;
+        font-weight: 600;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        background: linear-gradient(145deg, #2d4c3e 0%, #3c6a56 100%);
+        border: none;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        background: linear-gradient(145deg, #3c6a56 0%, #2d4c3e 100%);
+    }
+    .page-icon {
+        font-size: 2rem;
+        color: #2d4c3e;
+        margin-bottom: 1rem;
+    }
+</style>
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Save</button>
-</form>
+<div class="project-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <i class="bi bi-box-seam page-icon"></i>
+            <h2 class="fw-bold mb-2">Create New SKU</h2>
+            <p class="text-muted mb-0">Add a new SKU by filling out the details below</p>
+        </div>
+    </div>
+</div>
 
-<a href="{% url 'sku_list' %}" class="btn btn-secondary">Back to SKU List</a>
+<div class="form-container">
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+            {{ field.label_tag }}
+            {{ field }}
+            <div class="invalid-feedback">Please provide a valid {{ field.label }}</div>
+        </div>
+        {% endfor %}
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary create-project-btn">
+                <i class="bi bi-plus-lg me-2"></i>Create SKU
+            </button>
+            <a href="{% url 'sku_list' %}" class="btn btn-light ms-2">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
 {% endblock %}
