@@ -61,7 +61,7 @@ h2 {
 }
 
 .sidebar a:hover {
-    background-color: #3c6a56;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar .user-info {
