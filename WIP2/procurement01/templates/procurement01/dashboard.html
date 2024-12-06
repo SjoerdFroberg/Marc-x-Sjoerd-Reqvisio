@@ -109,9 +109,9 @@
                 <i class="bi bi-bell"></i>
                 <span class="notification-badge">3</span>
             </button>
-            <button class="btn btn-primary">
+            <a href="{% url 'create_project' %}" id="create-project-btn" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-2"></i>New Project
-            </button>
+            </a>
         </div>
     </div>
     
@@ -261,6 +261,166 @@
                 </div>
                 <div class="card-footer bg-light text-center">
                     <a href="#" class="text-decoration-none">View All Activity <i class="bi bi-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Components -->
+    <div class="row mt-4">
+        <!-- Project Timeline -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-calendar-event me-2"></i>Project Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-date">Today</div>
+                            <div class="timeline-content">
+                                <h6>RFX #456 Due</h6>
+                                <p>Final supplier responses deadline</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">Tomorrow</div>
+                            <div class="timeline-content">
+                                <h6>Supplier Review Meeting</h6>
+                                <p>Evaluation of Q3 performance</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">Next Week</div>
+                            <div class="timeline-content">
+                                <h6>Contract Negotiations</h6>
+                                <p>With top 3 suppliers</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supplier Performance -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-graph-up me-2"></i>Top Suppliers</h5>
+                </div>
+                <div class="card-body">
+                    <div class="supplier-list">
+                        <div class="supplier-item d-flex align-items-center mb-3">
+                            <div class="supplier-icon bg-primary text-white rounded-circle p-2 me-3">AB</div>
+                            <div class="supplier-info flex-grow-1">
+                                <h6 class="mb-0">ABC Manufacturing</h6>
+                                <small class="text-muted">Performance Score: 95%</small>
+                            </div>
+                            <i class="bi bi-star-fill text-warning"></i>
+                        </div>
+                        <div class="supplier-item d-flex align-items-center mb-3">
+                            <div class="supplier-icon bg-success text-white rounded-circle p-2 me-3">XY</div>
+                            <div class="supplier-info flex-grow-1">
+                                <h6 class="mb-0">XYZ Industries</h6>
+                                <small class="text-muted">Performance Score: 92%</small>
+                            </div>
+                            <i class="bi bi-star-fill text-warning"></i>
+                        </div>
+                        <div class="supplier-item d-flex align-items-center">
+                            <div class="supplier-icon bg-info text-white rounded-circle p-2 me-3">GH</div>
+                            <div class="supplier-info flex-grow-1">
+                                <h6 class="mb-0">Global Hardware Co.</h6>
+                                <small class="text-muted">Performance Score: 88%</small>
+                            </div>
+                            <i class="bi bi-star-fill text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cost Savings & Category Analysis -->
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-cash-stack me-2"></i>Cost Savings Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="savings-stats text-center mb-4">
+                        <h3 class="text-success">$1.2M</h3>
+                        <p class="text-muted">Total Savings YTD</p>
+                    </div>
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar bg-success" style="width: 75%" role="progressbar">
+                            Q3 Target: 75%
+                        </div>
+                    </div>
+                    <div class="savings-breakdown mt-4">
+                        <div class="row">
+                            <div class="col-4 text-center">
+                                <h5>$450K</h5>
+                                <small class="text-muted">Direct Savings</small>
+                            </div>
+                            <div class="col-4 text-center">
+                                <h5>$380K</h5>
+                                <small class="text-muted">Negotiated Savings</small>
+                            </div>
+                            <div class="col-4 text-center">
+                                <h5>$370K</h5>
+                                <small class="text-muted">Process Optimization</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-pie-chart me-2"></i>Category Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="category-list">
+                        <div class="category-item mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Electronics</span>
+                                <span>45%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-primary" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        <div class="category-item mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Mechanical Parts</span>
+                                <span>30%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: 30%"></div>
+                            </div>
+                        </div>
+                        <div class="category-item mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Raw Materials</span>
+                                <span>15%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-warning" style="width: 15%"></div>
+                            </div>
+                        </div>
+                        <div class="category-item">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Services</span>
+                                <span>10%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-info" style="width: 10%"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
