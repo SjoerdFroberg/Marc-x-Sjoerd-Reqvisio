@@ -72,7 +72,10 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-header">
-            <h3 class="brand">Reqvisio</h3>
+            <h3 class="brand">
+                <i class="bi bi-hexagon-fill me-2"></i>
+                Reqvisio
+            </h3>
         </div>
     
         {% if user.is_authenticated %}
@@ -80,7 +83,7 @@
                 <div class="nav-menu">
                     <div class="nav-item">
                         <a href="{% url 'dashboard' %}" class="nav-link">
-                            <i class="bi bi-house"></i>
+                            <i class="bi bi-house-door-fill"></i>
                             <span>Dashboard</span>
                         </a>
                     </div>
@@ -89,16 +92,16 @@
                         <div class="nav-item">
                             <a href="#" class="nav-link nav-section-header" onclick="toggleSection(this, 'projectsSectionOpen')">
                                 <i class="bi bi-chevron-right nav-caret"></i>
-                                <i class="bi bi-folder"></i>
+                                <i class="bi bi-folder-fill"></i>
                                 <span>Projects</span>
                             </a>
                             <div class="nav-section-content projects" style="display: none;">
                                 <a href="{% url 'project_list' %}" class="nav-link sub-link">
-                                    <i class="bi bi-folder"></i>
+                                    <i class="bi bi-folder2-open"></i>
                                     <span>All Projects</span>
                                 </a>
                                 <a href="{% url 'rfx_list' %}" class="nav-link sub-link">
-                                    <i class="bi bi-file-text"></i>
+                                    <i class="bi bi-file-earmark-text-fill"></i>
                                     <span>RFX Documents</span>
                                 </a>
                             </div>
@@ -114,11 +117,11 @@
                             </a>
                             <div class="nav-section-content rebuy" style="display: none;">
                                 <a href="{% url 'quick_quote_rebuy_initial_create' %}" class="nav-link sub-link">
-                                    <i class="bi bi-plus-circle"></i>
+                                    <i class="bi bi-plus-circle-fill"></i>
                                     <span>Quick Quote</span>
                                 </a>
                                 <a href="#" onclick="selectRFX()" class="nav-link sub-link">
-                                    <i class="bi bi-eye"></i>
+                                    <i class="bi bi-eye-fill"></i>
                                     <span>SKU Allocation</span>
                                 </a>
                             </div>
@@ -127,14 +130,14 @@
 
                     <div class="nav-item">
                         <a href="{% url 'sku_list' %}" class="nav-link">
-                            <i class="bi bi-box-seam"></i>
+                            <i class="bi bi-box-seam-fill"></i>
                             <span>SKUs</span>
                         </a>
                     </div>
 
                     <div class="nav-item">
                         <a href="{% url 'supplier_list' %}" class="nav-link">
-                            <i class="bi bi-building"></i>
+                            <i class="bi bi-building-fill"></i>
                             <span>Suppliers</span>
                         </a>
                     </div>
