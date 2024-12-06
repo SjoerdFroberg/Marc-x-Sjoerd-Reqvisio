@@ -8,7 +8,7 @@
 <style>
     .project-header {
         background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 2rem;
+        padding: 2.5rem;
         border-radius: 15px;
         margin-bottom: 2rem;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
@@ -41,6 +41,7 @@
     }
     .sku-summary-row {
         transition: all 0.2s ease;
+        cursor: pointer;
     }
     .sku-summary-row:hover {
         background: #f8f9fa;
@@ -48,30 +49,78 @@
         box-shadow: 0 4px 8px rgba(0,0,0,0.05);
     }
     .allocated-qty-input {
-        border-radius: 8px;
+        width: 100%;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
         border: 1px solid #e9ecef;
-        padding: 0.5rem;
+        font-size: 1rem;
         transition: all 0.2s ease;
     }
     .allocated-qty-input:focus {
-        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
-        border-color: #86b7fe;
+        box-shadow: 0 0 0 3px rgba(60, 106, 86, 0.25);
+        border-color: #3c6a56;
     }
     .toggle-suppliers {
-        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         transition: all 0.3s ease;
     }
     .toggle-suppliers:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+    .stats-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .stats-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
     }
 </style>
 
 <div class="project-header">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-2">SKU Allocation</h2>
             <p class="text-muted mb-0">{{ rfx.title }}</p>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h6 class="text-muted mb-2">Total SKUs</h6>
+                <h3 class="mb-0">{{ assignment_data|length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h6 class="text-muted mb-2">Allocated SKUs</h6>
+                <h3 class="mb-0">{{ assignment_data|length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h6 class="text-muted mb-2">Total Suppliers</h6>
+                <h3 class="mb-0">{{ unique_suppliers|length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h6 class="text-muted mb-2">Total Value</h6>
+                <h3 class="mb-0">€{{ total_cost_all_rows|floatformat:2 }}</h3>
+            </div>
         </div>
     </div>
 </div>
@@ -96,11 +145,15 @@
             </thead>
             <tbody>
                 {% for sku_data in assignment_data %}
-                    <!-- Summary Row for this SKU -->
                     <tr class="sku-summary-row" data-sku="{{ sku_data.sku_code }}">
-                        <td>{{ sku_data.sku }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-box-seam text-primary me-2"></i>
+                                <span class="fw-bold">{{ sku_data.sku }}</span>
+                            </div>
+                        </td>
                         <td>{{ sku_data.oem }}</td>
-                        <td>{{ sku_data.sku_code }}</td>
+                        <td><span class="badge bg-light text-dark">{{ sku_data.sku_code }}</span></td>
                         <td>{{ sku_data.quantity_required }}</td>
                         <td>{{ sku_data.maximum_lead_time }}</td>
                         <td class="summary-suppliers">{{ sku_data.suppliers }}</td>
@@ -115,7 +168,6 @@
                         </td>
                     </tr>
 
-                    <!-- Detail Rows (Supplier Rows) for this SKU -->
                     {% for detail in sku_data.detailed_response_items %}
                         <tr class="sku-detail-row d-none" data-parent-sku="{{ sku_data.sku_code }}">
                             <td></td>
@@ -137,6 +189,14 @@
                             <td colspan="5"></td>
                         </tr>
                     {% endfor %}
+                {% empty %}
+                    <tr>
+                        <td colspan="11" class="empty-state">
+                            <i class="bi bi-box-seam display-4 d-block mb-3"></i>
+                            <h5>No SKUs Available</h5>
+                            <p class="text-muted">No SKUs have been allocated yet</p>
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>

@@ -1753,6 +1753,32 @@ def sku_allocation(request, rfx_id):
             }
         )
 
-    context = {"rfx": rfx, "assignment_data": assignment_data}
+    # Calculate totals and stats
+    total_cost_all_rows = sum(row["total_cost"] for row in assignment_data)
+    total_quantity_required = sum(row["quantity_required"] for row in assignment_data)
+    total_quantity_assigned = sum(row["quantity_assigned"] for row in assignment_data)
+    
+    # Get unique OEMs and suppliers
+    unique_oems = len(set(row["oem"] for row in assignment_data))
+    unique_suppliers = len(set(
+        supplier 
+        for row in assignment_data
+        for supplier in row["suppliers"].split(", ")
+        if supplier  # Filter out empty strings
+    ))
+    
+    # Calculate allocation percentage
+    allocation_percentage = (total_quantity_assigned / total_quantity_required * 100) if total_quantity_required > 0 else 0
+    
+    context = {
+        "rfx": rfx,
+        "assignment_data": assignment_data,
+        "total_cost_all_rows": total_cost_all_rows,
+        "total_quantity_required": total_quantity_required,
+        "total_quantity_assigned": total_quantity_assigned,
+        "unique_oems": unique_oems,
+        "unique_suppliers": unique_suppliers,
+        "allocation_percentage": allocation_percentage
+    }
 
     return render(request, "procurement01/sku_allocation.html", context)

@@ -1,18 +1,76 @@
 {% extends 'procurement01/layout.html' %}
 
 {% block content %}
-<h2>Create Project</h2>
+<style>
+    .project-header {
+        background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 2.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .form-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        padding: 2rem;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-group label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    .form-group input, .form-group textarea {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+        box-shadow: 0 0 0 3px rgba(60, 106, 86, 0.25);
+        border-color: #3c6a56;
+    }
+    .submit-btn {
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+</style>
 
-<form method="post">
-    {% csrf_token %}
-    <div class="form-group">
-        {{ form.name.label_tag }}
-        {{ form.name }}
+<div class="project-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-2">Create New Project</h2>
+            <p class="text-muted mb-0">Start a new procurement project by filling out the details below</p>
+        </div>
     </div>
-    <div class="form-group">
-        {{ form.description.label_tag }}
-        {{ form.description }}
-    </div>
-    <button type="submit" class="btn btn-primary">Create Project</button>
-</form>
+</div>
+
+<div class="form-container">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.name.label_tag }}
+            {{ form.name }}
+        </div>
+        <div class="form-group">
+            {{ form.description.label_tag }}
+            {{ form.description }}
+        </div>
+        <button type="submit" class="btn btn-primary submit-btn">
+            <i class="bi bi-plus-lg me-2"></i>Create Project
+        </button>
+    </form>
+</div>
 {% endblock %}
