@@ -1,77 +1,86 @@
-from django.shortcuts import render, redirect, get_object_or_404 
-from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.decorators import login_required
-from django.forms import modelformset_factory, inlineformset_factory, formset_factory
-from django.http import JsonResponse, HttpResponseForbidden
-from django.template.loader import render_to_string
-import json 
-from django.db import transaction 
-from django.forms.models import model_to_dict
+import csv
+import json
 from collections import OrderedDict
-from django.http import HttpResponse 
-from collections import OrderedDict
-
-from decimal import Decimal, InvalidOperation
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
+from io import TextIOWrapper
 
-
+from django.conf import settings
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
+from django.core.mail import send_mail
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db import transaction
+from django.forms import formset_factory, inlineformset_factory, modelformset_factory
+from django.forms.models import model_to_dict
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from django.views.decorators.csrf import csrf_exempt
-
-from django.core.mail import send_mail
-from django.urls import reverse
-from django.conf import settings
-from django.utils import timezone
-
-
-from django.core.serializers.json import DjangoJSONEncoder
-
-
-
-
-import csv
-from io import TextIOWrapper
-from .forms import RebuyUploadForm
-
-
-from .models import SKU, Project, Company, RFX, GeneralQuestion, RFX_SKUs,SKUSpecificQuestion, RFXFile, RFXInvitation, SupplierResponse, SKUSpecificQuestionResponse, GeneralQuestionResponse
-from .forms import SKUForm, ProjectForm, SupplierForm, RFXBasicForm, SKUSearchForm, GeneralQuestionForm, RFX_SKUForm, RFXForm, SKUSpecificQuestionForm, GeneralQuestionResponseForm, SKUSpecificQuestionResponseForm
-
-
-
-
+from .forms import (
+    GeneralQuestionForm,
+    GeneralQuestionResponseForm,
+    ProjectForm,
+    RebuyUploadForm,
+    RFX_SKUForm,
+    RFXBasicForm,
+    RFXForm,
+    SKUForm,
+    SKUSearchForm,
+    SKUSpecificQuestionForm,
+    SKUSpecificQuestionResponseForm,
+    SupplierForm,
+)
+from .models import (
+    RFX,
+    SKU,
+    Company,
+    GeneralQuestion,
+    GeneralQuestionResponse,
+    Project,
+    RFX_SKUs,
+    RFXFile,
+    RFXInvitation,
+    SKUSpecificQuestion,
+    SKUSpecificQuestionResponse,
+    SupplierResponse,
+)
 
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('dashboard')  # If user is already logged in, redirect to dashboard
+        return redirect(
+            "dashboard"
+        )  # If user is already logged in, redirect to dashboard
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
+            username = form.cleaned_data.get("username")
+            password = form.cleaned_data.get("password")
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect('dashboard')  # Redirect to dashboard after login
+                return redirect("dashboard")  # Redirect to dashboard after login
     else:
         form = AuthenticationForm()
 
-    return render(request, 'procurement01/login.html', {'form': form})
-
+    return render(request, "procurement01/login.html", {"form": form})
 
 
 @login_required
 def dashboard_view(request):
-    return render(request, 'procurement01/dashboard.html')
+    return render(request, "procurement01/dashboard.html")
 
 
 def logout_view(request):
     logout(request)
-    return redirect('login')
+    return redirect("login")
 
 
 # View to list all SKUs
@@ -81,34 +90,36 @@ def sku_list_view(request):
     user_company = request.user.company
 
     skus = SKU.objects.filter(company=user_company)
-    return render(request, 'procurement01/sku_list.html', {'skus': skus})
+    return render(request, "procurement01/sku_list.html", {"skus": skus})
+
 
 # View to see details of a single SKU
 @login_required
 def sku_detail_view(request, sku_id):
     sku = get_object_or_404(SKU, id=sku_id)
-    return render(request, 'procurement01/sku_detail.html', {'sku': sku})
-
+    return render(request, "procurement01/sku_detail.html", {"sku": sku})
 
 
 @login_required
 def sku_create_view(request):
     if not request.user.is_procurer:
-        return render(request, 'procurement01/access_denied.html')  # Only procurers can create SKUs
+        return render(
+            request, "procurement01/access_denied.html"
+        )  # Only procurers can create SKUs
 
     company = request.user.company
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = SKUForm(request.POST, company=company)
         if form.is_valid():
             sku = form.save(commit=False)
             sku.company = company
             sku.save()
-            return redirect('sku_list')
+            return redirect("sku_list")
     else:
         form = SKUForm(company=company)
 
-    return render(request, 'procurement01/sku_form.html', {'form': form})
+    return render(request, "procurement01/sku_form.html", {"form": form})
 
 
 @login_required
@@ -117,32 +128,35 @@ def supplier_list_view(request):
     if request.user.is_procurer:
         procurer_company = request.user.company
         suppliers = Company.objects.filter(procurer=procurer_company)
-        return render(request, 'procurement01/supplier_list.html', {'suppliers': suppliers})
+        return render(
+            request, "procurement01/supplier_list.html", {"suppliers": suppliers}
+        )
     else:
-        return render(request, 'procurement01/access_denied.html')
-    
+        return render(request, "procurement01/access_denied.html")
 
 
 @login_required
 def create_supplier_view(request):
     if not request.user.is_procurer:
-        return render(request, 'procurement01/access_denied.html')  # Only procurers can create suppliers
+        return render(
+            request, "procurement01/access_denied.html"
+        )  # Only procurers can create suppliers
 
     procurer_company = request.user.company
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = SupplierForm(request.POST, procurer=procurer_company)
         if form.is_valid():
-            form.save(procurer=procurer_company)  # Assign the supplier to the logged-in procurer's company
-            return redirect('supplier_list')  # Redirect to the supplier list page after creating the supplier
+            form.save(
+                procurer=procurer_company
+            )  # Assign the supplier to the logged-in procurer's company
+            return redirect(
+                "supplier_list"
+            )  # Redirect to the supplier list page after creating the supplier
     else:
         form = SupplierForm(procurer=procurer_company)
 
-    return render(request, 'procurement01/supplier_form.html', {'form': form})
-
-
-
-
+    return render(request, "procurement01/supplier_form.html", {"form": form})
 
 
 @login_required
@@ -154,22 +168,20 @@ def project_list_view(request):
     projects = Project.objects.filter(company=user_company)
 
     context = {
-        'projects': projects,
+        "projects": projects,
     }
-    return render(request, 'procurement01/project_list.html', context)
-
-
-
-
+    return render(request, "procurement01/project_list.html", context)
 
 
 @login_required
 def create_project(request):
     # Ensure the logged-in user has a company
     if not request.user.company:
-        return HttpResponseForbidden("You must belong to a company to create a project.")
+        return HttpResponseForbidden(
+            "You must belong to a company to create a project."
+        )
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = ProjectForm(request.POST)
         if form.is_valid():
             # Save the project with the user's company
@@ -177,14 +189,14 @@ def create_project(request):
             project.company = request.user.company
             project.save()
             # Redirect to the project detail page after creation
-            return redirect('project_detail', project_id=project.id)
+            return redirect("project_detail", project_id=project.id)
     else:
         form = ProjectForm()
 
     context = {
-        'form': form,
+        "form": form,
     }
-    return render(request, 'procurement01/create_project.html', context)
+    return render(request, "procurement01/create_project.html", context)
 
 
 @login_required
@@ -196,17 +208,15 @@ def project_detail(request, project_id):
     rfxs = RFX.objects.filter(project=project)
 
     context = {
-        'project': project,
-        'rfxs': rfxs,
+        "project": project,
+        "rfxs": rfxs,
     }
-    return render(request, 'procurement01/project_detail.html', context)
-
-
+    return render(request, "procurement01/project_detail.html", context)
 
 
 @login_required
 def create_rfx_step1(request, rfx_id=None):
-    user_company = request.user.company 
+    user_company = request.user.company
 
     if rfx_id:
         rfx = get_object_or_404(RFX, id=rfx_id)
@@ -215,28 +225,35 @@ def create_rfx_step1(request, rfx_id=None):
         rfx = None
         existing_files = None  # Initialize for new RFX
 
-
     # Check if there's a project_id in the query parameters
-    project_id = request.GET.get('project_id')
-    initial_data = {'company': user_company}
+    project_id = request.GET.get("project_id")
+    initial_data = {"company": user_company}
 
     if project_id:
         try:
             # Check if the project belongs to the user's company
-            initial_project = Project.objects.get(id=project_id, company=request.user.company)
-            initial_data['project'] = initial_project
+            initial_project = Project.objects.get(
+                id=project_id, company=request.user.company
+            )
+            initial_data["project"] = initial_project
         except Project.DoesNotExist:
             pass
 
-    
-
-    if request.method == 'POST':
+    if request.method == "POST":
         with transaction.atomic():
 
             if rfx:
-                form = RFXBasicForm(request.POST, request.FILES, instance=rfx, user=request.user, initial=initial_data)
+                form = RFXBasicForm(
+                    request.POST,
+                    request.FILES,
+                    instance=rfx,
+                    user=request.user,
+                    initial=initial_data,
+                )
             else:
-                form = RFXBasicForm(request.POST, request.FILES, user=request.user, initial=initial_data)
+                form = RFXBasicForm(
+                    request.POST, request.FILES, user=request.user, initial=initial_data
+                )
 
             rfx_form_valid = form.is_valid()
 
@@ -246,16 +263,16 @@ def create_rfx_step1(request, rfx_id=None):
             rfx.save()
 
             # Handle file deletions
-            files_to_delete = request.POST.getlist('delete_files')
+            files_to_delete = request.POST.getlist("delete_files")
             if files_to_delete:
                 RFXFile.objects.filter(id__in=files_to_delete, rfx=rfx).delete()
 
             # Handle new file uploads
-            for file in request.FILES.getlist('new_files'):
+            for file in request.FILES.getlist("new_files"):
                 RFXFile.objects.create(rfx=rfx, file=file)
 
-            return redirect('create_rfx_step2', rfx_id=rfx.id)
-        
+            return redirect("create_rfx_step2", rfx_id=rfx.id)
+
     else:
         if rfx:
             form = RFXBasicForm(instance=rfx, user=request.user, initial=initial_data)
@@ -264,49 +281,50 @@ def create_rfx_step1(request, rfx_id=None):
             form = RFXBasicForm(user=request.user, initial=initial_data)
             existing_files = None
 
-    return render(request, 'procurement01/create_rfx_step1.html', {
-        'form': form,
-        'existing_files': existing_files,
-        'rfx': rfx,  # Include if needed in the template
-    })
+    return render(
+        request,
+        "procurement01/create_rfx_step1.html",
+        {
+            "form": form,
+            "existing_files": existing_files,
+            "rfx": rfx,  # Include if needed in the template
+        },
+    )
 
 
 @login_required
 def search_skus(request):
-    query = request.GET.get('query', '')
+    query = request.GET.get("query", "")
     company = request.user.company
 
     # Only proceed with the search if there is a query
     if query:
         skus = SKU.objects.filter(company=company, name__icontains=query)
-        sku_data = [{'id': sku.id, 'name': sku.name, 'sku_code': sku.sku_code} for sku in skus]
+        sku_data = [
+            {"id": sku.id, "name": sku.name, "sku_code": sku.sku_code} for sku in skus
+        ]
     else:
         sku_data = []  # Return an empty list if there is no query
 
     return JsonResponse(sku_data, safe=False)
 
 
-
-
-RFX_SKUFormSet = inlineformset_factory(RFX, RFX_SKUs, fields=('sku',), extra=1)
-
-
-
+RFX_SKUFormSet = inlineformset_factory(RFX, RFX_SKUs, fields=("sku",), extra=1)
 
 
 @login_required
 def create_rfx_step2(request, rfx_id):
     rfx = get_object_or_404(RFX, id=rfx_id)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         with transaction.atomic():
             # Get existing SKUs associated with the RFX
             existing_sku_ids = set(
-                RFX_SKUs.objects.filter(rfx=rfx).values_list('sku_id', flat=True)
+                RFX_SKUs.objects.filter(rfx=rfx).values_list("sku_id", flat=True)
             )
 
             # Get SKU IDs from the form
-            sku_ids = request.POST.getlist('skus[]')
+            sku_ids = request.POST.getlist("skus[]")
             submitted_sku_ids = set(int(sku_id) for sku_id in sku_ids)
 
             # Remove SKUs that are no longer in the form
@@ -314,22 +332,22 @@ def create_rfx_step2(request, rfx_id):
             if skus_to_remove:
                 RFX_SKUs.objects.filter(rfx=rfx, sku_id__in=skus_to_remove).delete()
 
-
             # Update or create RFX_SKUs and their extra data
-            extra_columns_data = request.POST.get('extra_columns_data')
-            extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
-
+            extra_columns_data = request.POST.get("extra_columns_data")
+            extra_columns_json = (
+                json.loads(extra_columns_data) if extra_columns_data else []
+            )
 
             for sku_data in extra_columns_json:
-                sku_id = sku_data['sku_id']
+                sku_id = sku_data["sku_id"]
                 sku = get_object_or_404(SKU, id=sku_id)
                 rfx_sku, _ = RFX_SKUs.objects.get_or_create(rfx=rfx, sku=sku)
-                data_ordered = OrderedDict(sku_data['data'])
+                data_ordered = OrderedDict(sku_data["data"])
                 rfx_sku.set_specification_data(OrderedDict(data_ordered))
 
             # Get the navigation destination and dynamically construct the redirect URL name
-            navigation_destination = request.POST.get('navigation_destination')
-            return redirect(f'create_rfx_{navigation_destination}', rfx_id=rfx.id)
+            navigation_destination = request.POST.get("navigation_destination")
+            return redirect(f"create_rfx_{navigation_destination}", rfx_id=rfx.id)
     else:
         # Handle GET request: Retrieve existing SKUs
         # Prepare SKUs and Extra Data for the template
@@ -341,30 +359,30 @@ def create_rfx_step2(request, rfx_id):
             extra_data = rfx_sku.get_specification_data()
             if not extra_columns and extra_data:
                 extra_columns = list(extra_data.keys())
-            processed_skus.append({
-                'sku_id': rfx_sku.sku.id,
-                'sku_name': rfx_sku.sku.name,
-                'extra_data': extra_data,
-                'extra_columns': extra_columns,
-
-            })
+            processed_skus.append(
+                {
+                    "sku_id": rfx_sku.sku.id,
+                    "sku_name": rfx_sku.sku.name,
+                    "extra_data": extra_data,
+                    "extra_columns": extra_columns,
+                }
+            )
         sku_search_form = SKUSearchForm()
 
         step = "step2"
 
-        current_step = 2 
+        current_step = 2
 
         context = {
-            'rfx': rfx,
-            'sku_search_form': sku_search_form,
-            'processed_skus': processed_skus,
-            'extra_columns': extra_columns,
-            'step': step,
-            'current_step': current_step,
+            "rfx": rfx,
+            "sku_search_form": sku_search_form,
+            "processed_skus": processed_skus,
+            "extra_columns": extra_columns,
+            "step": step,
+            "current_step": current_step,
         }
 
-        return render(request, 'procurement01/create_rfx_step2.html', context)
-
+        return render(request, "procurement01/create_rfx_step2.html", context)
 
 
 @login_required
@@ -382,16 +400,13 @@ def create_rfx_step3(request, rfx_id):
         GeneralQuestion, form=GeneralQuestionForm, extra=extra_forms, can_delete=True
     )
 
-    if request.method == 'POST':
+    if request.method == "POST":
         with transaction.atomic():
             general_questions_formset = GeneralQuestionFormSet(
                 request.POST, queryset=GeneralQuestion.objects.filter(rfx=rfx)
             )
 
-
             general_questions_formset_valid = general_questions_formset.is_valid()
-
-            
 
             if general_questions_formset.is_valid():
                 # Save the formset (updates and additions)
@@ -406,47 +421,44 @@ def create_rfx_step3(request, rfx_id):
                     print(deleted_question)
                     deleted_question.delete()  # This removes the marked object from the DB
 
-
             # Get the navigation destination and dynamically construct the redirect URL name
-            navigation_destination = request.POST.get('navigation_destination')
-            return redirect(f'create_rfx_{navigation_destination}', rfx_id=rfx.id)
-    
+            navigation_destination = request.POST.get("navigation_destination")
+            return redirect(f"create_rfx_{navigation_destination}", rfx_id=rfx.id)
+
     else:
 
         # Initialize the General Questions FormSet with existing questions
         general_questions_formset = GeneralQuestionFormSet(
             queryset=GeneralQuestion.objects.filter(rfx=rfx)
         )
-         
+
         step = "step3"
 
         context = {
-            'rfx': rfx,
-            'general_questions_formset': general_questions_formset,
-            'step': step
-
+            "rfx": rfx,
+            "general_questions_formset": general_questions_formset,
+            "step": step,
         }
 
-        return render(request, 'procurement01/create_rfx_step3.html', context)
+        return render(request, "procurement01/create_rfx_step3.html", context)
 
-            
 
 @login_required
 def create_rfx_step4(request, rfx_id):
     # Get the RFX instance
     rfx = get_object_or_404(RFX, id=rfx_id)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         with transaction.atomic():
 
             # Process SKUs and Extra Data
             # Get existing SKUs associated with the RFX
             existing_sku_ids = set(
-                RFX_SKUs.objects.filter(rfx=rfx).values_list('sku_id', flat=True)
+                RFX_SKUs.objects.filter(rfx=rfx).values_list("sku_id", flat=True)
             )
 
             # Get SKU IDs from the form
-            sku_ids = request.POST.getlist('skus[]')
+            sku_ids = request.POST.getlist("skus[]")
             submitted_sku_ids = set(int(sku_id) for sku_id in sku_ids)
 
             # Remove SKUs that are no longer in the form
@@ -454,15 +466,17 @@ def create_rfx_step4(request, rfx_id):
             RFX_SKUs.objects.filter(rfx=rfx, sku_id__in=skus_to_remove).delete()
 
             # Update or create RFX_SKUs and their extra data
-            extra_columns_data = request.POST.get('extra_columns_data')
-            extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
+            extra_columns_data = request.POST.get("extra_columns_data")
+            extra_columns_json = (
+                json.loads(extra_columns_data) if extra_columns_data else []
+            )
 
             for sku_data in extra_columns_json:
-                sku_id = sku_data['sku_id']
+                sku_id = sku_data["sku_id"]
                 sku = get_object_or_404(SKU, id=sku_id)
                 rfx_sku, _ = RFX_SKUs.objects.get_or_create(rfx=rfx, sku=sku)
                 # Convert dataArray back into an ordered dictionary
-                data_ordered = OrderedDict(sku_data['data'])
+                data_ordered = OrderedDict(sku_data["data"])
                 rfx_sku.set_specification_data(OrderedDict(data_ordered))
 
             # Process SKU-Specific Questions
@@ -470,19 +484,21 @@ def create_rfx_step4(request, rfx_id):
             SKUSpecificQuestion.objects.filter(rfx=rfx).delete()
 
             # Add new SKU-specific questions
-            sku_specific_data = request.POST.get('sku_specific_data')
-            sku_specific_json = json.loads(sku_specific_data) if sku_specific_data else []
+            sku_specific_data = request.POST.get("sku_specific_data")
+            sku_specific_json = (
+                json.loads(sku_specific_data) if sku_specific_data else []
+            )
 
             for question_data in sku_specific_json:
                 SKUSpecificQuestion.objects.create(
                     rfx=rfx,
-                    question=question_data['question'],
-                    question_type=question_data['question_type']
+                    question=question_data["question"],
+                    question_type=question_data["question_type"],
                 )
-            
+
             # Get the navigation destination and dynamically construct the redirect URL name
-            navigation_destination = request.POST.get('navigation_destination')
-            return redirect(f'create_rfx_{navigation_destination}', rfx_id=rfx.id)
+            navigation_destination = request.POST.get("navigation_destination")
+            return redirect(f"create_rfx_{navigation_destination}", rfx_id=rfx.id)
     else:
         # Prepare SKUs and Extra Data for the template
         rfx_skus = RFX_SKUs.objects.filter(rfx=rfx)
@@ -494,37 +510,35 @@ def create_rfx_step4(request, rfx_id):
 
             if not extra_columns and extra_data:
                 extra_columns = list(extra_data.keys())
-            processed_skus.append({
-                'sku_id': rfx_sku.sku.id,
-                'sku_name': rfx_sku.sku.name,
-                'extra_data': extra_data,
-            })
+            processed_skus.append(
+                {
+                    "sku_id": rfx_sku.sku.id,
+                    "sku_name": rfx_sku.sku.name,
+                    "extra_data": extra_data,
+                }
+            )
 
         # Get existing SKU-specific questions
         sku_specific_questions = SKUSpecificQuestion.objects.filter(rfx=rfx)
 
-        step= "step4"
+        step = "step4"
 
         context = {
-            'rfx': rfx,
-            'extra_columns': extra_columns,
-            'processed_skus': processed_skus,
-            'sku_specific_questions': sku_specific_questions,
-            'step': step,
+            "rfx": rfx,
+            "extra_columns": extra_columns,
+            "processed_skus": processed_skus,
+            "sku_specific_questions": sku_specific_questions,
+            "step": step,
         }
 
-        return render(request, 'procurement01/create_rfx_step4.html', context)
-
-
-
-
+        return render(request, "procurement01/create_rfx_step4.html", context)
 
 
 @login_required
 def create_rfx_step4a(request, rfx_id):
     # Get the RFX instance
     rfx = get_object_or_404(RFX, id=rfx_id)
-    
+
     # Fetch all RFX_SKUs associated with this RFX
     rfx_skus = RFX_SKUs.objects.filter(rfx=rfx)
 
@@ -535,20 +549,24 @@ def create_rfx_step4a(request, rfx_id):
     for rfx_sku in rfx_skus:
         extra_data = rfx_sku.get_extra_data()
         if not extra_columns:
-            extra_columns = list(extra_data.keys())  # Store the keys only once from the first SKU
+            extra_columns = list(
+                extra_data.keys()
+            )  # Store the keys only once from the first SKU
             print(extra_data)
             print(extra_columns)
-        processed_skus.append({
-            'sku_id': rfx_sku.id,
-            'sku_name': rfx_sku.sku.name,
-            'extra_data': extra_data,
-        })
+        processed_skus.append(
+            {
+                "sku_id": rfx_sku.id,
+                "sku_name": rfx_sku.sku.name,
+                "extra_data": extra_data,
+            }
+        )
         print(processed_skus)
 
     # Handle form submission
-    if request.method == 'POST':
+    if request.method == "POST":
         # Retrieve the JSON data for sku_specific_data from the form
-        sku_specific_data = request.POST.get('sku_specific_data')
+        sku_specific_data = request.POST.get("sku_specific_data")
         questions_data = json.loads(sku_specific_data) if sku_specific_data else []
 
         # Clear any existing SKU-specific questions for this RFX to prevent duplicates
@@ -558,72 +576,78 @@ def create_rfx_step4a(request, rfx_id):
         for question_data in questions_data:
             SKUSpecificQuestion.objects.create(
                 rfx=rfx,
-                question=question_data['question'],
-                question_type=question_data['question_type']
+                question=question_data["question"],
+                question_type=question_data["question_type"],
             )
 
         # Redirect to the next step
-            
-        return redirect('create_rfx_step5', rfx_id=rfx.id)
+
+        return redirect("create_rfx_step5", rfx_id=rfx.id)
 
     # Pass context to the template
     context = {
-        'rfx': rfx,
-        'extra_columns': extra_columns,
-        'processed_skus': processed_skus,
-        'question_types': SKUSpecificQuestion.QUESTION_TYPES,
+        "rfx": rfx,
+        "extra_columns": extra_columns,
+        "processed_skus": processed_skus,
+        "question_types": SKUSpecificQuestion.QUESTION_TYPES,
     }
-    return render(request, 'procurement01/create_rfx_step4.html', context)
+    return render(request, "procurement01/create_rfx_step4.html", context)
 
 
-    
 @login_required
 def rfx_list_view(request):
     user = request.user  # Get the currently logged-in user
     company = user.company  # Get the user's company
 
-    if company.company_type == 'Procurer':
+    if company.company_type == "Procurer":
         # Procurer should see only their own RFXs
         rfxs = RFX.objects.filter(company=company)
-    
+
     else:
         # If the user's company type is unknown, show nothing
         rfxs = RFX.objects.none()
 
-    return render(request, 'procurement01/rfx_list.html', {'rfxs': rfxs})
+    return render(request, "procurement01/rfx_list.html", {"rfxs": rfxs})
 
 
 @login_required
 def create_rfx_step2a(request, rfx_id):
     rfx = get_object_or_404(RFX, id=rfx_id)
 
-    if request.method == 'POST':
-        sku_ids = request.POST.getlist('skus[]')
-        extra_columns_data = request.POST.get('extra_columns_data')
-        extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
+    if request.method == "POST":
+        sku_ids = request.POST.getlist("skus[]")
+        extra_columns_data = request.POST.get("extra_columns_data")
+        extra_columns_json = (
+            json.loads(extra_columns_data) if extra_columns_data else []
+        )
 
         for sku_data in extra_columns_json:
-            sku_id = sku_data['sku_id']
+            sku_id = sku_data["sku_id"]
             sku = get_object_or_404(SKU, id=sku_id)
             rfx_sku = RFX_SKUs.objects.create(rfx=rfx, sku=sku)
 
             # Convert dataArray back into a dictionary, maintaining order
-            data_ordered = OrderedDict(sku_data['data'])
+            data_ordered = OrderedDict(sku_data["data"])
             rfx_sku.set_extra_data(data_ordered)
 
             rfx_sku.save()
 
-        return redirect('create_rfx_step3', rfx_id=rfx.id)
+        return redirect("create_rfx_step3", rfx_id=rfx.id)
 
     sku_search_form = SKUSearchForm()
 
-    return render(request, 'procurement01/create_rfx_step2a.html', {
-        'rfx': rfx,
-        'sku_search_form': sku_search_form,
-    })
+    return render(
+        request,
+        "procurement01/create_rfx_step2a.html",
+        {
+            "rfx": rfx,
+            "sku_search_form": sku_search_form,
+        },
+    )
 
 
 from django.views.decorators.http import require_POST
+
 
 @login_required
 @csrf_exempt  # Note: CSRF is disabled here since we are handling API calls, but keep in mind the security implications.
@@ -633,27 +657,38 @@ def create_sku(request):
         # Get the current user
         user = request.user
         if not user.is_procurer:
-            return JsonResponse({'success': False, 'error': 'Only procurers can create SKUs.'}, status=403)
+            return JsonResponse(
+                {"success": False, "error": "Only procurers can create SKUs."},
+                status=403,
+            )
 
         # Parse the request data
-        data = json.loads(request.body.decode('utf-8'))
-        sku_name = data.get('name', '').strip()
+        data = json.loads(request.body.decode("utf-8"))
+        sku_name = data.get("name", "").strip()
 
         if not sku_name:
-            return JsonResponse({'success': False, 'error': 'SKU name cannot be empty.'}, status=400)
+            return JsonResponse(
+                {"success": False, "error": "SKU name cannot be empty."}, status=400
+            )
 
         # Check if SKU with the same name exists for the company
         company = user.company
         if SKU.objects.filter(name=sku_name, company=company).exists():
-            return JsonResponse({'success': False, 'error': 'SKU with this name already exists.'}, status=400)
+            return JsonResponse(
+                {"success": False, "error": "SKU with this name already exists."},
+                status=400,
+            )
 
         # Create a new SKU
-        new_sku = SKU.objects.create(name=sku_name, company=company, sku_code=f'{sku_name.upper()}-{company.id}')
-        
-        return JsonResponse({'success': True, 'sku_id': new_sku.id, 'sku_name': new_sku.name})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        new_sku = SKU.objects.create(
+            name=sku_name, company=company, sku_code=f"{sku_name.upper()}-{company.id}"
+        )
 
+        return JsonResponse(
+            {"success": True, "sku_id": new_sku.id, "sku_name": new_sku.name}
+        )
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
 @login_required
@@ -665,7 +700,7 @@ def create_rfx_step5(request, rfx_id):
         GeneralQuestion, form=GeneralQuestionForm, extra=0, can_delete=True
     )
 
-    if request.method == 'POST':
+    if request.method == "POST":
         with transaction.atomic():
             # Process RFX Basic Information Form
             rfx_form = RFXBasicForm(request.POST, instance=rfx)
@@ -682,12 +717,12 @@ def create_rfx_step5(request, rfx_id):
                 rfx = rfx_form.save()
 
                 # Handle file deletions
-                files_to_delete = request.POST.getlist('delete_files')
+                files_to_delete = request.POST.getlist("delete_files")
                 if files_to_delete:
                     RFXFile.objects.filter(id__in=files_to_delete, rfx=rfx).delete()
 
                 # Handle new file uploads
-                for file in request.FILES.getlist('new_files'):
+                for file in request.FILES.getlist("new_files"):
                     RFXFile.objects.create(rfx=rfx, file=file)
 
                 # Save General Questions
@@ -698,58 +733,61 @@ def create_rfx_step5(request, rfx_id):
                 # Delete any questions marked for deletion
                 for deleted_question in general_questions_formset.deleted_objects:
                     deleted_question.delete()
-                    print('deleted')
+                    print("deleted")
 
                 # Process SKUs and Extra Data
                 # Get existing SKUs associated with the RFX
                 existing_sku_ids = set(
-                    RFX_SKUs.objects.filter(rfx=rfx).values_list('sku_id', flat=True)
+                    RFX_SKUs.objects.filter(rfx=rfx).values_list("sku_id", flat=True)
                 )
 
                 # Get SKU IDs from the form
-                sku_ids = request.POST.getlist('skus[]')
+                sku_ids = request.POST.getlist("skus[]")
                 submitted_sku_ids = set(int(sku_id) for sku_id in sku_ids)
 
                 # Remove SKUs that are no longer in the form
                 skus_to_remove = existing_sku_ids - submitted_sku_ids
                 RFX_SKUs.objects.filter(rfx=rfx, sku_id__in=skus_to_remove).delete()
 
-                
                 # Update or create RFX_SKUs and their extra data
-                extra_columns_data = request.POST.get('extra_columns_data')
-                extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
+                extra_columns_data = request.POST.get("extra_columns_data")
+                extra_columns_json = (
+                    json.loads(extra_columns_data) if extra_columns_data else []
+                )
 
                 for sku_data in extra_columns_json:
-                    sku_id = sku_data['sku_id']
+                    sku_id = sku_data["sku_id"]
                     sku = get_object_or_404(SKU, id=sku_id)
                     rfx_sku, _ = RFX_SKUs.objects.get_or_create(rfx=rfx, sku=sku)
                     # Convert dataArray back into an ordered dictionary
-                    data_ordered = OrderedDict(sku_data['data'])
+                    data_ordered = OrderedDict(sku_data["data"])
                     rfx_sku.set_specification_data(OrderedDict(data_ordered))
-
 
                 # Process SKU-Specific Questions
                 # Remove existing SKU-specific questions
                 SKUSpecificQuestion.objects.filter(rfx=rfx).delete()
 
                 # Add new SKU-specific questions
-                sku_specific_data = request.POST.get('sku_specific_data')
-                sku_specific_json = json.loads(sku_specific_data) if sku_specific_data else []
+                sku_specific_data = request.POST.get("sku_specific_data")
+                sku_specific_json = (
+                    json.loads(sku_specific_data) if sku_specific_data else []
+                )
 
                 for question_data in sku_specific_json:
                     SKUSpecificQuestion.objects.create(
                         rfx=rfx,
-                        question=question_data['question'],
-                        question_type=question_data['question_type']
-                )
+                        question=question_data["question"],
+                        question_type=question_data["question_type"],
+                    )
 
-                    
                 # Finalize RFX and redirect to RFX list or a success page
-                navigation_destination = request.POST.get('navigation_destination')
-                if navigation_destination == 'step4':
-                    return redirect(f'create_rfx_{navigation_destination}', rfx_id=rfx.id)
+                navigation_destination = request.POST.get("navigation_destination")
+                if navigation_destination == "step4":
+                    return redirect(
+                        f"create_rfx_{navigation_destination}", rfx_id=rfx.id
+                    )
                 else:
-                    return redirect( 'invite_suppliers', rfx_id=rfx.id)
+                    return redirect("invite_suppliers", rfx_id=rfx.id)
 
             else:
                 # If forms are invalid, re-render the page with errors
@@ -758,36 +796,36 @@ def create_rfx_step5(request, rfx_id):
                 processed_skus = []
                 extra_columns = []
 
-                
-
                 for rfx_sku in rfx_skus:
                     # Retrieve specification data using the `get_specification_data` method
                     specification_data = rfx_sku.get_specification_data()
-                    
+
                     if not extra_columns and specification_data:
                         # Populate extra_columns only if it's empty and specification data exists
                         extra_columns = list(specification_data.keys())
-                    
+
                     # Append the SKU data and its specification data
-                    processed_skus.append({
-                        'sku_id': rfx_sku.sku.id,
-                        'sku_name': rfx_sku.sku.name,
-                        'extra_data': specification_data,  # Ensure the same key is used as in Step 4
-                    })
+                    processed_skus.append(
+                        {
+                            "sku_id": rfx_sku.sku.id,
+                            "sku_name": rfx_sku.sku.name,
+                            "extra_data": specification_data,  # Ensure the same key is used as in Step 4
+                        }
+                    )
 
                 sku_specific_questions = SKUSpecificQuestion.objects.filter(rfx=rfx)
 
                 context = {
-                    'rfx': rfx,
-                    'rfx_form': rfx_form,
-                    'existing_files': existing_files,
-                    'general_questions_formset': general_questions_formset,
-                    'extra_columns': extra_columns,
-                    'processed_skus': processed_skus,
-                    'sku_specific_questions': sku_specific_questions,
+                    "rfx": rfx,
+                    "rfx_form": rfx_form,
+                    "existing_files": existing_files,
+                    "general_questions_formset": general_questions_formset,
+                    "extra_columns": extra_columns,
+                    "processed_skus": processed_skus,
+                    "sku_specific_questions": sku_specific_questions,
                 }
 
-                return render(request, 'procurement01/create_rfx_step5.html', context)
+                return render(request, "procurement01/create_rfx_step5.html", context)
 
     else:
         # Handle GET request
@@ -804,43 +842,44 @@ def create_rfx_step5(request, rfx_id):
         processed_skus = []
         extra_columns = []
 
-        
         for rfx_sku in rfx_skus:
             # Retrieve specification data using the `get_specification_data` method
             specification_data = rfx_sku.get_specification_data()
-            
+
             if not extra_columns and specification_data:
                 # Populate extra_columns only if it's empty and specification data exists
                 extra_columns = list(specification_data.keys())
-            
-            # Append the SKU data and its specification data
-            processed_skus.append({
-                'sku_id': rfx_sku.sku.id,
-                'sku_name': rfx_sku.sku.name,
-                'extra_data': specification_data,  # Ensure the same key is used as in Step 4
-            })
 
+            # Append the SKU data and its specification data
+            processed_skus.append(
+                {
+                    "sku_id": rfx_sku.sku.id,
+                    "sku_name": rfx_sku.sku.name,
+                    "extra_data": specification_data,  # Ensure the same key is used as in Step 4
+                }
+            )
 
         # Get existing SKU-specific questions
         sku_specific_questions = SKUSpecificQuestion.objects.filter(rfx=rfx)
 
         context = {
-            'rfx': rfx,
-            'rfx_form': rfx_form,
-            'existing_files': existing_files,
-            'general_questions_formset': general_questions_formset,
-            'extra_columns': extra_columns,
-            'processed_skus': processed_skus,
-            'sku_specific_questions': sku_specific_questions,
+            "rfx": rfx,
+            "rfx_form": rfx_form,
+            "existing_files": existing_files,
+            "general_questions_formset": general_questions_formset,
+            "extra_columns": extra_columns,
+            "processed_skus": processed_skus,
+            "sku_specific_questions": sku_specific_questions,
         }
 
-        return render(request, 'procurement01/create_rfx_step5.html', context)
-
+        return render(request, "procurement01/create_rfx_step5.html", context)
 
 
 def send_invitation_email(invitation):
     subject = f"Invitation to respond to RFX: {invitation.rfx.title}"
-    invitation_link = settings.SITE_URL + reverse('supplier_rfx_response', args=[invitation.token])
+    invitation_link = settings.SITE_URL + reverse(
+        "supplier_rfx_response", args=[invitation.token]
+    )
     message = f"""
     Dear {invitation.supplier.name},
 
@@ -868,40 +907,47 @@ def invite_suppliers(request, rfx_id):
     rfx = get_object_or_404(RFX, id=rfx_id)
 
     if not request.user.is_procurer:
-        return render(request, 'procurement01/access_denied.html')
+        return render(request, "procurement01/access_denied.html")
 
-    if request.method == 'POST':
-        supplier_ids = request.POST.getlist('suppliers')
+    if request.method == "POST":
+        supplier_ids = request.POST.getlist("suppliers")
         for supplier_id in supplier_ids:
             supplier = Company.objects.get(id=supplier_id)
             # Create an invitation for each supplier
-            invitation, created = RFXInvitation.objects.get_or_create(rfx=rfx, supplier=supplier)
+            invitation, created = RFXInvitation.objects.get_or_create(
+                rfx=rfx, supplier=supplier
+            )
             if created:
                 # Send invitation email
-                print('sending email')
+                print("sending email")
                 send_invitation_email(invitation)
-                print('sent email')
-        return redirect('rfx_list')  # Redirect to the RFX list or appropriate page
+                print("sent email")
+        return redirect("rfx_list")  # Redirect to the RFX list or appropriate page
 
     else:
         # Get suppliers associated with this procurer
         procurer_company = request.user.company
-        suppliers = Company.objects.filter(procurer=procurer_company, company_type='Supplier')
-        return render(request, 'procurement01/invite_suppliers.html', {
-            'rfx': rfx,
-            'suppliers': suppliers,
-        })
-
+        suppliers = Company.objects.filter(
+            procurer=procurer_company, company_type="Supplier"
+        )
+        return render(
+            request,
+            "procurement01/invite_suppliers.html",
+            {
+                "rfx": rfx,
+                "suppliers": suppliers,
+            },
+        )
 
 
 def supplier_rfx_response(request, token):
     invitation = get_object_or_404(RFXInvitation, token=token)
 
     if invitation.expires_at and timezone.now() > invitation.expires_at:
-        return render(request, 'procurement01/expired_invitation.html')
+        return render(request, "procurement01/expired_invitation.html")
 
     if invitation.responded_at:
-        return render(request, 'procurement01/already_responded.html')
+        return render(request, "procurement01/already_responded.html")
 
     rfx = invitation.rfx
     general_questions = GeneralQuestion.objects.filter(rfx=rfx)
@@ -920,15 +966,12 @@ def supplier_rfx_response(request, token):
             extra_columns = list(spec_data.keys()) if spec_data else []
             if "OEM" in extra_columns:
                 has_oem_column = True
-    
+
     if procurer_name == "REBUY" and has_oem_column:
         # Supplier's served OEMs
         served_oems = invitation.supplier.oems.all()
         # Filter rfx_skus by these OEMs
         rfx_skus = rfx_skus.filter(sku__oem__in=served_oems)
-
-
-
 
     processed_skus = []
     extra_columns = []
@@ -936,54 +979,58 @@ def supplier_rfx_response(request, token):
     for rfx_sku in rfx_skus:
         # Retrieve specification data using the `get_specification_data` method
         specification_data = rfx_sku.get_specification_data()
-        
+
         if not extra_columns and specification_data:
             # Populate extra_columns only if it's empty and specification data exists
             extra_columns = list(specification_data.keys())
-        
-        # Append the SKU data and its specification data
-        processed_skus.append({
-            'sku_id': rfx_sku.sku.id,
-            'sku_name': rfx_sku.sku.name,
-            'extra_data': specification_data,  # Ensure the same key is used as in Step 4
-        })
 
-    
+        # Append the SKU data and its specification data
+        processed_skus.append(
+            {
+                "sku_id": rfx_sku.sku.id,
+                "sku_name": rfx_sku.sku.name,
+                "extra_data": specification_data,  # Ensure the same key is used as in Step 4
+            }
+        )
+
     # Prepare options lists for questions
     for question in general_questions:
-        if question.question_type in ['Single-select', 'Multi-select']:
-            question.options_list = [option.strip() for option in question.multiple_choice_options.split(',')]
+        if question.question_type in ["Single-select", "Multi-select"]:
+            question.options_list = [
+                option.strip() for option in question.multiple_choice_options.split(",")
+            ]
 
     for sku_question in sku_specific_questions:
-        if sku_question.question_type in ['Single-select', 'Multi-select']:
-            sku_question.options_list = [option.strip() for option in sku_question.multiple_choice_options.split(',')]
+        if sku_question.question_type in ["Single-select", "Multi-select"]:
+            sku_question.options_list = [
+                option.strip()
+                for option in sku_question.multiple_choice_options.split(",")
+            ]
 
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
             with transaction.atomic():
                 # Create SupplierResponse record
                 supplier_response = SupplierResponse.objects.create(
-                    rfx=rfx,
-                    supplier=invitation.supplier,
-                    is_finalized=True
+                    rfx=rfx, supplier=invitation.supplier, is_finalized=True
                 )
 
                 # Save general question responses
                 for question in general_questions:
-                    field_name = f'general_{question.id}'
+                    field_name = f"general_{question.id}"
                     file = request.FILES.get(field_name)
 
-                    if question.question_type == 'text':
+                    if question.question_type == "text":
                         answer_text = request.POST.get(field_name)
                         answer_choice = None
-                    elif question.question_type == 'Single-select':
+                    elif question.question_type == "Single-select":
                         answer_choice = request.POST.get(field_name)
                         answer_text = None
-                    elif question.question_type == 'Multi-select':
+                    elif question.question_type == "Multi-select":
                         selected_options = request.POST.getlist(field_name)
-                        answer_choice = ','.join(selected_options)
+                        answer_choice = ",".join(selected_options)
                         answer_text = None
-                    elif question.question_type == 'File upload':
+                    elif question.question_type == "File upload":
                         answer_text = None
                         answer_choice = None
                     else:
@@ -996,7 +1043,9 @@ def supplier_rfx_response(request, token):
                         invitation=invitation,
                         answer_text=answer_text,
                         answer_choice=answer_choice,
-                        answer_file=file if question.question_type == 'File upload' else None
+                        answer_file=(
+                            file if question.question_type == "File upload" else None
+                        ),
                     )
 
                 # Save SKU-specific question responses
@@ -1006,13 +1055,13 @@ def supplier_rfx_response(request, token):
                         file = request.FILES.get(field_name)
                         answer = request.POST.get(field_name)
 
-                        if sku_question.question_type == 'text':
+                        if sku_question.question_type == "text":
                             answer_text = answer
                             answer_number = None
                             answer_date = None
                             answer_file = None
                             answer_choice = None
-                        elif sku_question.question_type == 'number':
+                        elif sku_question.question_type == "number":
                             try:
                                 answer_number = Decimal(answer)
                             except (InvalidOperation, TypeError):
@@ -1021,30 +1070,32 @@ def supplier_rfx_response(request, token):
                             answer_date = None
                             answer_file = None
                             answer_choice = None
-                        elif sku_question.question_type == 'date':
+                        elif sku_question.question_type == "date":
                             try:
-                                answer_date = datetime.strptime(answer, '%Y-%m-%d').date()
+                                answer_date = datetime.strptime(
+                                    answer, "%Y-%m-%d"
+                                ).date()
                             except (ValueError, TypeError):
                                 answer_date = None
                             answer_text = None
                             answer_number = None
                             answer_file = None
                             answer_choice = None
-                        elif sku_question.question_type == 'file':
+                        elif sku_question.question_type == "file":
                             answer_file = file
                             answer_text = None
                             answer_number = None
                             answer_date = None
                             answer_choice = None
-                        elif sku_question.question_type == 'Single-select':
+                        elif sku_question.question_type == "Single-select":
                             answer_choice = request.POST.get(field_name)
                             answer_text = None
                             answer_number = None
                             answer_date = None
                             answer_file = None
-                        elif sku_question.question_type == 'Multi-select':
+                        elif sku_question.question_type == "Multi-select":
                             selected_options = request.POST.getlist(field_name)
-                            answer_choice = ','.join(selected_options)
+                            answer_choice = ",".join(selected_options)
                             answer_text = None
                             answer_number = None
                             answer_date = None
@@ -1058,7 +1109,9 @@ def supplier_rfx_response(request, token):
 
                         SKUSpecificQuestionResponse.objects.create(
                             response=supplier_response,
-                            rfx_sku=RFX_SKUs.objects.get(rfx=rfx, sku__id=sku["sku_id"]),
+                            rfx_sku=RFX_SKUs.objects.get(
+                                rfx=rfx, sku__id=sku["sku_id"]
+                            ),
                             question=sku_question,
                             answer_text=answer_text,
                             answer_number=answer_number,
@@ -1072,34 +1125,36 @@ def supplier_rfx_response(request, token):
                 invitation.is_accepted = True
                 invitation.save()
 
-                return redirect('supplier_thank_you')
+                return redirect("supplier_thank_you")
         except Exception as e:
             print("Exception occurred:", e)
-            return render(request, 'procurement01/error.html', {'message': str(e)})
+            return render(request, "procurement01/error.html", {"message": str(e)})
 
-    return render(request, 'procurement01/supplier_rfx_response.html', {
-        'rfx': rfx,
-        'invitation': invitation,
-        'general_questions': general_questions,
-        'sku_specific_questions': sku_specific_questions,
-        'extra_columns': extra_columns,
-        'processed_skus': processed_skus,
-    })
+    return render(
+        request,
+        "procurement01/supplier_rfx_response.html",
+        {
+            "rfx": rfx,
+            "invitation": invitation,
+            "general_questions": general_questions,
+            "sku_specific_questions": sku_specific_questions,
+            "extra_columns": extra_columns,
+            "processed_skus": processed_skus,
+        },
+    )
 
 
 def supplier_thank_you(request):
     # Retrieve the RFX title from the session if it's been passed through.
-    rfx_title = request.session.get('rfx_title', 'the RFX')
+    rfx_title = request.session.get("rfx_title", "the RFX")
 
     # Clear the RFX title from the session after displaying it
-    if 'rfx_title' in request.session:
-        del request.session['rfx_title']
+    if "rfx_title" in request.session:
+        del request.session["rfx_title"]
 
-    return render(request, 'procurement01/supplier_thank_you.html', {'rfx_title': rfx_title})
-
-
-
-
+    return render(
+        request, "procurement01/supplier_thank_you.html", {"rfx_title": rfx_title}
+    )
 
 
 def general_question_table_view(request, rfx_id):
@@ -1121,13 +1176,11 @@ def general_question_table_view(request, rfx_id):
         "general_questions": general_questions,
         "supplier_responses": supplier_responses,
         "response_data": response_data,
-        "multi_choice_types": ['Single-select', 'Multi-select'],  # Add this
+        "multi_choice_types": ["Single-select", "Multi-select"],  # Add this
     }
     print(response_data)
 
-    return render(request, 'procurement01/general_question_table.html', context)
-
-
+    return render(request, "procurement01/general_question_table.html", context)
 
 
 @login_required
@@ -1143,17 +1196,19 @@ def sku_specific_question_responses_analysis(request, rfx_id):
     for rfx_sku in rfx_skus:
         # Retrieve specification data using the `get_specification_data` method
         specification_data = rfx_sku.get_specification_data()
-        
+
         if not extra_columns and specification_data:
             # Populate extra_columns only if it's empty and specification data exists
             extra_columns = list(specification_data.keys())
-        
+
         # Append the SKU data and its specification data
-        processed_skus.append({
-            'sku_id': rfx_sku.sku.id,
-            'sku_name': rfx_sku.sku.name,
-            'extra_data': specification_data,  
-        })
+        processed_skus.append(
+            {
+                "sku_id": rfx_sku.sku.id,
+                "sku_name": rfx_sku.sku.name,
+                "extra_data": specification_data,
+            }
+        )
 
     # Step 3: Retrieve SKU-specific questions for the RFX
     sku_specific_questions = SKUSpecificQuestion.objects.filter(rfx=rfx)
@@ -1169,17 +1224,17 @@ def sku_specific_question_responses_analysis(request, rfx_id):
     for response in sku_question_responses:
         key = f"{response.response.supplier.id}_{response.rfx_sku.sku.id}_{response.question.id}"
         response_lookup[key] = {
-            'text': response.answer_text,
-            'number': response.answer_number,
-            'file': response.answer_file.url if response.answer_file else None,
-            'date': response.answer_date,
-            'choice': response.answer_choice,
+            "text": response.answer_text,
+            "number": response.answer_number,
+            "file": response.answer_file.url if response.answer_file else None,
+            "date": response.answer_date,
+            "choice": response.answer_choice,
         }
 
     # **Updated Step 6: Handle selected questions**
-    selected_question_ids = request.GET.getlist('question_ids[]')
+    selected_question_ids = request.GET.getlist("question_ids[]")
 
-    if 'question_ids[]' not in request.GET:
+    if "question_ids[]" not in request.GET:
         # Default to all questions when parameter is not present (initial page load)
         selected_question_ids = [str(q.id) for q in sku_specific_questions]
     else:
@@ -1192,33 +1247,46 @@ def sku_specific_question_responses_analysis(request, rfx_id):
     sku_specific_questions_data = [
         {
             "value": str(question.id),
-            "label": question.question.replace('"', '\\"').replace('\\\\"', '"'),  # Escape double quotes for JSON
-            "selected": str(question.id) in selected_question_ids
+            "label": question.question.replace('"', '\\"').replace(
+                '\\\\"', '"'
+            ),  # Escape double quotes for JSON
+            "selected": str(question.id) in selected_question_ids,
         }
         for question in sku_specific_questions
     ]
 
     # Prepare context for the template
     context = {
-        'rfx': rfx,
-        'processed_skus': processed_skus,
-        'extra_columns': extra_columns,
-        'sku_specific_questions': sku_specific_questions,
-        'selected_questions': selected_questions,
-        'selected_question_ids': selected_question_ids,  # For template
-        'supplier_responses': supplier_responses,
-        'response_lookup': response_lookup,
-        "multi_choice_types": ['Single-select', 'Multi-select'],  # For handling response types
-        "sku_specific_questions_json": json.dumps(sku_specific_questions_data, cls=DjangoJSONEncoder),
+        "rfx": rfx,
+        "processed_skus": processed_skus,
+        "extra_columns": extra_columns,
+        "sku_specific_questions": sku_specific_questions,
+        "selected_questions": selected_questions,
+        "selected_question_ids": selected_question_ids,  # For template
+        "supplier_responses": supplier_responses,
+        "response_lookup": response_lookup,
+        "multi_choice_types": [
+            "Single-select",
+            "Multi-select",
+        ],  # For handling response types
+        "sku_specific_questions_json": json.dumps(
+            sku_specific_questions_data, cls=DjangoJSONEncoder
+        ),
     }
 
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
         # Render only the table
-        table_html = render_to_string('procurement01/sku_specific_question_table.html', context, request=request)
-        return JsonResponse({'table_html': table_html})
+        table_html = render_to_string(
+            "procurement01/sku_specific_question_table.html", context, request=request
+        )
+        return JsonResponse({"table_html": table_html})
     else:
         # Render the full page
-        return render(request, 'procurement01/sku_specific_question_responses_analysis.html', context)
+        return render(
+            request,
+            "procurement01/sku_specific_question_responses_analysis.html",
+            context,
+        )
 
 
 @login_required
@@ -1234,15 +1302,12 @@ def rfx_detail(request, rfx_id):
 
     # Pass the data to the template
     context = {
-        'rfx': rfx,
-        'invitations_sent': invitations_sent,
-        'responses_received': responses_received,
+        "rfx": rfx,
+        "invitations_sent": invitations_sent,
+        "responses_received": responses_received,
     }
 
-    return render(request, 'procurement01/rfx_detail.html', context)
-
-
-
+    return render(request, "procurement01/rfx_detail.html", context)
 
 
 @login_required
@@ -1254,7 +1319,7 @@ def quick_quote_rebuy_initial_create(request):
         rfx = RFX.objects.create(
             title="Temporary Title",
             description="Quick quote for REBUY parts",
-            company=user_company
+            company=user_company,
         )
         rfx.title = f"REBUY Quotation for Parts {rfx.id}"
         rfx.save()
@@ -1263,19 +1328,17 @@ def quick_quote_rebuy_initial_create(request):
         sku_specific_questions = [
             {"question": "All-In Price / Unit", "question_type": "number"},
             {"question": "Quantity Offered", "question_type": "number"},
-            {"question": "Lead Time in Days", "question_type": "number"}
+            {"question": "Lead Time in Days", "question_type": "number"},
         ]
         for question in sku_specific_questions:
             SKUSpecificQuestion.objects.get_or_create(
                 rfx=rfx,
                 question=question["question"],
-                question_type=question["question_type"]
+                question_type=question["question_type"],
             )
 
     # Redirect to the detailed RFX page
-    return redirect('quick_quote_rebuy', rfx_id=rfx.id)
-    
-
+    return redirect("quick_quote_rebuy", rfx_id=rfx.id)
 
 
 @login_required
@@ -1284,7 +1347,6 @@ def quick_quote_rebuy(request, rfx_id):
     rfx = RFX.objects.get(id=rfx_id, company=request.user.company)
 
     user_company = request.user.company
-
 
     # Fetch preloaded SKU-specific questions to pass to the template
     preloaded_sku_questions = SKUSpecificQuestion.objects.filter(rfx=rfx)
@@ -1300,50 +1362,49 @@ def quick_quote_rebuy(request, rfx_id):
             extra_data = rfx_sku.get_specification_data()
             if not extra_columns and extra_data:
                 extra_columns = list(extra_data.keys())
-            processed_skus.append({
-                'sku_id': rfx_sku.sku.id,
-                'sku_name': rfx_sku.sku.name,
-                'extra_data': extra_data,
-                'extra_columns': extra_columns,
-
-            })
+            processed_skus.append(
+                {
+                    "sku_id": rfx_sku.sku.id,
+                    "sku_name": rfx_sku.sku.name,
+                    "extra_data": extra_data,
+                    "extra_columns": extra_columns,
+                }
+            )
     else:
         # Hard-coded extra columns
         extra_columns = ["OEM", "SKU Code", "Quantity Required", "Maximum Lead Time"]
 
-    
     # Instantiate the upload form
     upload_form = RebuyUploadForm()
 
-
     # Handle POST: If user uploads a file
-    if request.method == 'POST' and request.POST.get('action') == 'upload_file':
+    if request.method == "POST" and request.POST.get("action") == "upload_file":
         upload_form = RebuyUploadForm(request.POST, request.FILES)
         if upload_form.is_valid():
-            file = upload_form.cleaned_data['file']
+            file = upload_form.cleaned_data["file"]
 
             # Parse the file
             processed_skus, warnings = parse_rebuy_csv(
-                file=file, 
-                company=user_company,  
-                encoding=request.encoding or 'utf-8'
+                file=file, company=user_company, encoding=request.encoding or "utf-8"
             )
 
             # If we wanted to save these SKUs to the RFX_SKUs model, we could do so here:
             with transaction.atomic():
                 for sku_info in processed_skus:
-                    
-                    if not sku_info.get('invalid'):
+
+                    if not sku_info.get("invalid"):
                         # SKU found in DB
-                        db_sku = sku_info['db_sku']  # Returned by the parse function
+                        db_sku = sku_info["db_sku"]  # Returned by the parse function
                         print(db_sku)
-                        rfx_sku, created = RFX_SKUs.objects.get_or_create(rfx=rfx, sku=db_sku)
+                        rfx_sku, created = RFX_SKUs.objects.get_or_create(
+                            rfx=rfx, sku=db_sku
+                        )
                         # Set specification data
                         data = {
-                            "OEM": sku_info['OEM'],
-                            "SKU Code": sku_info['SKU Code'],
-                            "Quantity Required": sku_info['Quantity Required'],
-                            "Maximum Lead Time": sku_info['Maximum Lead Time']
+                            "OEM": sku_info["OEM"],
+                            "SKU Code": sku_info["SKU Code"],
+                            "Quantity Required": sku_info["Quantity Required"],
+                            "Maximum Lead Time": sku_info["Maximum Lead Time"],
                         }
                         rfx_sku.set_specification_data(data)
 
@@ -1355,40 +1416,45 @@ def quick_quote_rebuy(request, rfx_id):
                 extra_data = rfx_sku.get_specification_data()
                 if not extra_columns and extra_data:
                     extra_columns = list(extra_data.keys())
-                processed_skus.append({
-                    'sku_id': rfx_sku.sku.id,
-                    'sku_name': rfx_sku.sku.name,
-                    'extra_data': extra_data,
-                    'extra_columns': extra_columns,
-                })
+                processed_skus.append(
+                    {
+                        "sku_id": rfx_sku.sku.id,
+                        "sku_name": rfx_sku.sku.name,
+                        "extra_data": extra_data,
+                        "extra_columns": extra_columns,
+                    }
+                )
 
             # Re-render template with processed SKUs and warnings
-            return render(request, 'procurement01/quick_quote_rebuy.html', {
-                'rfx': rfx,
-                'extra_columns': extra_columns,
-                'processed_skus': processed_skus,  # This will now reflect the CSV data
-                'sku_specific_questions': preloaded_sku_questions,
-                'upload_form': upload_form,
-                'warnings': warnings,
-            })
-            
-    elif request.method == 'POST' and request.POST.get('action') == 'save_changes':
-        
+            return render(
+                request,
+                "procurement01/quick_quote_rebuy.html",
+                {
+                    "rfx": rfx,
+                    "extra_columns": extra_columns,
+                    "processed_skus": processed_skus,  # This will now reflect the CSV data
+                    "sku_specific_questions": preloaded_sku_questions,
+                    "upload_form": upload_form,
+                    "warnings": warnings,
+                },
+            )
+
+    elif request.method == "POST" and request.POST.get("action") == "save_changes":
 
         with transaction.atomic():
             # Update RFX title
-            rfx.title = request.POST.get('title', rfx.title)
+            rfx.title = request.POST.get("title", rfx.title)
             rfx.save()
-            print('saved title')
+            print("saved title")
 
             # Process SKUs and Extra Data
             # Get existing SKUs associated with the RFX
             existing_sku_ids = set(
-                RFX_SKUs.objects.filter(rfx=rfx).values_list('sku_id', flat=True)
+                RFX_SKUs.objects.filter(rfx=rfx).values_list("sku_id", flat=True)
             )
 
             # Get SKU IDs from the form
-            sku_ids = request.POST.getlist('skus[]')
+            sku_ids = request.POST.getlist("skus[]")
             submitted_sku_ids = set(int(sku_id) for sku_id in sku_ids)
 
             # Remove SKUs that are no longer in the form
@@ -1396,15 +1462,17 @@ def quick_quote_rebuy(request, rfx_id):
             RFX_SKUs.objects.filter(rfx=rfx, sku_id__in=skus_to_remove).delete()
 
             # Update or create RFX_SKUs and their extra data
-            extra_columns_data = request.POST.get('extra_columns_data')
-            extra_columns_json = json.loads(extra_columns_data) if extra_columns_data else []
+            extra_columns_data = request.POST.get("extra_columns_data")
+            extra_columns_json = (
+                json.loads(extra_columns_data) if extra_columns_data else []
+            )
 
             for sku_data in extra_columns_json:
-                sku_id = sku_data['sku_id']
+                sku_id = sku_data["sku_id"]
                 sku = get_object_or_404(SKU, id=sku_id)
                 rfx_sku, _ = RFX_SKUs.objects.get_or_create(rfx=rfx, sku=sku)
                 # Convert dataArray back into an ordered dictionary
-                data_ordered = OrderedDict(sku_data['data'])
+                data_ordered = OrderedDict(sku_data["data"])
                 rfx_sku.set_specification_data(OrderedDict(data_ordered))
 
             # Process SKU-Specific Questions
@@ -1412,45 +1480,47 @@ def quick_quote_rebuy(request, rfx_id):
             SKUSpecificQuestion.objects.filter(rfx=rfx).delete()
 
             # Add new SKU-specific questions
-            sku_specific_data = request.POST.get('sku_specific_data')
-            sku_specific_json = json.loads(sku_specific_data) if sku_specific_data else []
+            sku_specific_data = request.POST.get("sku_specific_data")
+            sku_specific_json = (
+                json.loads(sku_specific_data) if sku_specific_data else []
+            )
 
             for question_data in sku_specific_json:
                 SKUSpecificQuestion.objects.create(
                     rfx=rfx,
-                    question=question_data['question'],
-                    question_type=question_data['question_type']
+                    question=question_data["question"],
+                    question_type=question_data["question_type"],
                 )
-                
-            navigation_destination = request.POST.get('navigation_destination')
-            if navigation_destination == 'quick_quote_rebuy_invite_suppliers':
-                return redirect('quick_quote_rebuy_invite_suppliers', rfx_id=rfx.id)
+
+            navigation_destination = request.POST.get("navigation_destination")
+            if navigation_destination == "quick_quote_rebuy_invite_suppliers":
+                return redirect("quick_quote_rebuy_invite_suppliers", rfx_id=rfx.id)
             else:
-                return redirect('quick_quote_rebuy', rfx_id=rfx.id)
-
-
+                return redirect("quick_quote_rebuy", rfx_id=rfx.id)
 
     # If GET or not a file upload action, just render the template
 
-    return render(request, 'procurement01/quick_quote_rebuy.html', {
-        'rfx': rfx,
-        'extra_columns': extra_columns,
-        'processed_skus': processed_skus,
-        'sku_specific_questions': preloaded_sku_questions,
-        'upload_form': upload_form,
-    })
+    return render(
+        request,
+        "procurement01/quick_quote_rebuy.html",
+        {
+            "rfx": rfx,
+            "extra_columns": extra_columns,
+            "processed_skus": processed_skus,
+            "sku_specific_questions": preloaded_sku_questions,
+            "upload_form": upload_form,
+        },
+    )
 
-def parse_rebuy_csv(file, company, encoding='utf-8'):
+
+def parse_rebuy_csv(file, company, encoding="utf-8"):
     """
     Parses the uploaded CSV file for REBUY quick quote.
     Expected columns: SKU Name, Quantity Required, Maximum Lead Time
     """
     # Convert to text wrapper so csv.reader can handle it
-    f = TextIOWrapper(file.file, encoding=encoding, errors='replace')
+    f = TextIOWrapper(file.file, encoding=encoding, errors="replace")
     reader = csv.DictReader(f)
-
-  
-
 
     required_columns = ["SKU Name", "Quantity Required", "Maximum Lead Time"]
     for col in required_columns:
@@ -1460,11 +1530,12 @@ def parse_rebuy_csv(file, company, encoding='utf-8'):
     processed_skus = []
     warnings = []
 
-    for line_num, row in enumerate(reader, start=2):  # start=2 assuming line 1 is header
+    for line_num, row in enumerate(
+        reader, start=2
+    ):  # start=2 assuming line 1 is header
         sku_name = row.get("SKU Name", "").strip()
         quantity_required = row.get("Quantity Required", "").strip()
         max_lead_time = row.get("Maximum Lead Time", "").strip()
-
 
         # Lookup the SKU
         try:
@@ -1481,15 +1552,17 @@ def parse_rebuy_csv(file, company, encoding='utf-8'):
             invalid = True
             warnings.append(f"Line {line_num}: SKU '{sku_name}' not found in database.")
 
-        processed_skus.append({
-            "SKU Name": sku_name,
-            "OEM": oem_name,
-            "SKU Code": sku_code,
-            "Quantity Required": quantity_required,
-            "Maximum Lead Time": max_lead_time,
-            "db_sku": db_sku,
-            "invalid": invalid,
-        })
+        processed_skus.append(
+            {
+                "SKU Name": sku_name,
+                "OEM": oem_name,
+                "SKU Code": sku_code,
+                "Quantity Required": quantity_required,
+                "Maximum Lead Time": max_lead_time,
+                "db_sku": db_sku,
+                "invalid": invalid,
+            }
+        )
 
         print(processed_skus)
 
@@ -1502,39 +1575,41 @@ def quick_quote_rebuy_invite_suppliers(request, rfx_id):
 
     # Ensure user is a procurer
     if not request.user.is_procurer:
-        return render(request, 'procurement01/access_denied.html')
+        return render(request, "procurement01/access_denied.html")
 
     # Extract OEMs from the RFX SKUs
     rfx_skus = RFX_SKUs.objects.filter(rfx=rfx)
-    oem_ids = rfx_skus.values_list('sku__oem', flat=True).distinct()
+    oem_ids = rfx_skus.values_list("sku__oem", flat=True).distinct()
     # Filter out None OEMs if any
     oem_ids = [o for o in oem_ids if o is not None]
 
     # Find suppliers who serve these OEMs
     suppliers = Company.objects.filter(
-        company_type='Supplier',
-        procurer=request.user.company,
-        oems__in=oem_ids
+        company_type="Supplier", procurer=request.user.company, oems__in=oem_ids
     ).distinct()
 
-    if request.method == 'POST':
-        supplier_ids = request.POST.getlist('suppliers')
+    if request.method == "POST":
+        supplier_ids = request.POST.getlist("suppliers")
         for supplier_id in supplier_ids:
             supplier = Company.objects.get(id=supplier_id)
             # Create or get invitation
-            invitation, created = RFXInvitation.objects.get_or_create(rfx=rfx, supplier=supplier)
+            invitation, created = RFXInvitation.objects.get_or_create(
+                rfx=rfx, supplier=supplier
+            )
             if created:
                 send_invitation_email(invitation)
-        return redirect('rfx_list')
+        return redirect("rfx_list")
 
     # In GET request, we want to pre-select all these suppliers
     # The template can just mark all checkboxes as checked by default
-    return render(request, 'procurement01/quick_quote_rebuy_invite_suppliers.html', {
-        'rfx': rfx,
-        'suppliers': suppliers,
-    })
-
-
+    return render(
+        request,
+        "procurement01/quick_quote_rebuy_invite_suppliers.html",
+        {
+            "rfx": rfx,
+            "suppliers": suppliers,
+        },
+    )
 
 
 @login_required
@@ -1546,8 +1621,12 @@ def sku_allocation(request, rfx_id):
     rfx_skus = RFX_SKUs.objects.filter(rfx=rfx)
 
     # Fetch SKU-specific questions we care about
-    all_in_price_q = SKUSpecificQuestion.objects.get(rfx=rfx, question="All-In Price / Unit")
-    quantity_offered_q = SKUSpecificQuestion.objects.get(rfx=rfx, question="Quantity Offered")
+    all_in_price_q = SKUSpecificQuestion.objects.get(
+        rfx=rfx, question="All-In Price / Unit"
+    )
+    quantity_offered_q = SKUSpecificQuestion.objects.get(
+        rfx=rfx, question="Quantity Offered"
+    )
     lead_time_q = SKUSpecificQuestion.objects.get(rfx=rfx, question="Lead Time in Days")
 
     # Get all supplier responses for this RFX
@@ -1557,12 +1636,14 @@ def sku_allocation(request, rfx_id):
 
     for rfx_sku in rfx_skus:
         specification_data = rfx_sku.get_specification_data()
-        
+
         sku_name = rfx_sku.sku.name
         oem = specification_data.get("OEM", "")
         sku_code = specification_data.get("SKU Code", "")
         quantity_required_str = specification_data.get("Quantity Required", "0")
-        quantity_required = int(quantity_required_str) if quantity_required_str.isdigit() else 0
+        quantity_required = (
+            int(quantity_required_str) if quantity_required_str.isdigit() else 0
+        )
         max_lead_time = specification_data.get("Maximum Lead Time", "")
 
         # Gather all responses for this SKU
@@ -1571,37 +1652,42 @@ def sku_allocation(request, rfx_id):
         for s_response in supplier_responses:
             # Get the responses for this SKU
             sku_responses = SKUSpecificQuestionResponse.objects.filter(
-                response=s_response,
-                rfx_sku=rfx_sku
+                response=s_response, rfx_sku=rfx_sku
             )
             # Convert queryset to a dict keyed by question_id
             answer_map = {res.question_id: res for res in sku_responses}
 
             # Check if we have the required responses
-            if (all_in_price_q.id in answer_map and
-                quantity_offered_q.id in answer_map and
-                lead_time_q.id in answer_map):
-                
+            if (
+                all_in_price_q.id in answer_map
+                and quantity_offered_q.id in answer_map
+                and lead_time_q.id in answer_map
+            ):
+
                 supplier_name = s_response.supplier.name
                 try:
                     price = float(answer_map[all_in_price_q.id].answer_number or 0)
                 except (ValueError, TypeError):
                     price = 0.0
                 try:
-                    q_offered = int(answer_map[quantity_offered_q.id].answer_number or 0)
+                    q_offered = int(
+                        answer_map[quantity_offered_q.id].answer_number or 0
+                    )
                 except (ValueError, TypeError):
                     q_offered = 0
                 lead_time = answer_map[lead_time_q.id].answer_number or 0
 
-                response_items.append({
-                    'supplier': supplier_name,
-                    'price': price,
-                    'quantity_offered': q_offered,
-                    'lead_time': lead_time
-                })
+                response_items.append(
+                    {
+                        "supplier": supplier_name,
+                        "price": price,
+                        "quantity_offered": q_offered,
+                        "lead_time": lead_time,
+                    }
+                )
 
         # Sort by price ascending
-        response_items = sorted(response_items, key=lambda x: x['price'])
+        response_items = sorted(response_items, key=lambda x: x["price"])
 
         total_assigned_quantity = 0
         total_cost = 0
@@ -1610,10 +1696,10 @@ def sku_allocation(request, rfx_id):
 
         # Perform a greedy allocation to minimize cost
         for resp in response_items:
-            supplier = resp['supplier']
-            q_offered = resp['quantity_offered']
-            price = resp['price']
-            lead_time = resp['lead_time']
+            supplier = resp["supplier"]
+            q_offered = resp["quantity_offered"]
+            price = resp["price"]
+            lead_time = resp["lead_time"]
 
             quantity_to_assign = (
                 min(quantity_required - total_assigned_quantity, q_offered)
@@ -1627,39 +1713,46 @@ def sku_allocation(request, rfx_id):
                 total_cost += quantity_to_assign * price
 
             # Add detailed response item data for all bids
-            detailed_response_items.append({
-                'sku': sku_name,
-                'oem': oem,
-                'sku_code': sku_code,
-                'quantity_required': quantity_required,
-                'maximum_lead_time': max_lead_time,
-                'supplier': supplier,
-                'quantity_offered': q_offered,
-                'price': price,
-                'lead_time': lead_time,
-                'quantity_assigned': quantity_to_assign,
-                'total_cost': quantity_to_assign * price if quantity_to_assign > 0 else 0
-            })
+            detailed_response_items.append(
+                {
+                    "sku": sku_name,
+                    "oem": oem,
+                    "sku_code": sku_code,
+                    "quantity_required": quantity_required,
+                    "maximum_lead_time": max_lead_time,
+                    "supplier": supplier,
+                    "quantity_offered": q_offered,
+                    "price": price,
+                    "lead_time": lead_time,
+                    "quantity_assigned": quantity_to_assign,
+                    "total_cost": (
+                        quantity_to_assign * price if quantity_to_assign > 0 else 0
+                    ),
+                }
+            )
 
-        average_price = total_cost / total_assigned_quantity if total_assigned_quantity > 0 else 0
+        average_price = (
+            total_cost / total_assigned_quantity if total_assigned_quantity > 0 else 0
+        )
 
-        assignment_data.append({
-            'sku': sku_name,
-            'oem': oem,
-            'sku_code': sku_code,
-            'quantity_required': quantity_required,
-            'maximum_lead_time': max_lead_time,
-            'suppliers': ', '.join(assigned_suppliers),
-            'quantity_offered': sum(item['quantity_offered'] for item in detailed_response_items),
-            'price': average_price,
-            'quantity_assigned': total_assigned_quantity,
-            'total_cost': total_cost,
-            'detailed_response_items': detailed_response_items
-        })
+        assignment_data.append(
+            {
+                "sku": sku_name,
+                "oem": oem,
+                "sku_code": sku_code,
+                "quantity_required": quantity_required,
+                "maximum_lead_time": max_lead_time,
+                "suppliers": ", ".join(assigned_suppliers),
+                "quantity_offered": sum(
+                    item["quantity_offered"] for item in detailed_response_items
+                ),
+                "price": average_price,
+                "quantity_assigned": total_assigned_quantity,
+                "total_cost": total_cost,
+                "detailed_response_items": detailed_response_items,
+            }
+        )
 
-    context = {
-        'rfx': rfx,
-        'assignment_data': assignment_data
-    }
+    context = {"rfx": rfx, "assignment_data": assignment_data}
 
-    return render(request, 'procurement01/sku_allocation.html', context)
+    return render(request, "procurement01/sku_allocation.html", context)

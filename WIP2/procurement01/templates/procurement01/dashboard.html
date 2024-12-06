@@ -3,5 +3,271 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-    <h2>Welcome to the Dashboard, {{ user.username }}!</h2>
+<style>
+    .card {
+        min-height: 30vh;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        backdrop-filter: blur(10px);
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    }
+    .stats-card {
+        border-radius: 20px;
+        overflow: hidden;
+        background: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    }
+    .stats-card .card-body {
+        padding: 2rem;
+    }
+    .stats-card .display-4 {
+        font-weight: 700;
+        margin: 0.5rem 0;
+        font-size: 2.5rem;
+    }
+    .quick-action-btn {
+        padding: 1rem;
+        font-weight: 600;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+    }
+    .quick-action-btn:hover {
+        transform: scale(1.02) translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+    .list-group-item {
+        border: none;
+        margin-bottom: 0.5rem;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+    .list-group-item:hover {
+        background-color: rgba(0, 0, 0, 0.03);
+        transform: translateX(5px);
+    }
+    .dashboard-welcome {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-radius: 25px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+    .progress-ring {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: conic-gradient(from 0deg, var(--bs-primary) 0%, var(--bs-primary) 75%, #e9ecef 75%, #e9ecef 100%);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 1rem auto;
+    }
+    .progress-ring::before {
+        content: "75%";
+        position: absolute;
+        font-weight: bold;
+        font-size: 1.5rem;
+        color: var(--bs-primary);
+    }
+    .notification-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    .trend-indicator {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        background: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    .trend-indicator.down {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+</style>
+
+<div class="dashboard-welcome p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-2">Welcome to the Dashboard, {{ user.username }}! 👋</h2>
+            <p class="text-muted">Here's what's happening with your projects today.</p>
+        </div>
+        <div class="d-flex gap-3">
+            <button class="btn btn-light position-relative">
+                <i class="bi bi-bell"></i>
+                <span class="notification-badge">3</span>
+            </button>
+            <button class="btn btn-primary">
+                <i class="bi bi-plus-lg me-2"></i>New Project
+            </button>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Enhanced Stats Cards -->
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold"><i class="bi bi-folder me-2"></i>Active Projects</h5>
+                    <h2 class="display-4">12</h2>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <p class="card-text opacity-75">Currently in progress</p>
+                        <span class="trend-indicator">+2.4% <i class="bi bi-arrow-up"></i></span>
+                    </div>
+                    <div class="progress mt-3" style="height: 6px;">
+                        <div class="progress-bar bg-white" style="width: 75%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold"><i class="bi bi-file-text me-2"></i>Open RFXs</h5>
+                    <h2 class="display-4">5</h2>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <p class="card-text opacity-75">Awaiting responses</p>
+                        <span class="trend-indicator">+1.2% <i class="bi bi-arrow-up"></i></span>
+                    </div>
+                    <div class="progress mt-3" style="height: 6px;">
+                        <div class="progress-bar bg-white" style="width: 60%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold"><i class="bi bi-box-seam me-2"></i>Active SKUs</h5>
+                    <h2 class="display-4">234</h2>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <p class="card-text opacity-75">In database</p>
+                        <span class="trend-indicator">+5.7% <i class="bi bi-arrow-up"></i></span>
+                    </div>
+                    <div class="progress mt-3" style="height: 6px;">
+                        <div class="progress-bar bg-white" style="width: 85%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold"><i class="bi bi-building me-2"></i>Suppliers</h5>
+                    <h2 class="display-4">45</h2>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <p class="card-text opacity-75">Active partnerships</p>
+                        <span class="trend-indicator down">-0.8% <i class="bi bi-arrow-down"></i></span>
+                    </div>
+                    <div class="progress mt-3" style="height: 6px;">
+                        <div class="progress-bar bg-dark" style="width: 45%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Quick Actions & Recent Activity -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-lightning-charge me-2"></i>Quick Actions</h5>
+                    <button class="btn btn-sm btn-outline-primary">View All</button>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'create_rfx_step1' %}" class="btn btn-primary quick-action-btn">
+                            <i class="bi bi-plus-circle me-2"></i>Create New RFX
+                            <small class="d-block text-light mt-1">Start a new request for proposal</small>
+                        </a>
+                        <a href="{% url 'quick_quote_rebuy_initial_create' %}" class="btn btn-success quick-action-btn">
+                            <i class="bi bi-lightning me-2"></i>Quick Quote Rebuy
+                            <small class="d-block text-light mt-1">Fast track your repeat purchases</small>
+                        </a>
+                        <a href="{% url 'sku_list' %}" class="btn btn-info quick-action-btn text-white">
+                            <i class="bi bi-search me-2"></i>Browse SKUs
+                            <small class="d-block text-light mt-1">Manage your product catalog</small>
+                        </a>
+                        <a href="{% url 'supplier_list' %}" class="btn btn-warning quick-action-btn">
+                            <i class="bi bi-building me-2"></i>Browse Suppliers
+                            <small class="d-block text-dark mt-1">View and manage suppliers</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>Recent Activity</h5>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary">Today</button>
+                        <button class="btn btn-sm btn-outline-secondary active">Week</button>
+                        <button class="btn btn-sm btn-outline-secondary">Month</button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-primary">New RFX Response Received</h6>
+                                    <p class="mb-1 text-muted">Supplier ABC submitted response for RFX #123</p>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block"><i class="bi bi-clock me-1"></i>3 mins ago</small>
+                                    <span class="badge bg-success">New</span>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-success">Project Updated</h6>
+                                    <p class="mb-1 text-muted">Project "Q4 Sourcing" status changed to "In Progress"</p>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block"><i class="bi bi-clock me-1"></i>1 hour ago</small>
+                                    <span class="badge bg-primary">Update</span>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-info">New SKUs Added</h6>
+                                    <p class="mb-1 text-muted">15 new SKUs were added to the database</p>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block"><i class="bi bi-clock me-1"></i>2 hours ago</small>
+                                    <span class="badge bg-info">Addition</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer bg-light text-center">
+                    <a href="#" class="text-decoration-none">View All Activity <i class="bi bi-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

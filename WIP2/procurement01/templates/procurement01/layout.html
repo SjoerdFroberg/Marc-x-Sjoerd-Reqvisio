@@ -21,6 +21,52 @@
     
     <!-- External JS Libraries (Head) -->
     <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.min.js"></script>
+    <script>
+        function toggleSection(element, sectionKey) {
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('i');
+            const isOpen = content.style.display === "block";
+            
+            if (isOpen) {
+                content.style.display = "none";
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-right');
+                localStorage.setItem(sectionKey, 'false');
+            } else {
+                content.style.display = "block";
+                icon.classList.remove('bi-chevron-right');
+                icon.classList.add('bi-chevron-down');
+                localStorage.setItem(sectionKey, 'true');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = [
+                { key: 'projectsSectionOpen', selector: '.nav-section-content.projects' },
+                { key: 'rebuySectionOpen', selector: '.nav-section-content.rebuy' }
+            ];
+
+            sections.forEach(section => {
+                const isOpen = localStorage.getItem(section.key) === 'true';
+                const content = document.querySelector(section.selector);
+                const icon = content.previousElementSibling.querySelector('i');
+                if (isOpen) {
+                    content.style.display = "block";
+                    icon.classList.remove('bi-chevron-right');
+                    icon.classList.add('bi-chevron-down');
+                }
+            });
+        });
+    </script>
+    <style>
+        .nav-section-header {
+            display: block; /* Ensures full width */
+            width: 100%; /* Takes full width of the parent */
+        }
+        .nav-section-content a {
+            display: block;
+        }
+    </style>
 </head>
 <body>
     <!-- Sidebar -->
@@ -30,12 +76,35 @@
         {% if user.is_authenticated %}
             {% if user.company.company_type == 'Procurer' %}
                 <div class="nav-links">
-                    <a href="{% url 'dashboard' %}">Dashboard</a>
-                    <a href="{% url 'sku_list' %}">SKUs</a>
-                    <a href="{% url 'supplier_list' %}">Suppliers</a>
-                    <a href = "{% url 'quick_quote_rebuy_initial_create' %}">Quick Quote REBUY</a>
-                    <a href="{% url 'rfx_list' %}">RFXs</a>
-                    <a href="{% url 'project_list' %}">Projects</a>
+                    <a href="{% url 'dashboard' %}">Dashboard <i class="bi bi-house" style="float: right;"></i></a>
+                    <div class="nav-section">
+                        <a href="#" class="nav-section-header" onclick="toggleSection(this, 'projectsSectionOpen')">
+                            <i class="bi bi-chevron-right"></i> Projects
+                        </a>
+                        <div class="nav-section-content projects" style="display: none; background-color: rgba(255,255,255,0.07); border-radius: 8px;">
+                            <a href="{% url 'project_list' %}">Projects <i class="bi bi-list" style="float: right;"></i></a>
+                            <a href="{% url 'rfx_list' %}">RFXs <i class="bi bi-file-text" style="float: right;"></i></a>
+                        </div>
+                    </div>
+                    <div class="nav-section">
+                        <a href="#" class="nav-section-header" onclick="toggleSection(this, 'rebuySectionOpen')">
+                            <i class="bi bi-chevron-right"></i> Rebuy
+                        </a>
+                        <div class="nav-section-content rebuy" style="display: none; background-color: rgba(255,255,255,0.07); border-radius: 8px;">
+                            <a href="{% url 'quick_quote_rebuy_initial_create' %}">Quick Quote <i class="bi bi-plus" style="float: right;"></i></a>
+                            <a href="#" onclick="selectRFX()">SKU Allocation <i class="bi bi-eye" style="float: right;"></i></a>
+                            <script>
+                            function selectRFX() {
+                                const rfxId = prompt("Please enter the RFX ID:");
+                                if (rfxId) {
+                                    window.location.href = `/procurement01/rfx/${rfxId}/sku_allocation/`;
+                                }
+                            }
+                            </script>
+                        </div>
+                    </div>
+                    <a href="{% url 'sku_list' %}">SKUs <i class="bi bi-box-seam" style="float: right;"></i></a>
+                    <a href="{% url 'supplier_list' %}">Suppliers <i class="bi bi-building" style="float: right;"></i></a>
                 </div>
     
                 <!-- User Info & Logout in Sidebar -->
