@@ -7,7 +7,7 @@
 {% block content %}
 <div class="container mt-5">
     <div class="card shadow-lg border-0">
-        <div class="card-header">
+        <div class="card-header" style="background-color: #dddddd; color: #6c6c6c; font-weight: 600; padding: 20px; text-align: center; border-bottom: none;">
             <h3 class="mb-0">Quick Quotation Request </h3>
         </div>
         <div class="card-body">
@@ -30,13 +30,19 @@
                     <div class="top-controls">
                         <div id="left-controls">
                         <!-- Full screen toggle -->
-                        <button type="button" id="full-screen-toggle" class="action-btn">Full Screen</button>
+                        <button type="button" id="full-screen-toggle" class="action-btn btn btn-light">
+                            <i class="bi bi-arrows-fullscreen"></i> Full Screen
+                        </button>
     
                         <!-- Button to add extra data column -->
-                        <button type="button" id="add-extra-column" class="action-btn">Add Extra Data Column</button>
+                        <button type="button" id="add-extra-column" class="action-btn btn btn-light">
+                            <i class="bi bi-plus-circle"></i> Add Extra Data Column
+                        </button>
     
                         <!-- Button to add SKU-specific question -->
-                        <button type="button" id="add-sku-question-btn" class="action-btn">Add SKU-specific Question</button>
+                        <button type="button" id="add-sku-question-btn" class="action-btn btn btn-light">
+                            <i class="bi bi-question-circle"></i> Add SKU-specific Question
+                        </button>
                     </div>
                 </div>
     
@@ -132,8 +138,12 @@
                 <div class="mt-4 d-flex justify-content-end">
                     <input type="hidden" name="action" value="save_changes">
 
-                    <button type="submit" name="action" value="save_changes" class="btn btn-primary">Save Changes</button>
-                    <button type="button" class="btn btn-success me-2" id="invite-suppliers-btn">Invite Suppliers</button>
+                    <button type="submit" name="action" value="save_changes" class="btn btn-light me-2">
+                        <i class="bi bi-save"></i> Save Changes
+                    </button>
+                    <button type="button" class="btn btn-light me-2" id="invite-suppliers-btn">
+                        <i class="bi bi-envelope"></i> Invite Suppliers
+                    </button>
 
                     
                 </div>
@@ -142,8 +152,8 @@
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 {{ upload_form.file.label_tag }} {{ upload_form.file }}
-                <button type="submit" name="action" value="upload_file" class="btn btn-secondary mt-2">
-                    Upload
+                <button type="submit" name="action" value="upload_file" class="btn btn-light mt-2">
+                    <i class="bi bi-upload"></i> Upload
                 </button>
             </form>
         </div>
