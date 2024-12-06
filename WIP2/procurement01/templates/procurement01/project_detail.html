@@ -1,41 +1,164 @@
 {% extends 'procurement01/layout.html' %}
 
 {% block content %}
-<h1>{{ project.name }}</h1>
+<style>
+    .project-header {
+        background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 2.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .project-table {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .project-table thead {
+        background: #f8f9fa;
+    }
+    .project-table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border: none;
+    }
+    .project-table td {
+        padding: 1rem;
+        border: none;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    .clickable-row {
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .clickable-row:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+    .stats-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .stats-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .status-active {
+        background: #e6f4ea;
+        color: #1e7e34;
+    }
+    .status-completed {
+        background: #e8eaf6;
+        color: #3f51b5;
+    }
+</style>
 
-<p>{{ project.description }}</p>
+<div class="project-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-2">{{ project.name }}</h2>
+            <p class="text-muted mb-0">{{ project.description }}</p>
+        </div>
+        <a href="{% url 'create_rfx_step1' %}?project_id={{ project.id }}" class="btn btn-primary create-project-btn">
+            <i class="bi bi-plus-lg me-2"></i>Create New RFX
+        </a>
+    </div>
 
-<h2>RFXs for this Project</h2>
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h6 class="text-muted mb-2">Total RFXs</h6>
+                <h3 class="mb-0">{{ rfxs|length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h6 class="text-muted mb-2">Active RFXs</h6>
+                <h3 class="mb-0">{{ rfxs|length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h6 class="text-muted mb-2">Completed</h6>
+                <h3 class="mb-0">0</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h6 class="text-muted mb-2">This Month</h6>
+                <h3 class="mb-0">{{ rfxs|length }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
 
-<a href="{% url 'create_rfx_step1' %}?project_id={{ project.id }}" class="btn btn-primary"><i class="bi bi-plus-lg me-2"></i>Create New RFX</a>  
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Date Created</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for rfx in rfxs %}
-            <tr class="clickable-row" data-href="{% url 'rfx_detail' rfx.id %}">
-                <td>{{ rfx.title }}</td>
-                <td>{{ rfx.description }}</td>
-                <td>{{ rfx.created_at }}</td>
+<div class="project-table">
+    <table class="table mb-0">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Progress</th>
             </tr>
-        {% empty %}
-        <tr>
-            <td colspan="3">No RFXs available for this project.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            {% for rfx in rfxs %}
+                <tr class="clickable-row" data-href="{% url 'rfx_detail' rfx.id %}">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-file-text text-primary me-2"></i>
+                            <span class="fw-bold">{{ rfx.title }}</span>
+                        </div>
+                    </td>
+                    <td class="text-muted">{{ rfx.description }}</td>
+                    <td><span class="status-badge status-active">Active</span></td>
+                    <td><span class="badge bg-light text-dark">{{ rfx.created_at }}</span></td>
+                    <td>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 75%"></div>
+                        </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="empty-state">
+                        <i class="bi bi-file-x display-4 d-block mb-3"></i>
+                        <h5>No RFXs Available</h5>
+                        <p class="text-muted">Start by creating your first RFX</p>
+                        <a href="{% url 'create_rfx_step1' %}?project_id={{ project.id }}" class="btn btn-primary mt-3">
+                            <i class="bi bi-plus-lg me-2"></i>Create First RFX
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Attach click event to all rows with the class 'clickable-row'
     document.addEventListener('DOMContentLoaded', () => {
         const rows = document.querySelectorAll('.clickable-row');
         rows.forEach(row => {
