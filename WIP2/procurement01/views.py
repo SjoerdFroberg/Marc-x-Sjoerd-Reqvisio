@@ -56,7 +56,7 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect(
             "dashboard"
-        )  # If user is already logged in, redirect to dashboard
+        ) 
 
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
@@ -66,7 +66,7 @@ def login_view(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect("dashboard")  # Redirect to dashboard after login
+                return redirect("dashboard")
     else:
         form = AuthenticationForm()
 
@@ -83,7 +83,6 @@ def logout_view(request):
     return redirect("login")
 
 
-# View to list all SKUs
 @login_required
 def sku_list_view(request):
 
@@ -93,7 +92,6 @@ def sku_list_view(request):
     return render(request, "procurement01/sku_list.html", {"skus": skus})
 
 
-# View to see details of a single SKU
 @login_required
 def sku_detail_view(request, sku_id):
     sku = get_object_or_404(SKU, id=sku_id)
@@ -105,7 +103,7 @@ def sku_create_view(request):
     if not request.user.is_procurer:
         return render(
             request, "procurement01/access_denied.html"
-        )  # Only procurers can create SKUs
+        )  
 
     company = request.user.company
 
@@ -124,7 +122,6 @@ def sku_create_view(request):
 
 @login_required
 def supplier_list_view(request):
-    # Ensure the logged-in user is a procurer
     if request.user.is_procurer:
         procurer_company = request.user.company
         suppliers = Company.objects.filter(procurer=procurer_company)
@@ -140,7 +137,7 @@ def create_supplier_view(request):
     if not request.user.is_procurer:
         return render(
             request, "procurement01/access_denied.html"
-        )  # Only procurers can create suppliers
+        ) 
 
     procurer_company = request.user.company
 
@@ -287,7 +284,7 @@ def create_rfx_step1(request, rfx_id=None):
         {
             "form": form,
             "existing_files": existing_files,
-            "rfx": rfx,  # Include if needed in the template
+            "rfx": rfx,  
         },
     )
 
@@ -406,19 +403,16 @@ def create_rfx_step3(request, rfx_id):
                 request.POST, queryset=GeneralQuestion.objects.filter(rfx=rfx)
             )
 
-            general_questions_formset_valid = general_questions_formset.is_valid()
 
             if general_questions_formset.is_valid():
                 # Save the formset (updates and additions)
                 general_questions = general_questions_formset.save(commit=False)
                 for question in general_questions:
-                    print(question)
                     question.rfx = rfx
                     question.save()
 
                 # Handle deletions
                 for deleted_question in general_questions_formset.deleted_objects:
-                    print(deleted_question)
                     deleted_question.delete()  # This removes the marked object from the DB
 
             # Get the navigation destination and dynamically construct the redirect URL name
@@ -1493,8 +1487,26 @@ def quick_quote_rebuy(request, rfx_id):
                 )
 
             navigation_destination = request.POST.get("navigation_destination")
+
             if navigation_destination == "quick_quote_rebuy_invite_suppliers":
                 return redirect("quick_quote_rebuy_invite_suppliers", rfx_id=rfx.id)
+            elif navigation_destination == "quick_quote_rebuy_invite_suppliers_auto":
+                # Automatically find suppliers and invite them
+                rfx_skus = RFX_SKUs.objects.filter(rfx=rfx)
+                oem_ids = rfx_skus.values_list("sku__oem", flat=True).distinct()
+                oem_ids = [o for o in oem_ids if o is not None]
+
+                suppliers = Company.objects.filter(
+                    company_type="Supplier", procurer=request.user.company, oems__in=oem_ids
+                ).distinct()
+
+                for supplier in suppliers:
+                    invitation, created = RFXInvitation.objects.get_or_create(rfx=rfx, supplier=supplier)
+                    if created:
+                        send_invitation_email(invitation)
+
+                # Redirect to RFX list
+                return redirect("rfx_list")
             else:
                 return redirect("quick_quote_rebuy", rfx_id=rfx.id)
 

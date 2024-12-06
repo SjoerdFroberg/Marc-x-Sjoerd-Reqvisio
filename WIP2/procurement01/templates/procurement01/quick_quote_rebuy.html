@@ -150,6 +150,8 @@
                     <input type="hidden" name="action" value="save_changes">
                     <button type="submit" name="action" value="save_changes" class="btn btn-primary rounded-pill" id="save-changes-btn">Save Changes</button>
                     <button type="button" class="btn btn-primary rounded-pill" id="invite-suppliers-btn">Invite Suppliers</button>
+                    <button type="button" class="btn btn-primary rounded-pill" id="invite-auto-suppliers-btn">Invite Automatically Selected Suppliers</button>
+
                 </form>
             </div>
 
@@ -188,6 +190,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const saveFormTitle = document.getElementById('save_form_title');
     const rfxTitleInput = document.getElementById("rfx_title");
     const saveForm = document.getElementById('save-form');
+    const inviteAutoSuppliersButton = document.getElementById('invite-auto-suppliers-btn');
+
 
     function gatherTableData() {
         const tableBody = skuTable.querySelector('tbody');
@@ -287,6 +291,11 @@ document.addEventListener("DOMContentLoaded", () => {
     inviteSuppliersButton.addEventListener("click", (event) => {
         event.preventDefault();
         prepareAndSubmitForm("quick_quote_rebuy_invite_suppliers");
+    });
+
+    inviteAutoSuppliersButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        prepareAndSubmitForm("quick_quote_rebuy_invite_suppliers_auto");
     });
 
 });

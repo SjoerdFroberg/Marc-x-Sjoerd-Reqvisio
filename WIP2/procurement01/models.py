@@ -191,8 +191,6 @@ class RFXInvitation(models.Model):
 
 
 
-
-
 class SupplierResponse(models.Model):
     """A model to store a supplier's overall response to an RFX."""
     rfx = models.ForeignKey(RFX, on_delete=models.CASCADE, related_name="responses")
