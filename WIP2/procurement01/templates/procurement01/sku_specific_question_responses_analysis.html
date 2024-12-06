@@ -4,59 +4,104 @@
 {% block title %}SKU-Specific Question Responses Analysis{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="section-header">
-        <h2>SKU-Specific Question Responses Analysis</h2>
-    </div>
+<style>
+    .project-header {
+        background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 2.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .analysis-table {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .action-btn {
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        margin-right: 1rem;
+    }
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .modal-header {
+        background: #f8f9fa;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    .form-check-input:checked {
+        background-color: #2d4c3e;
+        border-color: #2d4c3e;
+    }
+</style>
 
-    <!-- Display RFX details -->
-    <div class="mb-3">
-        <strong>RFX Title:</strong> {{ rfx.title }}<br>
-        <strong>RFX Description:</strong> {{ rfx.description }}
-    </div>
-
-    <div id="dropdown-container">
-        <!-- Top Controls -->
-        <div class="top-controls mb-4">
-            <!-- Column Visibility Button -->
-            <button id="column-visibility-btn" class="btn btn-secondary me-2">Column Visibility</button>
-            <!-- Full-Screen Toggle Button -->
-            <button id="toggle-fullscreen-btn" class="btn btn-primary">Full Screen</button>
-            <a href="{% url 'general_question_table' rfx.id %}" class="btn btn-secondary">General Question Responses</a>
+<div class="project-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-2">SKU-Specific Question Responses Analysis</h2>
+            <p class="text-muted mb-0">{{ rfx.title }}</p>
+            <p class="text-muted small">{{ rfx.description }}</p>
         </div>
+        <div>
+            <button id="column-visibility-btn" class="btn btn-secondary action-btn">
+                <i class="bi bi-eye me-2"></i>Column Visibility
+            </button>
+            <button id="toggle-fullscreen-btn" class="btn btn-primary action-btn">
+                <i class="bi bi-arrows-fullscreen me-2"></i>Full Screen
+            </button>
+            <a href="{% url 'general_question_table' rfx.id %}" class="btn btn-secondary action-btn">
+                <i class="bi bi-table me-2"></i>General Questions
+            </a>
+        </div>
+    </div>
+</div>
 
-        <div id="analysis-fullscreen" class="table-wrapper">
-            <button id="exit-fullscreen-btn" class="btn btn-secondary d-none">Exit Full Screen</button>
-            <div id="table-freeze" class="table-freeze">
-                <div id="table-container">
-                    {% include 'procurement01/sku_specific_question_table.html' %}
-                </div>
-            </div>
+<div id="analysis-fullscreen" class="analysis-table">
+    <button id="exit-fullscreen-btn" class="btn btn-secondary action-btn d-none">
+        <i class="bi bi-arrows-angle-contract me-2"></i>Exit Full Screen
+    </button>
+    <div id="table-freeze" class="table-responsive">
+        <div id="table-container">
+            {% include 'procurement01/sku_specific_question_table.html' %}
         </div>
     </div>
 </div>
 
 <!-- Modal -->
 <div class="modal fade" id="columnVisibilityModal" tabindex="-1" aria-labelledby="columnVisibilityModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- Use modal-lg if you have many questions -->
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Select Questions to Display</h5>
+                <h5 class="modal-title fw-bold">Select Questions to Display</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- Select All/Deselect All Buttons -->
                 <div class="mb-3">
-                    <button id="select-all-btn" type="button" class="btn btn-sm btn-primary me-2">Select All</button>
-                    <button id="deselect-all-btn" type="button" class="btn btn-sm btn-secondary">Deselect All</button>
+                    <button id="select-all-btn" type="button" class="btn btn-sm btn-primary me-2">
+                        <i class="bi bi-check-all me-1"></i>Select All
+                    </button>
+                    <button id="deselect-all-btn" type="button" class="btn btn-sm btn-secondary">
+                        <i class="bi bi-x-lg me-1"></i>Deselect All
+                    </button>
                 </div>
-                <!-- Checkbox List -->
                 <form id="column-visibility-form">
                     <div class="row">
                         {% for question in sku_specific_questions %}
                             <div class="col-md-6 mb-2">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="{{ question.id }}" id="questionCheckbox{{ question.id }}" {% if question.id|stringformat:"s" in selected_question_ids %}checked{% endif %}>
+                                    <input class="form-check-input" type="checkbox" value="{{ question.id }}" 
+                                           id="questionCheckbox{{ question.id }}" 
+                                           {% if question.id|stringformat:"s" in selected_question_ids %}checked{% endif %}>
                                     <label class="form-check-label" for="questionCheckbox{{ question.id }}">
                                         {{ question.question }}
                                     </label>
@@ -67,8 +112,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="apply-column-visibility-btn">
-                    <span id="apply-btn-text">Apply</span>
+                <button type="button" class="btn btn-primary action-btn" id="apply-column-visibility-btn">
+                    <span id="apply-btn-text"><i class="bi bi-check2 me-2"></i>Apply</span>
                     <span id="apply-btn-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                 </button>
             </div>

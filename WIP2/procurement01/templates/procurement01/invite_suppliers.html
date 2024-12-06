@@ -3,19 +3,84 @@
 {% extends 'procurement01/layout.html' %}
 
 {% block content %}
-<h2>Invite Suppliers to RFX: {{ rfx.title }}</h2>
+<style>
+    .project-header {
+        background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 2.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .supplier-list {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        padding: 2rem;
+    }
+    .supplier-item {
+        padding: 1rem;
+        border-bottom: 1px solid #f1f1f1;
+        transition: all 0.2s ease;
+    }
+    .supplier-item:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .supplier-item label {
+        margin: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+    }
+    .supplier-item input[type="checkbox"] {
+        margin-right: 1rem;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+</style>
 
-<form method="post">
-    {% csrf_token %}
-    <p>Select suppliers to invite:</p>
-    {% for supplier in suppliers %}
+<div class="project-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <input type="checkbox" name="suppliers" value="{{ supplier.id }}" id="supplier_{{ supplier.id }}">
-            <label for="supplier_{{ supplier.id }}">{{ supplier.name }} ({{ supplier.email }})</label>
+            <h2 class="fw-bold mb-2">Invite Suppliers</h2>
+            <p class="text-muted mb-0">{{ rfx.title }}</p>
         </div>
-    {% empty %}
-        <p>No suppliers available. Please add suppliers first.</p>
-    {% endfor %}
-    <button type="submit" class="btn btn-primary">Send Invitations</button>
-</form>
+    </div>
+</div>
+
+<div class="supplier-list">
+    <form method="post">
+        {% csrf_token %}
+        {% for supplier in suppliers %}
+            <div class="supplier-item">
+                <label for="supplier_{{ supplier.id }}">
+                    <input type="checkbox" name="suppliers" value="{{ supplier.id }}" id="supplier_{{ supplier.id }}">
+                    <div>
+                        <span class="fw-bold">{{ supplier.name }}</span>
+                        <span class="text-muted ms-2">({{ supplier.email }})</span>
+                    </div>
+                </label>
+            </div>
+        {% empty %}
+            <div class="empty-state">
+                <i class="bi bi-people-x display-4 d-block mb-3"></i>
+                <h5>No Suppliers Available</h5>
+                <p class="text-muted">Please add suppliers before sending invitations</p>
+            </div>
+        {% endfor %}
+        
+        {% if suppliers %}
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary create-project-btn">
+                    <i class="bi bi-send me-2"></i>Send Invitations
+                </button>
+            </div>
+        {% endif %}
+    </form>
+</div>
 {% endblock %}

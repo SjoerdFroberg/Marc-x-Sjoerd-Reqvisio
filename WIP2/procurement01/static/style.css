@@ -1303,7 +1303,8 @@ body.fullscreen-active {
 }
 
 #sku-allocation-table th {
-    background-color: #2d4c3e; /* Dark green for headers */
+    /* background-color: #2d4c3e; Dark green for headers */
+    background-color: #999aa2;
     color: #ffffff;
     font-weight: bold;
     padding: 12px;

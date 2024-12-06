@@ -5,70 +5,123 @@
 {% block title %}General Questions Analysis - {{ rfx.title }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="section-header">
-        <h2>General Questions Analysis</h2>
-    </div>
+<style>
+    .project-header {
+        background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 2.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .analysis-table {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        overflow: hidden;
+        margin-top: 2rem;
+    }
+    .analysis-table thead {
+        background: #f8f9fa;
+    }
+    .analysis-table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border: none;
+    }
+    .analysis-table td {
+        padding: 1rem;
+        border: none;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    .question-cell {
+        font-weight: 500;
+        color: #2d4c3e;
+    }
+    .action-btn {
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        margin-right: 1rem;
+    }
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+</style>
 
-    <div>
-    <!-- Full-Screen Toggle Button -->
-    <button id="toggle-fullscreen-btn" class="btn btn-primary">Full Screen</button>
-    <a href="{% url 'sku_specific_question_responses_analysis' rfx.id %}" class="btn btn-secondary">SKU Specific Question Responses</a>
-    
-    </div>
-
-    <div id="analysis-fullscreen" class="table-wrapper">
-        <button id="exit-fullscreen-btn" class="btn btn-secondary d-none">Exit Full Screen</button>
-        <div id = "table-freeze" class="table-freeze">
-            <table class="styled-table">
-                <thead>
-                    <tr>
-                        <th class="question-header">General Questions</th>
-                        {% for response in supplier_responses %}
-                            <th>{{ response.supplier.name }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for question in general_questions %}
-                    <tr>
-                        <td class="question-cell">{{ question.question_text }}</td>
-                        {% for supplier_response in supplier_responses %}
-                        <td>
-                            {% with response_data|dict_get:question.id as supplier_responses %}
-                                {% with supplier_responses|dict_get:supplier_response.supplier.id as answer %}
-                                    {% if answer %}
-                                        {% if question.question_type == 'text' %}
-                                            {{ answer.answer_text }}
-                                        {% elif question.question_type in multi_choice_types %}
-                                            {{ answer.answer_choice }}
-                                        {% elif question.question_type == 'File upload' %}
-                                            {% if answer.answer_file %}
-                                                <a href="{{ answer.answer_file.url }}" target="_blank">Download</a>
-                                            {% else %}
-                                                <em>No file uploaded</em>
-                                            {% endif %}
-                                        {% endif %}
-                                    {% else %}
-                                        <em>No response</em>
-                                    {% endif %}
-                                {% endwith %}
-                            {% endwith %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<div class="project-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-2">General Questions Analysis</h2>
+            <p class="text-muted mb-0">{{ rfx.title }}</p>
+        </div>
+        <div>
+            <button id="toggle-fullscreen-btn" class="btn btn-primary action-btn">
+                <i class="bi bi-arrows-fullscreen me-2"></i>Full Screen
+            </button>
+            <a href="{% url 'sku_specific_question_responses_analysis' rfx.id %}" class="btn btn-secondary action-btn">
+                <i class="bi bi-table me-2"></i>SKU Specific Questions
+            </a>
         </div>
     </div>
-    
-    
+</div>
+
+<div id="analysis-fullscreen" class="analysis-table">
+    <button id="exit-fullscreen-btn" class="btn btn-secondary action-btn d-none">
+        <i class="bi bi-arrows-angle-contract me-2"></i>Exit Full Screen
+    </button>
+    <div id="table-freeze" class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th class="question-header">General Questions</th>
+                    {% for response in supplier_responses %}
+                        <th>{{ response.supplier.name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for question in general_questions %}
+                <tr>
+                    <td class="question-cell">{{ question.question_text }}</td>
+                    {% for supplier_response in supplier_responses %}
+                    <td>
+                        {% with response_data|dict_get:question.id as supplier_responses %}
+                            {% with supplier_responses|dict_get:supplier_response.supplier.id as answer %}
+                                {% if answer %}
+                                    {% if question.question_type == 'text' %}
+                                        {{ answer.answer_text }}
+                                    {% elif question.question_type in multi_choice_types %}
+                                        {{ answer.answer_choice }}
+                                    {% elif question.question_type == 'File upload' %}
+                                        {% if answer.answer_file %}
+                                            <a href="{{ answer.answer_file.url }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-download me-1"></i>Download
+                                            </a>
+                                        {% else %}
+                                            <em class="text-muted">No file uploaded</em>
+                                        {% endif %}
+                                    {% endif %}
+                                {% else %}
+                                    <em class="text-muted">No response</em>
+                                {% endif %}
+                            {% endwith %}
+                        {% endwith %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{% static 'js/general_questions_analysis.js' %}"></script>
 {% endblock %}
-
-
