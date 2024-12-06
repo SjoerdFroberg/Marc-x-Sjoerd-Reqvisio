@@ -70,47 +70,89 @@
 </head>
 <body>
     <!-- Sidebar -->
-    <div class="sidebar d-flex flex-column">
-        <h3>Reqvisio</h3>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3 class="brand">Reqvisio</h3>
+        </div>
     
         {% if user.is_authenticated %}
             {% if user.company.company_type == 'Procurer' %}
-                <div class="nav-links">
-                    <a href="{% url 'dashboard' %}">Dashboard <i class="bi bi-house" style="float: right;"></i></a>
-                    <div class="nav-section">
-                        <a href="#" class="nav-section-header" onclick="toggleSection(this, 'projectsSectionOpen')">
-                            <i class="bi bi-chevron-right"></i> Projects
+                <div class="nav-menu">
+                    <div class="nav-item">
+                        <a href="{% url 'dashboard' %}" class="nav-link">
+                            <i class="bi bi-house"></i>
+                            <span>Dashboard</span>
                         </a>
-                        <div class="nav-section-content projects" style="display: none; background-color: rgba(255,255,255,0.07); border-radius: 8px;">
-                            <a href="{% url 'project_list' %}">Projects <i class="bi bi-folder" style="float: right;"></i></a>
-                            <a href="{% url 'rfx_list' %}">RFXs <i class="bi bi-file-text" style="float: right;"></i></a>
+                    </div>
+
+                    <div class="nav-group">
+                        <div class="nav-item">
+                            <a href="#" class="nav-link nav-section-header" onclick="toggleSection(this, 'projectsSectionOpen')">
+                                <i class="bi bi-chevron-right nav-caret"></i>
+                                <i class="bi bi-folder"></i>
+                                <span>Projects</span>
+                            </a>
+                            <div class="nav-section-content projects" style="display: none;">
+                                <a href="{% url 'project_list' %}" class="nav-link sub-link">
+                                    <i class="bi bi-folder"></i>
+                                    <span>All Projects</span>
+                                </a>
+                                <a href="{% url 'rfx_list' %}" class="nav-link sub-link">
+                                    <i class="bi bi-file-text"></i>
+                                    <span>RFX Documents</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
-                    <div class="nav-section">
-                        <a href="#" class="nav-section-header" onclick="toggleSection(this, 'rebuySectionOpen')">
-                            <i class="bi bi-chevron-right"></i> Rebuy
-                        </a>
-                        <div class="nav-section-content rebuy" style="display: none; background-color: rgba(255,255,255,0.07); border-radius: 8px;">
-                            <a href="{% url 'quick_quote_rebuy_initial_create' %}">Quick Quote <i class="bi bi-plus-circle" style="float: right;"></i></a>
-                            <a href="#" onclick="selectRFX()">SKU Allocation <i class="bi bi-eye" style="float: right;"></i></a>
-                            <script>
-                            function selectRFX() {
-                                const rfxId = prompt("Please enter the RFX ID:");
-                                if (rfxId) {
-                                    window.location.href = `/procurement01/rfx/${rfxId}/sku_allocation/`;
-                                }
-                            }
-                            </script>
+
+                    <div class="nav-group">
+                        <div class="nav-item">
+                            <a href="#" class="nav-link nav-section-header" onclick="toggleSection(this, 'rebuySectionOpen')">
+                                <i class="bi bi-chevron-right nav-caret"></i>
+                                <i class="bi bi-arrow-repeat"></i>
+                                <span>Rebuy</span>
+                            </a>
+                            <div class="nav-section-content rebuy" style="display: none;">
+                                <a href="{% url 'quick_quote_rebuy_initial_create' %}" class="nav-link sub-link">
+                                    <i class="bi bi-plus-circle"></i>
+                                    <span>Quick Quote</span>
+                                </a>
+                                <a href="#" onclick="selectRFX()" class="nav-link sub-link">
+                                    <i class="bi bi-eye"></i>
+                                    <span>SKU Allocation</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
-                    <a href="{% url 'sku_list' %}">SKUs <i class="bi bi-box-seam" style="float: right;"></i></a>
-                    <a href="{% url 'supplier_list' %}">Suppliers <i class="bi bi-building" style="float: right;"></i></a>
+
+                    <div class="nav-item">
+                        <a href="{% url 'sku_list' %}" class="nav-link">
+                            <i class="bi bi-box-seam"></i>
+                            <span>SKUs</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-item">
+                        <a href="{% url 'supplier_list' %}" class="nav-link">
+                            <i class="bi bi-building"></i>
+                            <span>Suppliers</span>
+                        </a>
+                    </div>
                 </div>
     
-                <!-- User Info & Logout in Sidebar -->
-                <div class="user-info mt-auto">
-                    <span><i class="bi bi-person-circle"></i> {{ user.username }}</span>
-                    <a href="{% url 'logout' %}" class="logout-link"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                <div class="user-profile">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                        <div class="user-details">
+                            <span class="username">{{ user.username }}</span>
+                            <a href="{% url 'logout' %}" class="logout-link">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Sign Out</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             {% endif %}
         {% endif %}
@@ -128,6 +170,15 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
     
+    <script>
+        function selectRFX() {
+            const rfxId = prompt("Please enter the RFX ID:");
+            if (rfxId) {
+                window.location.href = `/procurement01/rfx/${rfxId}/sku_allocation/`;
+            }
+        }
+    </script>
+
     <!-- Custom JS -->
     {% block scripts %}{% endblock %}
 </body>
