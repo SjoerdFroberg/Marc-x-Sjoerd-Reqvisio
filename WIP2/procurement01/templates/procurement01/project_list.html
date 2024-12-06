@@ -4,7 +4,7 @@
 <style>
     .project-header {
         background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 2rem;
+        padding: 2.5rem;
         border-radius: 15px;
         margin-bottom: 2rem;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
@@ -56,18 +56,94 @@
         transform: translateY(-2px);
         box-shadow: 0 6px 12px rgba(0,0,0,0.15);
     }
+    .stats-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .stats-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .status-active {
+        background: #e6f4ea;
+        color: #1e7e34;
+    }
+    .status-completed {
+        background: #e8eaf6;
+        color: #3f51b5;
+    }
+    .search-bar {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    .search-bar input {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        padding-left: 3rem;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+        font-size: 1rem;
+    }
+    .search-bar i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+    }
 </style>
 
 <div class="project-header">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-2">Projects</h2>
+            <h2 class="fw-bold mb-2">Projects Dashboard</h2>
             <p class="text-muted mb-0">Manage and track all your procurement projects</p>
         </div>
         <a href="{% url 'create_project' %}" id="create-project-btn" class="btn btn-primary create-project-btn">
             <i class="bi bi-plus-lg me-2"></i>Create New Project
         </a>
     </div>
+    
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h6 class="text-muted mb-2">Total Projects</h6>
+                <h3 class="mb-0">{{ projects|length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h6 class="text-muted mb-2">Active Projects</h6>
+                <h3 class="mb-0">{{ projects|length }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h6 class="text-muted mb-2">Completed</h6>
+                <h3 class="mb-0">0</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h6 class="text-muted mb-2">This Month</h6>
+                <h3 class="mb-0">{{ projects|length }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="search-bar">
+    <i class="bi bi-search"></i>
+    <input type="text" id="projectSearch" placeholder="Search projects..." class="form-control">
 </div>
 
 <div class="project-table">
@@ -76,22 +152,38 @@
             <tr>
                 <th>Project Name</th>
                 <th>Description</th>
+                <th>Status</th>
                 <th>Created</th>
+                <th>Progress</th>
             </tr>
         </thead>
         <tbody>
             {% for project in projects %}
                 <tr class="clickable-row" data-href="{% url 'project_detail' project.id %}">
-                    <td class="fw-bold text-primary">{{ project.name }}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-folder2 text-primary me-2"></i>
+                            <span class="fw-bold">{{ project.name }}</span>
+                        </div>
+                    </td>
                     <td class="text-muted">{{ project.description }}</td>
+                    <td><span class="status-badge status-active">Active</span></td>
                     <td><span class="badge bg-light text-dark">{{ project.created_at }}</span></td>
+                    <td>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 75%"></div>
+                        </div>
+                    </td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="3" class="empty-state">
+                    <td colspan="5" class="empty-state">
                         <i class="bi bi-folder-x display-4 d-block mb-3"></i>
                         <h5>No Projects Available</h5>
                         <p class="text-muted">Start by creating your first project</p>
+                        <a href="{% url 'create_project' %}" class="btn btn-primary mt-3">
+                            <i class="bi bi-plus-lg me-2"></i>Create First Project
+                        </a>
                     </td>
                 </tr>
             {% endfor %}
@@ -103,12 +195,28 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Clickable rows
         const rows = document.querySelectorAll('.clickable-row');
         rows.forEach(row => {
             row.addEventListener('click', () => {
                 const href = row.getAttribute('data-href');
                 if (href) {
                     window.location.href = href;
+                }
+            });
+        });
+
+        // Search functionality
+        const searchInput = document.getElementById('projectSearch');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            rows.forEach(row => {
+                const projectName = row.querySelector('span.fw-bold').textContent.toLowerCase();
+                const projectDesc = row.querySelector('.text-muted').textContent.toLowerCase();
+                if (projectName.includes(searchTerm) || projectDesc.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
                 }
             });
         });
