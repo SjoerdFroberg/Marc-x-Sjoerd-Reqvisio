@@ -6,92 +6,172 @@
 {% block title %}Create RFX - Step 1{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="card shadow-lg border-0">
-        <div class="card-header">
-            <h3 class="mb-0">Create RFX - Step 1: Title and Description</h3>
-        </div>
-        <div class="card-body">
+<style>
+    .wizard-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+    }
+    .wizard-header {
+        background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .wizard-content {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        padding: 2rem;
+    }
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+    .progress-steps::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #e9ecef;
+        z-index: 1;
+    }
+    .step {
+        position: relative;
+        z-index: 2;
+        background: white;
+        padding: 0 1rem;
+        text-align: center;
+    }
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .step.active .step-number {
+        background: #0d6efd;
+        color: white;
+    }
+    .step-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+    .form-group label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #344767;
+        margin-bottom: 0.5rem;
+    }
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
+    }
+    .form-control:focus {
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+        border-color: #86b7fe;
+    }
+    .action-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+    }
+    .btn-next {
+        background: #0d6efd;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .btn-next:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.2);
+    }
+</style>
 
+<div class="wizard-container">
+    <div class="wizard-header">
+        <h2 class="fw-bold mb-0">Create New RFX</h2>
+        <p class="text-muted mb-0">Step 1: Basic Information</p>
+    </div>
 
-
-
-
-
-            <form method="post" enctype="multipart/form-data" novalidate>
-                {% csrf_token %}
-                <!-- Navigation Buttons -->
-            <div class="navigation-buttons">
-                <div class="button-group">
-                    
-                </div>
-
-                <div class="progress-bar-container">
-                    <ul class="progress-bar horizontal">
-                        <li class="in-progress">
-                            <span class="step-icon">1</span>
-                            <span class="step-label">Basic Info</span>
-                        </li>
-                        <li class="step-icon">
-                            <span class="step-icon">2</span>
-                            <span class="step-label">Add SKUs</span>
-                        </li>
-                        <li>
-                            <span class="step-icon">3</span>
-                            <span class="step-label">General Questions</span>
-                        </li>
-                        <li>
-                            <span class="step-icon">4</span>
-                            <span class="step-label">SKU Questions</span>
-                        </li>
-                        <li>
-                            <span class="step-icon">5</span>
-                            <span class="step-label">Review</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="button-group">
-                    <button type="submit" id="continue-to-step-2-btn" class="action-btn">Continue to Step 2</button>
-                </div>
+    <div class="wizard-content">
+        <div class="progress-steps">
+            <div class="step active">
+                <div class="step-number">1</div>
+                <div class="step-label">Basic Info</div>
             </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-label">SKUs</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-label">General Questions</div>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-label">SKU Questions</div>
+            </div>
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-label">Review</div>
+            </div>
+        </div>
 
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            
             <div class="form-group mb-4">
-                <label for="id_project" class="form-label fw-bold text-secondary">Project (optional)</label>
+                <label for="id_project">Project (Optional)</label>
                 {{ form.project }}
                 {% if form.project.errors %}
-                    <div class="text-danger small mt-1">
-                        {{ form.project.errors }}
-                    </div>
+                    <div class="text-danger small mt-1">{{ form.project.errors }}</div>
                 {% endif %}
             </div>
 
-                <div class="form-group mb-4">
-                    <label for="id_title" class="form-label fw-bold text-secondary">RFX Title</label>
-                    {{ form.title }}
-                    {% if form.title.errors %}
-                        <div class="text-danger small mt-1">
-                            {{ form.title.errors }}
-                        </div>
-                    {% endif %}
-                </div>
+            <div class="form-group mb-4">
+                <label for="id_title">RFX Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="text-danger small mt-1">{{ form.title.errors }}</div>
+                {% endif %}
+            </div>
 
-                <div class="form-group mb-4">
-                    <label for="id_description" class="form-label fw-bold text-secondary">RFX Description</label>
-                    {{ form.description }}
-                    {% if form.description.errors %}
-                        <div class="text-danger small mt-1">
-                            {{ form.description.errors }}
-                        </div>
-                    {% endif %}
-                </div>
+            <div class="form-group mb-4">
+                <label for="id_description">RFX Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="text-danger small mt-1">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
 
-                <!-- Include the shared file upload section -->
-                {% include 'procurement01/file_upload_section.html' %}
+            {% include 'procurement01/file_upload_section.html' %}
 
-                    
-            </form>
-        </div>
+            <div class="action-buttons">
+                <button type="submit" class="btn btn-next">
+                    Continue to Step 2
+                    <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}

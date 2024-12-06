@@ -3,10 +3,76 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-    <h2>Login</h2>
-    <form method="post">
+<style>
+    .login-container {
+        max-width: 400px;
+        margin: 5rem auto;
+        padding: 2.5rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .login-header i {
+        font-size: 3rem;
+        color: #0d6efd;
+        margin-bottom: 1rem;
+    }
+    .login-form input {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s ease;
+    }
+    .login-form input:focus {
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+        border-color: #86b7fe;
+    }
+    .login-btn {
+        width: 100%;
+        padding: 0.75rem;
+        font-weight: 600;
+        border-radius: 8px;
+        margin-top: 1rem;
+        transition: all 0.3s ease;
+    }
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.2);
+    }
+</style>
+
+<div class="login-container">
+    <div class="login-header">
+        <i class="bi bi-hexagon-fill"></i>
+        <h2 class="fw-bold">Welcome Back</h2>
+        <p class="text-muted">Sign in to your account</p>
+    </div>
+    
+    <form method="post" class="login-form">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Login</button>
+        <div class="mb-3">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-person-fill"></i>
+                </span>
+                {{ form.username }}
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-lock-fill"></i>
+                </span>
+                {{ form.password }}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary login-btn">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+        </button>
     </form>
+</div>
 {% endblock %}
