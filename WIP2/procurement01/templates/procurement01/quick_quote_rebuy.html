@@ -7,263 +7,290 @@
 {% block content %}
 <div class="container mt-5">
     <div class="card shadow-lg border-0">
-        <div class="card-header" style="background-color: #dddddd; color: #6c6c6c; font-weight: 600; padding: 20px; text-align: center; border-bottom: none;">
-            <h3 class="mb-0">Quick Quotation Request </h3>
+        <div class="card-header">
+            <h3 class="mb-0">Quick Quotation Request</h3>
         </div>
         <div class="card-body">
-            <form id="rfx-sku-questions-form" method="POST">
-                {% csrf_token %}
-                <input type="hidden" id="extra_columns_data" name="extra_columns_data" />
-                <input type="hidden" id="sku_specific_data" name="sku_specific_data" />
-                <input type="hidden" name="navigation_destination" id="navigation_destination" value="">
 
+            <!-- Title Field Outside Any Form -->
+            <div class="form-group mb-4">
+                <label for="rfx_title" class="form-label fw-bold text-secondary">Quick Quote Title</label>
+                <input type="text" id="rfx_title" class="form-control" value="{{ rfx.title }}">
+            </div>
 
-                <!-- Editable Title Field -->
-                <div class="form-group mb-4">
-                    <label for="rfx_title" class="form-label fw-bold text-secondary">Quick Quote Title</label>
-                    <input type="text" name="title" id="rfx_title" class="form-control" value="{{ rfx.title }}">
-                </div>
-
-                <div id="full-screen-container">
-
-                    <!-- Controls -->
-                    <div class="top-controls">
-                        <div id="left-controls">
+            <div id="full-screen-container">
+                <!-- Controls -->
+                <div class="top-controls mb-3">
+                    <div id="left-controls">
                         <!-- Full screen toggle -->
-                        <button type="button" id="full-screen-toggle" class="action-btn btn btn-light">
-                            <i class="bi bi-arrows-fullscreen"></i> Full Screen
-                        </button>
-    
+                        <button type="button" id="full-screen-toggle" class="action-btn">Full Screen</button>
+
                         <!-- Button to add extra data column -->
-                        <button type="button" id="add-extra-column" class="action-btn btn btn-light">
-                            <i class="bi bi-plus-circle"></i> Add Extra Data Column
-                        </button>
-    
+                        <button type="button" id="add-extra-column" class="action-btn">Add Extra Data Column</button>
+
                         <!-- Button to add SKU-specific question -->
-                        <button type="button" id="add-sku-question-btn" class="action-btn btn btn-light">
-                            <i class="bi bi-question-circle"></i> Add SKU-specific Question
-                        </button>
+                        <button type="button" id="add-sku-question-btn" class="action-btn">Add SKU-specific Question</button>
                     </div>
                 </div>
-    
-                    <!-- SKU Search -->
-                    <div class="search-container">
-                        <label for="sku-search-input">Search and Add SKU</label>
-                        <span class="tooltip-icon" title="Type an SKU name to add it to the table">ℹ️</span>
+
+                <!-- SKU Search -->
+                <div class="search-container mb-3">
+                    <label for="sku-search-input">Search and Add SKU</label>
+                    <span class="tooltip-icon" title="Type an SKU name to add it to the table">ℹ️</span>
+                </div>
+                <input type="text" id="sku-search-input" class="form-control mb-3" placeholder="Search SKU to Add" autocomplete="off" autofocus>
+                <div id="sku-search-results" class="sku-search-results"></div>
+
+                {% if warnings %}
+                    <div class="alert alert-warning">
+                        <ul>
+                        {% for w in warnings %}
+                            <li>{{ w }}</li>
+                        {% endfor %}
+                        </ul>
                     </div>
-                    <input type="text" id="sku-search-input" class="form-control" placeholder="Search SKU to Add" autocomplete="off" autofocus>
-                    <div id="sku-search-results" class="sku-search-results"></div>
-    
-                    {% if warnings %}
-                        <div class="alert alert-warning">
-                            <ul>
-                            {% for w in warnings %}
-                                <li>{{ w }}</li>
-                            {% endfor %}
-                            </ul>
-                        </div>
-                    {% endif %}
-                        
-                    <!-- The table -->
-                    <div class="table-wrapper">
-                        <table class="table sheet-table" id="sku-table">
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th><input type="text" class="column-input" value="SKU Name" disabled></th>
-                                    {% for column in extra_columns %}
-                                        <th>
-                                            <input type="text" class="column-input" value="{{ column }}">
-                                            <button type="button" class="remove-column-x">
-                                                <i class="bi bi-x-circle"></i>
-                                            </button>
-                                        </th>
-                                    {% endfor %}
-                                    <!-- SKU-specific Questions Headers -->
-                                    {% for question in sku_specific_questions %}
-                                        <th class="sku-specific-question">
-                                            <input type="text" class="column-input" value="{{ question.question }}">
-                                            <button type="button" class="remove-column-x">
-                                                <i class="bi bi-x-circle"></i>
-                                            </button>
-                                        </th>
-                                    {% endfor %}
-                                </tr>
-                                <tr>
-                                    <th></th>
-                                    <th></th>
-                                    {% for column in extra_columns %}
-                                        <th></th>
-                                    {% endfor %}
-                                    <!-- SKU-specific Questions Types -->
-                                    {% for question in sku_specific_questions %}
-                                        <th class="sku-specific-question">
-                                            <select class="form-control question-type-select">
-                                                <option value="text" {% if question.question_type == 'text' %}selected{% endif %}>Text</option>
-                                                <option value="number" {% if question.question_type == 'number' %}selected{% endif %}>Number</option>
-                                                <option value="file" {% if question.question_type == 'file' %}selected{% endif %}>File Upload</option>
-                                                <option value="date" {% if question.question_type == 'date' %}selected{% endif %}>Date</option>
-                                            </select>
-                                        </th>
-                                    {% endfor %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for sku in processed_skus %}
-                                    <tr data-sku-id="{{ sku.sku_id }}">
-                                        <td>
-                                            <button type="button" class="remove-sku-btn">
-                                                <i class="bi bi-x-circle"></i>
-                                            </button>
-                                        </td>
-                                        <td contenteditable="false">{{ sku.sku_name }}
-                                            <input type="hidden" name="skus[]" value="{{ sku.sku_id }}">
-                                        </td>
-                                        {% for key, value in sku.extra_data.items %}
-                                            <td contenteditable="true">{{ value }}</td>
-                                        {% endfor %}
-                                        {% for _ in sku_specific_questions %}
-                                            <td contenteditable="false"></td>
-                                        {% endfor %}
-                                    </tr>
+                {% endif %}
+
+                <!-- The table (not inside a form) -->
+                <div class="table-wrapper">
+                    <table class="table sheet-table" id="sku-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th><input type="text" class="column-input" value="SKU Name" disabled></th>
+                                {% for column in extra_columns %}
+                                    <th>
+                                        <input type="text" class="column-input" value="{{ column }}">
+                                        <button type="button" class="remove-column-x">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </th>
                                 {% endfor %}
-
-                            </tbody>
-                        </table>
-                    </div>
-    
+                                <!-- SKU-specific Questions Headers -->
+                                {% for question in sku_specific_questions %}
+                                    <th class="sku-specific-question">
+                                        <input type="text" class="column-input" value="{{ question.question }}">
+                                        <button type="button" class="remove-column-x">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                {% for column in extra_columns %}
+                                    <th></th>
+                                {% endfor %}
+                                <!-- SKU-specific Questions Types -->
+                                {% for question in sku_specific_questions %}
+                                    <th class="sku-specific-question">
+                                        <select class="form-control question-type-select">
+                                            <option value="text" {% if question.question_type == 'text' %}selected{% endif %}>Text</option>
+                                            <option value="number" {% if question.question_type == 'number' %}selected{% endif %}>Number</option>
+                                            <option value="file" {% if question.question_type == 'file' %}selected{% endif %}>File Upload</option>
+                                            <option value="date" {% if question.question_type == 'date' %}selected{% endif %}>Date</option>
+                                        </select>
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sku in processed_skus %}
+                                <tr data-sku-id="{{ sku.sku_id }}">
+                                    <td>
+                                        <button type="button" class="remove-sku-btn">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </td>
+                                    <td contenteditable="false">{{ sku.sku_name }}
+                                        <input type="hidden" class="sku-id-input" value="{{ sku.sku_id }}">
+                                    </td>
+                                    {% for key, value in sku.extra_data.items %}
+                                        <td contenteditable="true">{{ value }}</td>
+                                    {% endfor %}
+                                    {% for _ in sku_specific_questions %}
+                                        <td contenteditable="false"></td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
+            </div>
 
-                <!-- Add any buttons for saving or proceeding -->
-                <div class="mt-4 d-flex justify-content-end">
-                    <input type="hidden" name="action" value="save_changes">
-
-                    <button type="submit" name="action" value="save_changes" class="btn btn-light me-2">
-                        <i class="bi bi-save"></i> Save Changes
+            <!-- Single Row with Four Buttons in Two Separate Forms -->
+            <!-- We'll have a d-flex container with two forms side-by-side -->
+            <div class="mt-4 d-flex justify-content-between align-items-center gap-3">
+                <!-- LEFT: Upload Form -->
+                <form method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-3 mb-0" id="upload-form">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-primary rounded-pill" id="file-upload-trigger">
+                        <i class="bi bi-paperclip me-2"></i> Choose CSV
                     </button>
-                    <button type="button" class="btn btn-light me-2" id="invite-suppliers-btn">
-                        <i class="bi bi-envelope"></i> Invite Suppliers
+                    <!-- Hidden file input -->
+                    <input type="file" name="file" style="display:none;">
+                    <span id="selected-file-name" class="ms-2 text-muted"></span>
+                    <button type="submit" name="action" value="upload_file" class="btn btn-primary rounded-pill">
+                        <i class="bi bi-upload me-2"></i> Upload
                     </button>
+                </form>
 
+                <!-- RIGHT: Save Changes & Invite Suppliers Form -->
+                <form id="save-form" method="POST" class="d-flex align-items-center gap-3 mb-0">
+                    {% csrf_token %}
+                    <input type="hidden" name="title" id="save_form_title">
+                    <input type="hidden" name="extra_columns_data" id="extra_columns_data">
+                    <input type="hidden" name="sku_specific_data" id="sku_specific_data">
+                    <input type="hidden" name="navigation_destination" id="navigation_destination">
+
+                    <!-- We'll populate skus[] dynamically before submission -->
+                    <!-- We'll do this by adding hidden inputs for each SKU right before submit -->
                     
-                </div>
-            </form>
+                    <input type="hidden" name="action" value="save_changes">
+                    <button type="submit" name="action" value="save_changes" class="btn btn-primary rounded-pill" id="save-changes-btn">Save Changes</button>
+                    <button type="button" class="btn btn-primary rounded-pill" id="invite-suppliers-btn">Invite Suppliers</button>
+                </form>
+            </div>
 
-            <form method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                {{ upload_form.file.label_tag }} {{ upload_form.file }}
-                <button type="submit" name="action" value="upload_file" class="btn btn-light mt-2">
-                    <i class="bi bi-upload"></i> Upload
-                </button>
-            </form>
         </div>
     </div>
 </div>
-
-
 {% endblock %}
 
 {% block scripts %}
-
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const saveButton = document.querySelector("button[name='action'][value='save_changes']");
-        const inviteSuppliersButton = document.getElementById("invite-suppliers-btn");
-        const extraColumnsDataInput = document.getElementById("extra_columns_data");
-        const skuSpecificDataInput = document.getElementById("sku_specific_data");
-        const skuTable = document.getElementById('sku-table');
-        const navigationDestinationInput = document.getElementById("navigation_destination");
-        const form = document.getElementById('rfx-sku-questions-form');
+document.addEventListener("DOMContentLoaded", () => {
+    const fileTrigger = document.getElementById('file-upload-trigger');
+    const fileInput = document.querySelector('input[name="file"]');
+    const selectedFileName = document.getElementById('selected-file-name');
 
-        function saveAndSubmit(destination=null) {
-            event.preventDefault(); // Prevent default form submission
-            const rows = skuTable.querySelectorAll("tbody tr");
+    // Trigger file selection when "Choose CSV" is clicked
+    fileTrigger.addEventListener('click', () => {
+        fileInput.click();
+    });
 
-            const skuData = [];
-            const tableBody = skuTable.querySelector('tbody');
+    // Display selected file name
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            selectedFileName.textContent = fileInput.files[0].name;
+        } else {
+            selectedFileName.textContent = '';
+        }
+    });
 
-            // Collect Extra Data Column Indices and Headers
-            const extraDataColumns = [];
-            skuTable.querySelectorAll('thead tr:first-child th').forEach((th, index) => {
-                if (!th.classList.contains('sku-specific-question') && index >= 2) {
-                    const header = th.querySelector('.column-input') ? th.querySelector('.column-input').value.trim() : th.textContent.trim();
-                    extraDataColumns.push({ index: index, header: header });
-                }
-            });
+    const saveChangesButton = document.getElementById('save-changes-btn');
+    const inviteSuppliersButton = document.getElementById('invite-suppliers-btn');
+    const extraColumnsDataInput = document.getElementById("extra_columns_data");
+    const skuSpecificDataInput = document.getElementById("sku_specific_data");
+    const navigationDestinationInput = document.getElementById("navigation_destination");
+    const skuTable = document.getElementById('sku-table');
+    const saveFormTitle = document.getElementById('save_form_title');
+    const rfxTitleInput = document.getElementById("rfx_title");
+    const saveForm = document.getElementById('save-form');
 
-            // Collect SKU-specific Question Column Indices, Headers, and Types
-            const skuSpecificColumns = [];
-            skuTable.querySelectorAll('thead tr:first-child th').forEach((th, index) => {
-                if (th.classList.contains('sku-specific-question')) {
-                    const header = th.querySelector('.column-input') ? th.querySelector('.column-input').value.trim() : '';
-                    const typeSelect = skuTable.querySelector(`thead tr:nth-child(2) th:nth-child(${index + 1}) select.question-type-select`);
-                    const questionType = typeSelect ? typeSelect.value : '';
+    function gatherTableData() {
+        const tableBody = skuTable.querySelector('tbody');
+
+        // Collect Extra Data Columns
+        const extraDataColumns = [];
+        const firstHeaderRow = skuTable.querySelector('thead tr:first-child');
+        firstHeaderRow.querySelectorAll('th').forEach((th, index) => {
+            if (!th.classList.contains('sku-specific-question') && index >= 2) {
+                const header = th.querySelector('.column-input') ? th.querySelector('.column-input').value.trim() : th.textContent.trim();
+                extraDataColumns.push({ index: index, header: header });
+            }
+        });
+
+        // Collect SKU-specific Question Columns
+        const skuSpecificColumns = [];
+        firstHeaderRow.querySelectorAll('th').forEach((th, index) => {
+            if (th.classList.contains('sku-specific-question')) {
+                const header = th.querySelector('.column-input') ? th.querySelector('.column-input').value.trim() : '';
+                const typeSelect = skuTable.querySelector(`thead tr:nth-child(2) th:nth-child(${index + 1}) select.question-type-select`);
+                const questionType = typeSelect ? typeSelect.value : '';
+                if (header && questionType) {
                     skuSpecificColumns.push({ index: index, header: header, question_type: questionType });
                 }
-            });
-
-            // Collect SKU Data
-            tableBody.querySelectorAll('tr').forEach(row => {
-                const skuId = row.querySelector('input[name="skus[]"]').value;
-                const cells = row.querySelectorAll('td');
-
-                // Extract Extra Data Values
-                const dataArray = [];
-                extraDataColumns.forEach(col => {
-                    const cell = cells[col.index];
-                    const value = cell ? cell.innerText.trim() : '';
-                    dataArray.push([col.header, value]);
-                });
-
-                skuData.push({
-                    sku_id: skuId,
-                    data: dataArray
-                });
-            });
-
-            // Set the SKU Data in Hidden Input
-            extraColumnsDataInput.value = JSON.stringify(skuData);
-
-            // Collect SKU-specific Questions Data
-            const questionsData = [];
-            skuSpecificColumns.forEach(col => {
-                const question = col.header;
-                const questionType = col.question_type;
-                if (question && questionType) {
-                    questionsData.push({
-                        question: question,
-                        question_type: questionType
-                    });
-                }
-            });
-
-            // Set the SKU-specific Questions Data in Hidden Input
-            if (skuSpecificDataInput) {
-                skuSpecificDataInput.value = JSON.stringify(questionsData);
-            }            
-            
-
-            if (destination) {
-                navigationDestinationInput.value = destination;
             }
-            form.submit();
+        });
+
+        // Collect SKU Data
+        const skuData = [];
+        tableBody.querySelectorAll('tr').forEach(row => {
+            const skuIdInput = row.querySelector('.sku-id-input');
+            if (!skuIdInput) return;
+            const skuId = skuIdInput.value;
+            const cells = row.querySelectorAll('td');
+
+            const dataArray = [];
+            extraDataColumns.forEach(col => {
+                const cell = cells[col.index];
+                const value = cell ? cell.innerText.trim() : '';
+                dataArray.push([col.header, value]);
+            });
+
+            skuData.push({
+                sku_id: skuId,
+                data: dataArray
+            });
+        });
+
+        // Collect SKU-specific Questions
+        const questionsData = skuSpecificColumns.map(col => ({
+            question: col.header,
+            question_type: col.question_type
+        }));
+
+        return { skuData, questionsData };
+    }
+
+    function addSkusToForm(form, skuIds) {
+        // Remove existing skus[] inputs
+        form.querySelectorAll('input[name="skus[]"]').forEach(el => el.remove());
+        // Add them anew
+        skuIds.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'skus[]';
+            input.value = id;
+            form.appendChild(input);
+        });
+    }
+
+    function prepareAndSubmitForm(destination=null) {
+        const { skuData, questionsData } = gatherTableData();
+
+        // Set title
+        saveFormTitle.value = rfxTitleInput.value;
+
+        // Set the SKU Data and Questions in Hidden Input
+        extraColumnsDataInput.value = JSON.stringify(skuData);
+        skuSpecificDataInput.value = JSON.stringify(questionsData);
+
+        // Extract sku_ids to add them to the form
+        const skuIds = skuData.map(item => item.sku_id);
+        addSkusToForm(saveForm, skuIds);
+
+        if (destination) {
+            navigationDestinationInput.value = destination;
         }
 
+        saveForm.submit();
+    }
 
-        saveButton.addEventListener("click", (event) => {
-            event.preventDefault();
-            saveAndSubmit(); // Normal save with no redirect
-        });
+    saveChangesButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        prepareAndSubmitForm(); // Normal save with no redirect
+    });
 
-        inviteSuppliersButton.addEventListener("click", (event) => {
-            event.preventDefault();
-            // Save and then redirect to the invite suppliers page
-            saveAndSubmit("quick_quote_rebuy_invite_suppliers");
-        });
+    inviteSuppliersButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        prepareAndSubmitForm("quick_quote_rebuy_invite_suppliers");
+    });
 
 });
 </script>
-
 
 <script src="{% static 'js/shared_sku.js' %}"></script>
 {% endblock %}

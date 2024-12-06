@@ -113,13 +113,13 @@
         <div class="col-md-3">
             <div class="stats-card">
                 <h6 class="text-muted mb-2">Total Suppliers</h6>
-                <h3 class="mb-0">{{ unique_suppliers|length }}</h3>
+                <h3 class="mb-0" id="total-suppliers">{{ unique_suppliers}}</h3>
             </div>
         </div>
         <div class="col-md-3">
             <div class="stats-card">
                 <h6 class="text-muted mb-2">Total Value</h6>
-                <h3 class="mb-0">€{{ total_cost_all_rows|floatformat:2 }}</h3>
+                <h3 class="mb-0" id="total-value">€{{ total_cost_all_rows|floatformat:2 }}</h3>
             </div>
         </div>
     </div>

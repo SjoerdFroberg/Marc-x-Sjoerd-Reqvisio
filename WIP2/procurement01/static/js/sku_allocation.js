@@ -40,6 +40,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
+
+    function recalculateGlobalStats() {
+        const summaryRows = document.querySelectorAll('.sku-summary-row');
+        const allSuppliers = new Set();
+        let totalCost = 0;
+        let allocatedSkuCount = 0;
+    
+        summaryRows.forEach(row => {
+            const suppliersCell = row.querySelector('.summary-suppliers');
+            const totalCostCell = row.querySelector('.summary-total-cost');
+            const quantityAssignedCell = row.querySelector('.summary-quantity-assigned');
+    
+            const suppliers = suppliersCell.textContent.split(',').map(s => s.trim()).filter(Boolean);
+            suppliers.forEach(s => allSuppliers.add(s));
+    
+            const cost = parseFloat(totalCostCell.textContent) || 0;
+            totalCost += cost;
+    
+            const quantityAssigned = parseFloat(quantityAssignedCell.textContent) || 0;
+            if (quantityAssigned > 0) {
+                allocatedSkuCount++;
+            }
+        });
+    
+        // Now update the elements in your header with these new values.
+        // Assuming you have elements with IDs #total-suppliers, #total-value, etc.
+        document.getElementById('total-suppliers').textContent = allSuppliers.size;
+        document.getElementById('total-value').textContent = '€' + totalCost.toFixed(2);
+        // If you also need to update allocated SKUs count or others, do it here as well.
+    }
+
     function recalculateForSKU(skuCode) {
         const summaryRow = table.querySelector(`.sku-summary-row[data-sku="${skuCode}"]`);
         const detailRows = table.querySelectorAll(`.sku-detail-row[data-parent-sku="${skuCode}"]`);
@@ -83,6 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
         totalQtyAssignedCell.textContent = totalAllocatedQty;
         avgPriceCell.textContent = avgPrice.toFixed(2);
         totalCostCell.textContent = totalCost.toFixed(2);
+
+        recalculateGlobalStats();
 
        
     }

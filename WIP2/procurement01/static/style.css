@@ -378,8 +378,8 @@ h2 {
 
 /* Card Styles */
 .card-header {
-    background-color: #3c6a56; /* Matches button color */
-    color: #ffffff;
+    background-color: #3c6a56 !important; /* Matches button color */
+    color: #ffffff !important;
     font-weight: 600;
     padding: 20px;
     text-align: center;
@@ -1304,7 +1304,7 @@ body.fullscreen-active {
 
 #sku-allocation-table th {
     /* background-color: #2d4c3e; Dark green for headers */
-    background-color: #999aa2;
+    background-color: #3c6a56;
     color: #ffffff;
     font-weight: bold;
     padding: 12px;
@@ -1420,3 +1420,43 @@ body.fullscreen-active {
     font-weight: bold;
     color: #2d4c3e;
 }
+
+
+
+.file-upload-container {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Space between the buttons and the label */
+    flex-wrap: wrap; /* Ensure the layout works for smaller screens */
+}
+
+#file-upload-button {
+    background-color: #3c6a56;
+    color: #ffffff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#file-upload-button:hover {
+    background-color: #2d4c3e;
+}
+
+#file-upload-label {
+    font-size: 0.875rem;
+    font-style: italic;
+    color: #6c757d;
+}
+
+
+.form-control[type="file"] {
+    padding: 0.4rem;
+    border-radius: 0.5rem;
+    border: 1px solid #ccc;
+}
+
+
