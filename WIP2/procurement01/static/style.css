@@ -378,8 +378,8 @@ h2 {
 
 /* Card Styles */
 .card-header {
-    background-color: #3c6a56 !important; /* Matches button color */
-    color: #ffffff !important;
+    background-color: #ffffff !important; /* Matches button color */
+    color: #000000 !important;
     font-weight: 600;
     padding: 20px;
     text-align: center;
